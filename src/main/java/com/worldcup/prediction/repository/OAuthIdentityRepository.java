@@ -18,4 +18,6 @@ public interface OAuthIdentityRepository extends JpaRepository<OAuthIdentity, Lo
     Optional<OAuthIdentity> findByEmailIgnoreCaseAndProvider(String email, OAuthProvider provider);
 
     boolean existsByProviderAndProviderSubject(OAuthProvider provider, String providerSubject);
+
+    Optional<OAuthIdentity> findByUserIdAndProvider(Long userId, OAuthProvider provider);
 }
