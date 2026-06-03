@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::main-content})}">
+<head><title>Match Preview</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+<div class="max-w-4xl mx-auto px-4 py-10 space-y-8">
+
+  <!-- Match header -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center space-y-2">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest"
+       th:text="${match.roundLabel}">Group Stage</p>
+
+    <div class="flex items-center justify-center gap-6 mt-3">
+      <!-- Home team -->
+      <div class="flex flex-col items-center gap-2 w-36">
+        <img th:if="${match.homeTeam != null}"
+             th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
+             class="w-16 h-16 rounded-full shadow" th:alt="${match.homeTeam.name}"/>
+        <span class="font-bold text-gray-800 text-sm text-center"
+              th:text="${match.homeTeam != null ? match.homeTeam.name : match.homeTeamPlaceholder}">Home</span>
+      </div>
+
+      <!-- Score / time -->
+      <div class="text-center">
+        <div th:if="${match.homeScore != null}" class="font-display text-5xl text-gray-900 tracking-wider"
+             th:text="${match.homeScore + ' – ' + match.awayScore}">0 – 0</div>
+        <div th:unless="${match.homeScore != null}" class="font-display text-3xl text-gray-400"
+             th:text="${#temporals.format(match.kickoffTime, 'HH:mm')}">19:00</div>
+        <div class="text-xs text-gray-400 mt-1"
+             th:text="${#temporals.format(match.kickoffTime, 'EEE d MMM yyyy')}">Mon 11 Jun 2026</div>
+        <div th:if="${match.venue != null}" class="text-xs text-gray-400 mt-0.5"
+             th:text="${match.venue + ', ' + match.city}">Stadium, City</div>
+      </div>
+
+      <!-- Away team -->
+      <div class="flex flex-col items-center gap-2 w-36">
+        <img th:if="${match.awayTeam != null}"
+             th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
+             class="w-16 h-16 rounded-full shadow" th:alt="${match.awayTeam.name}"/>
+        <span class="font-bold text-gray-800 text-sm text-center"
+              th:text="${match.awayTeam != null ? match.awayTeam.name : match.awayTeamPlaceholder}">Away</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Goals timeline -->
+  <div th:if="${not #lists.isEmpty(goals)}"
+       class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <h2 class="font-bold text-gray-700 text-sm uppercase tracking-wide mb-4">Goals</h2>
+    <div class="space-y-2">
+      <div th:each="goal : ${goals}"
+           class="flex items-center gap-3 text-sm">
+        <span class="w-10 text-right font-mono text-gray-500"
+              th:text="${goal.minute + &quot;'&quot;}">23'</span>
+        <span th:if="${goal.player != null}" class="font-medium text-gray-800"
+              th:text="${goal.player.name}">Scorer</span>
+        <span th:unless="${goal.player != null}" class="text-gray-400 italic">Own goal</span>
+        <span th:if="${goal.type.name() != 'REGULAR'}"
+              class="px-1.5 py-0.5 text-xs rounded bg-gray-100 text-gray-500"
+              th:text="${goal.type.name() == 'OWN_GOAL' ? 'OG' : 'PEN'}">OG</span>
+        <span class="text-gray-400 text-xs" th:text="${goal.team.name}">Team</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lineups -->
+  <div th:if="${hasLineup}"
+       class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <h2 class="font-bold text-gray-700 text-sm uppercase tracking-wide mb-4">Lineups</h2>
+    <div class="grid grid-cols-2 gap-8">
+      <div th:if="${homeLineup != null}">
+        <p class="font-semibold text-gray-700 mb-3" th:text="${match.homeTeam?.name}">Home</p>
+        <div class="space-y-1">
+          <div th:each="entry : ${homeLineup}"
+               class="flex items-center gap-2 text-sm"
+               th:classappend="${entry.starting} ? '' : 'text-gray-400'">
+            <span class="w-6 text-right font-mono text-gray-400 text-xs" th:text="${entry.shirtNumber}">1</span>
+            <span th:text="${entry.player.name}">Player</span>
+            <span class="text-xs text-gray-400" th:text="${entry.formationPosition}">GK</span>
+            <span th:unless="${entry.starting}" class="text-xs text-gray-300">(sub)</span>
+          </div>
+        </div>
+      </div>
+      <div th:if="${awayLineup != null}">
+        <p class="font-semibold text-gray-700 mb-3" th:text="${match.awayTeam?.name}">Away</p>
+        <div class="space-y-1">
+          <div th:each="entry : ${awayLineup}"
+               class="flex items-center gap-2 text-sm"
+               th:classappend="${entry.starting} ? '' : 'text-gray-400'">
+            <span class="w-6 text-right font-mono text-gray-400 text-xs" th:text="${entry.shirtNumber}">1</span>
+            <span th:text="${entry.player.name}">Player</span>
+            <span class="text-xs text-gray-400" th:text="${entry.formationPosition}">GK</span>
+            <span th:unless="${entry.starting}" class="text-xs text-gray-300">(sub)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:unless="${hasLineup}" class="text-center text-sm text-gray-400 py-4">
+    Lineup not yet available.
+  </div>
+
+</div>
+</th:block>
+</body>
+</html>
