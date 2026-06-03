@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title layout:title-pattern="$CONTENT_TITLE — WC2026 Admin">WC2026 Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'admin-dark':  '#006b2a',
+            'admin-mid':   '#008f38',
+            'admin-light': '#00c853',
+            'admin-bg':    '#f0fdf5',
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-bebas { font-family: 'Bebas Neue', cursive; }
+  </style>
+  <th:block layout:fragment="head-extra"/>
+</head>
+<body class="bg-admin-bg min-h-screen flex"
+      th:attr="hx-headers='{ &quot;X-CSRF-TOKEN&quot;: &quot;' + ${_csrf.token} + '&quot; }'">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-admin-dark text-white flex flex-col min-h-screen shadow-xl flex-shrink-0">
+    <div class="px-6 py-5 border-b border-admin-mid">
+      <a th:href="@{/}" class="no-underline">
+        <span class="font-bebas text-3xl tracking-widest text-admin-light">WC2026</span>
+        <span class="block text-xs text-green-300 uppercase tracking-widest mt-0.5">Admin Panel</span>
+      </a>
+    </div>
+
+    <nav class="flex-1 px-4 py-6 space-y-1">
+      <a th:href="@{/admin}"
+         th:classappend="${currentUri == '/admin'} ? ' bg-admin-mid text-white' : ' text-green-200 hover:bg-admin-mid hover:text-white'"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        Dashboard
+      </a>
+
+      <a th:href="@{/admin/users}"
+         th:classappend="${currentUri.startsWith('/admin/users')} ? ' bg-admin-mid text-white' : ' text-green-200 hover:bg-admin-mid hover:text-white'"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        Users
+      </a>
+
+      <a th:href="@{/admin/matches}"
+         th:classappend="${currentUri.startsWith('/admin/matches')} ? ' bg-admin-mid text-white' : ' text-green-200 hover:bg-admin-mid hover:text-white'"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        Matches
+      </a>
+
+      <a th:href="@{/admin/predictions}"
+         th:classappend="${currentUri.startsWith('/admin/predictions')} ? ' bg-admin-mid text-white' : ' text-green-200 hover:bg-admin-mid hover:text-white'"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        Predictions
+      </a>
+    </nav>
+
+    <!-- Admin user footer -->
+    <div class="px-4 py-4 border-t border-admin-mid">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-admin-light flex items-center justify-center text-white text-xs font-bold ring-2 ring-admin-light flex-shrink-0">
+          A
+        </div>
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-white truncate"
+             sec:authentication="name">Admin</p>
+          <p class="text-xs text-green-300">Administrator</p>
+        </div>
+      </div>
+      <form th:action="@{/logout}" method="post" class="mt-3">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit"
+                class="w-full text-xs text-green-300 hover:text-white py-1.5 rounded border border-green-700 hover:border-green-400 transition-colors duration-150">
+          Sign out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="flex-1 flex flex-col min-h-screen overflow-auto">
+    <!-- Top bar -->
+    <header class="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
+      <h1 class="font-bebas text-2xl tracking-wide text-gray-800">
+        <th:block layout:fragment="page-title">Admin</th:block>
+      </h1>
+      <div class="text-xs text-gray-400"
+           th:text="${#temporals.format(#temporals.createNow(), 'EEE d MMM yyyy')}"></div>
+    </header>
+
+    <!-- Flash messages -->
+    <div th:if="${successMessage}"
+         class="mx-8 mt-4 p-3 bg-green-100 border border-green-300 text-green-800 rounded-lg text-sm"
+         th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}"
+         class="mx-8 mt-4 p-3 bg-red-100 border border-red-300 text-red-800 rounded-lg text-sm"
+         th:text="${errorMessage}"></div>
+
+    <!-- Page content -->
+    <main class="flex-1 p-8">
+      <th:block layout:fragment="content"/>
+    </main>
+  </div>
+
+</body>
+</html>

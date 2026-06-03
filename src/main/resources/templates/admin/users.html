@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout}">
+<head><title>Users</title></head>
+<body>
+
+<th:block layout:fragment="page-title">User Management</th:block>
+
+<th:block layout:fragment="content">
+
+  <!-- Filter bar -->
+  <div class="flex items-center gap-2 mb-6 flex-wrap">
+    <a th:href="@{/admin/users}"
+       th:classappend="${statusFilter == null} ? ' bg-admin-dark text-white' : ' bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'"
+       class="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150">All</a>
+    <a th:href="@{/admin/users(status='PENDING')}"
+       th:classappend="${statusFilter == 'PENDING'} ? ' bg-amber-500 text-white' : ' bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'"
+       class="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150">Pending</a>
+    <a th:href="@{/admin/users(status='ACTIVE')}"
+       th:classappend="${statusFilter == 'ACTIVE'} ? ' bg-green-600 text-white' : ' bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'"
+       class="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150">Active</a>
+    <a th:href="@{/admin/users(status='DISABLED')}"
+       th:classappend="${statusFilter == 'DISABLED'} ? ' bg-gray-600 text-white' : ' bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'"
+       class="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150">Disabled</a>
+    <span class="ml-auto text-sm text-gray-400" th:text="${#lists.size(users)} + ' users'"></span>
+  </div>
+
+  <!-- Users table -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-gray-50 border-b border-gray-100 text-left">
+          <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+          <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+          <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+          <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Registered</th>
+          <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="users-table-body" class="divide-y divide-gray-50">
+        <tr th:if="${#lists.isEmpty(users)}" class="text-center text-gray-400 text-sm">
+          <td colspan="5" class="py-12">No users found.</td>
+        </tr>
+
+        <!-- userRow fragment used by HTMX outerHTML swap -->
+        <tr th:each="user : ${users}"
+            th:fragment="userRow"
+            th:id="'user-row-' + ${user.id}"
+            class="hover:bg-gray-50 transition-colors duration-100">
+
+          <td class="px-6 py-3">
+            <div class="flex items-center gap-3">
+              <img th:src="${user.avatarUrl ?: 'https://ui-avatars.com/api/?background=006b2a&color=fff&name=U'}"
+                   class="w-8 h-8 rounded-full object-cover flex-shrink-0" alt=""/>
+              <div class="min-w-0">
+                <p class="font-medium text-gray-900 truncate" th:text="${user.fullName}">Name</p>
+                <p class="text-xs text-gray-400 truncate" th:text="${user.email}">email</p>
+              </div>
+            </div>
+          </td>
+
+          <td class="px-4 py-3">
+            <span th:switch="${user.status.name()}">
+              <span th:case="'PENDING'"  class="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Pending</span>
+              <span th:case="'ACTIVE'"   class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Active</span>
+              <span th:case="'DISABLED'" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Disabled</span>
+              <span th:case="*"          class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500" th:text="${user.status}">Unknown</span>
+            </span>
+          </td>
+
+          <td class="px-4 py-3">
+            <span th:if="${user.role.name() == 'ADMIN'}"
+                  class="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700">Admin</span>
+            <span th:unless="${user.role.name() == 'ADMIN'}"
+                  class="px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-600">Participant</span>
+          </td>
+
+          <td class="px-4 py-3 text-xs text-gray-500"
+              th:text="${#temporals.format(user.createdAt, 'dd MMM yyyy')}">01 Jan 2026</td>
+
+          <td class="px-6 py-3">
+            <div class="flex items-center justify-end gap-2 flex-wrap">
+
+              <button th:if="${user.status.name() == 'PENDING'}"
+                      th:attr="hx-post=@{'/admin/users/' + ${user.id} + '/approve'},hx-target='#user-row-' + ${user.id}"
+                      hx-swap="outerHTML"
+                      hx-include="[name='_csrf']"
+                      class="px-3 py-1 text-xs font-medium rounded-md bg-green-600 hover:bg-green-700 text-white transition-colors duration-150">
+                Approve
+              </button>
+
+              <button th:if="${user.status.name() == 'PENDING'}"
+                      th:attr="hx-post=@{'/admin/users/' + ${user.id} + '/reject'},hx-target='#user-row-' + ${user.id}"
+                      hx-swap="outerHTML"
+                      hx-include="[name='_csrf']"
+                      class="px-3 py-1 text-xs font-medium rounded-md bg-red-500 hover:bg-red-600 text-white transition-colors duration-150">
+                Reject
+              </button>
+
+              <button th:if="${user.status.name() == 'ACTIVE' and user.role.name() != 'ADMIN'}"
+                      th:attr="hx-post=@{'/admin/users/' + ${user.id} + '/disable'},hx-target='#user-row-' + ${user.id}"
+                      hx-swap="outerHTML"
+                      hx-include="[name='_csrf']"
+                      class="px-3 py-1 text-xs font-medium rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors duration-150">
+                Disable
+              </button>
+
+              <button th:if="${user.status.name() == 'DISABLED'}"
+                      th:attr="hx-post=@{'/admin/users/' + ${user.id} + '/enable'},hx-target='#user-row-' + ${user.id}"
+                      hx-swap="outerHTML"
+                      hx-include="[name='_csrf']"
+                      class="px-3 py-1 text-xs font-medium rounded-md bg-admin-dark hover:bg-admin-mid text-white transition-colors duration-150">
+                Enable
+              </button>
+
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Hidden CSRF for HTMX requests -->
+  <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+
+</th:block>
+</body>
+</html>

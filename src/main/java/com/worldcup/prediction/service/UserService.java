@@ -50,6 +50,23 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
+    public User setStatus(Long userId, UserStatus status) {
+        User user = findById(userId);
+        user.setStatus(status);
+        return userRepository.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<User> findByStatus(UserStatus status) {
+        return userRepository.findByStatus(status);
+    }
+
+    @Transactional(readOnly = true)
+    public long countByStatus(UserStatus status) {
+        return userRepository.countByStatus(status);
+    }
+
     @Transactional(readOnly = true)
     public List<User> findPendingUsers() {
         return userRepository.findByStatus(UserStatus.PENDING);

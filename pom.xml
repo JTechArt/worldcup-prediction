@@ -58,6 +58,12 @@
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
 
+        <!-- Thymeleaf Layout Dialect (used by admin panel templates) -->
+        <dependency>
+            <groupId>nz.net.ultraq.thymeleaf</groupId>
+            <artifactId>thymeleaf-layout-dialect</artifactId>
+        </dependency>
+
         <!-- Flyway core -->
         <dependency>
             <groupId>org.flywaydb</groupId>

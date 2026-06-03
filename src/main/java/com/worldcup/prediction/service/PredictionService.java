@@ -139,6 +139,39 @@ public class PredictionService {
     }
 
     // -------------------------------------------------------
+    //  Admin operations
+    // -------------------------------------------------------
+
+    /** Returns ALL predictions for a match (admin use — bypasses window checks). */
+    public List<Prediction> findAllByMatchId(Long matchId) {
+        return predictionRepository.findByMatchId(matchId);
+    }
+
+    /**
+     * Overrides a prediction's predicted scores.
+     * Re-scores immediately if the match result is already recorded.
+     */
+    @Transactional
+    public Prediction overridePrediction(Long predictionId, int homeScore, int awayScore,
+                                         ScoringService scoringService) {
+        Prediction p = predictionRepository.findById(predictionId)
+                .orElseThrow(() -> new IllegalArgumentException("Prediction not found: " + predictionId));
+        p.setPredictedHome(homeScore);
+        p.setPredictedAway(awayScore);
+        p.setEditedByAdmin(true);
+        if (p.getMatch().isCompleted()
+                && p.getMatch().getHomeScore() != null
+                && p.getMatch().getAwayScore() != null) {
+            int pts = scoringService.calculatePoints(
+                    p.getMatch().getEffectiveHomeScore(),
+                    p.getMatch().getEffectiveAwayScore(),
+                    homeScore, awayScore);
+            p.setPointsAwarded(pts);
+        }
+        return predictionRepository.save(p);
+    }
+
+    // -------------------------------------------------------
     //  Custom exceptions
     // -------------------------------------------------------
 

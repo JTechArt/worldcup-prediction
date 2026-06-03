@@ -1,0 +1,101 @@
+package com.worldcup.prediction.controller.admin;
+
+import com.worldcup.prediction.domain.Match;
+import com.worldcup.prediction.domain.Team;
+import com.worldcup.prediction.domain.enums.MatchStage;
+import com.worldcup.prediction.repository.UserRepository;
+import com.worldcup.prediction.service.*;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(AdminMatchController.class)
+class AdminMatchControllerTest {
+
+    @Autowired MockMvc mockMvc;
+
+    @MockBean MatchAdminService matchAdminService;
+    @MockBean AuditLogService   auditLogService;
+    @MockBean EmailService      emailService;
+    @MockBean UserService       userService;
+    @MockBean UserRepository    userRepository; // required by AccountStatusFilter
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void listMatches_returnsMatchesPage() throws Exception {
+        when(matchAdminService.findAllOrderByKickoffAsc()).thenReturn(List.of());
+
+        mockMvc.perform(get("/admin/matches"))
+               .andExpect(status().isOk())
+               .andExpect(view().name("admin/matches"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void enterResult_scoresAndRedirects() throws Exception {
+        Match match = buildMatch(10L, "Brazil", "Argentina");
+        when(matchAdminService.setResult(10L, 2, 1)).thenReturn(match);
+
+        mockMvc.perform(post("/admin/matches/10/result")
+                       .param("homeScore", "2")
+                       .param("awayScore", "1")
+                       .with(csrf()))
+               .andExpect(status().is3xxRedirection())
+               .andExpect(redirectedUrl("/admin/matches"));
+
+        verify(matchAdminService).scoreAllPredictions(10L);
+        verify(auditLogService).log(any(), any(), eq("MATCH"), eq(10L), anyString());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void openWindow_opensAndRedirects() throws Exception {
+        Match match = buildMatch(5L, "France", "Germany");
+        when(matchAdminService.setPredictionWindowOpen(5L, true)).thenReturn(match);
+
+        mockMvc.perform(post("/admin/matches/5/open-window").with(csrf()))
+               .andExpect(status().is3xxRedirection())
+               .andExpect(redirectedUrl("/admin/matches"));
+
+        verify(auditLogService).log(any(), any(), eq("MATCH"), eq(5L), anyString());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void closeWindow_closesAndRedirects() throws Exception {
+        Match match = buildMatch(5L, "France", "Germany");
+        when(matchAdminService.setPredictionWindowOpen(5L, false)).thenReturn(match);
+
+        mockMvc.perform(post("/admin/matches/5/close-window").with(csrf()))
+               .andExpect(status().is3xxRedirection())
+               .andExpect(redirectedUrl("/admin/matches"));
+
+        verify(auditLogService).log(any(), any(), eq("MATCH"), eq(5L), anyString());
+    }
+
+    private Match buildMatch(Long id, String homeName, String awayName) {
+        Team home = Team.builder().name(homeName).flagCode("br").fifaCode("BRA").build();
+        Team away = Team.builder().name(awayName).flagCode("ar").fifaCode("ARG").build();
+        return Match.builder()
+                .id(id)
+                .homeTeam(home)
+                .awayTeam(away)
+                .kickoffTime(LocalDateTime.now().plusDays(1))
+                .stage(MatchStage.GROUP)
+                .matchNumber(1)
+                .roundLabel("Group Stage MD1")
+                .build();
+    }
+}

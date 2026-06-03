@@ -95,4 +95,6 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     List<Match> findMatchesWhereWindowShouldClose(@Param("now") LocalDateTime now);
 
     long countByStatus(MatchStatus status);
+
+    List<Match> findByPredictionWindowOpen(boolean open);
 }
