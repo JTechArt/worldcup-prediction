@@ -36,6 +36,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
                 .requestMatchers("/", "/login", "/error").permitAll()
+                .requestMatchers("/dev/**").permitAll() // dev-only login bypass (sqlite profile)
                 .requestMatchers("/leaderboard/**").permitAll()
                 .requestMatchers("/fixtures/**").permitAll()
                 .requestMatchers("/groups/**").permitAll()

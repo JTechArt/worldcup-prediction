@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dev Login — WC Predict 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family:'Inter',sans-serif; background:#f0fdf5; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; }
+    .card { background:white; border-radius:16px; border:2px solid #e2f5ea; box-shadow:0 8px 32px rgba(0,107,42,0.1); padding:40px 48px; max-width:420px; width:100%; text-align:center; }
+    .badge { background:#fff3cd; border:1px solid #ffc107; color:#856404; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; border-radius:6px; padding:4px 12px; display:inline-block; margin-bottom:20px; }
+    h1 { font-family:'Bebas Neue',sans-serif; font-size:36px; letter-spacing:4px; color:#006b2a; margin:0 0 8px; }
+    p { color:#667c70; font-size:13px; margin:0 0 28px; }
+    .btn { display:block; width:100%; padding:14px; background:linear-gradient(135deg,#006b2a,#00c853); color:white; font-size:15px; font-weight:800; border:none; border-radius:12px; cursor:pointer; text-decoration:none; transition:opacity .2s; }
+    .btn:hover { opacity:.9; }
+    .info { margin-top:20px; font-size:11px; color:#94a3b8; line-height:1.7; }
+    .info code { background:#f0fdf5; border:1px solid #e2f5ea; padding:1px 5px; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">⚠ Development Only</div>
+    <h1>DEV LOGIN</h1>
+    <p>Sign in as <strong>Dev Admin</strong> without OAuth2.<br/>Only available in the <code>sqlite</code> profile.</p>
+
+    <form th:action="@{/dev/login}" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit" class="btn">⚡ Login as Dev Admin</button>
+    </form>
+
+    <div class="info">
+      Creates <code>devadmin@localhost</code> with <code>ADMIN</code> role.<br/>
+      Not available in production (postgres profile).
+    </div>
+  </div>
+</body>
+</html>

@@ -13,6 +13,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
     Optional<Group> findByNameIgnoreCase(String name);
 
-    @Query("SELECT g FROM Group g JOIN FETCH g.teams ORDER BY g.name")
+    @Query("SELECT DISTINCT g FROM Group g JOIN FETCH g.teams ORDER BY g.name")
     List<Group> findAllWithTeams();
 }
