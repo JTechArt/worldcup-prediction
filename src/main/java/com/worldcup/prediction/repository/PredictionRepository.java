@@ -18,6 +18,8 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
 
     List<Prediction> findByUserId(Long userId);
 
+    List<Prediction> findByUser(com.worldcup.prediction.domain.User user);
+
     List<Prediction> findByMatchId(Long matchId);
 
     boolean existsByUserIdAndMatchId(Long userId, Long matchId);

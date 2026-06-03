@@ -13,6 +13,8 @@ public interface TournamentWinnerPredictionRepository extends JpaRepository<Tour
 
     Optional<TournamentWinnerPrediction> findByUserId(Long userId);
 
+    Optional<TournamentWinnerPrediction> findByUser(com.worldcup.prediction.domain.User user);
+
     boolean existsByUserId(Long userId);
 
     List<TournamentWinnerPrediction> findByTeamId(Long teamId);
