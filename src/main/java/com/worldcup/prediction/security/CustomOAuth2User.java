@@ -63,4 +63,16 @@ public class CustomOAuth2User implements OAuth2User {
     public String getDisplayName() {
         return user.getFirstName() + " " + user.getLastName();
     }
+
+    public String getAvatarUrl() {
+        return user.getAvatarUrl();
+    }
+
+    public String getInitials() {
+        String f = user.getFirstName();
+        String l = user.getLastName();
+        String fi = (f != null && !f.isEmpty()) ? String.valueOf(f.charAt(0)).toUpperCase() : "";
+        String li = (l != null && !l.isEmpty()) ? String.valueOf(l.charAt(0)).toUpperCase() : "";
+        return fi + li;
+    }
 }

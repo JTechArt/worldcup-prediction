@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::main-content})}">
+<head><title>Fixtures</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Page header -->
+    <div class="mb-8 animate-fade-up">
+      <h1 class="font-display text-5xl text-green-dark tracking-wider mb-1">FIXTURES</h1>
+      <p class="text-gray-500 text-sm font-medium">All 104 matches · FIFA World Cup 2026</p>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="flex gap-2 flex-wrap mb-8 animate-fade-up stagger-1">
+      <th:block th:each="tab : ${ {'all','group','knockout','today'} }">
+        <button
+          th:text="${tab == 'all' ? 'All' : tab == 'group' ? 'Group Stage' : tab == 'knockout' ? 'Knockouts' : 'Today'}"
+          th:classappend="${activeFilter == tab} ? 'bg-green-dark text-white shadow-md' : 'bg-white text-gray-600 hover:bg-green-light hover:text-green-dark border border-gray-200'"
+          class="px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer"
+          th:attr="hx-get=@{/fixtures/filter(filter=${tab})}"
+          hx-target="#fixture-list"
+          hx-swap="innerHTML">
+        </button>
+      </th:block>
+    </div>
+
+    <!-- Fixture rows (HTMX swap target) -->
+    <div id="fixture-list">
+      <div th:replace="~{fragments/fixture-rows :: fixture-rows}"></div>
+    </div>
+
+  </div>
+
+</th:block>
+</body>
+</html>
