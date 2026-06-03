@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
@@ -35,6 +36,9 @@ class PredictionRepositoryTest {
     @Autowired
     private MatchRepository matchRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     private User alice;
     private User bob;
     private Match match1;
@@ -42,9 +46,14 @@ class PredictionRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        predictionRepository.deleteAll();
-        matchRepository.deleteAll();
-        userRepository.deleteAll();
+        jdbcTemplate.execute("DELETE FROM predictions");
+        jdbcTemplate.execute("DELETE FROM tournament_winner_predictions");
+        jdbcTemplate.execute("DELETE FROM matches");
+        jdbcTemplate.execute("DELETE FROM group_standings");
+        jdbcTemplate.execute("DELETE FROM group_teams");
+        jdbcTemplate.execute("DELETE FROM teams");
+        jdbcTemplate.execute("DELETE FROM groups");
+        jdbcTemplate.execute("DELETE FROM users");
 
         alice = userRepository.save(User.builder()
                 .email("alice@example.com").firstName("Alice").lastName("Smith")

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
@@ -28,13 +29,22 @@ class MatchRepositoryTest {
     @Autowired
     private TeamRepository teamRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     private Team brazil;
     private Team argentina;
 
     @BeforeEach
     void setUp() {
-        matchRepository.deleteAll();
-        teamRepository.deleteAll();
+        // Delete in FK-safe order: seed data references teams from group_teams + matches
+        jdbcTemplate.execute("DELETE FROM predictions");
+        jdbcTemplate.execute("DELETE FROM tournament_winner_predictions");
+        jdbcTemplate.execute("DELETE FROM matches");
+        jdbcTemplate.execute("DELETE FROM group_standings");
+        jdbcTemplate.execute("DELETE FROM group_teams");
+        jdbcTemplate.execute("DELETE FROM teams");
+        jdbcTemplate.execute("DELETE FROM groups");
 
         brazil = teamRepository.save(Team.builder()
                 .name("Brazil")
