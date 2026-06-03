@@ -88,6 +88,24 @@
           </div>
         </div>
 
+        <!-- Matches for this group -->
+        <div th:if="${matchesByGroup != null and matchesByGroup[groupEntry.key] != null}"
+             class="border-t border-gray-50 divide-y divide-gray-50">
+          <a th:each="m : ${matchesByGroup[groupEntry.key]}"
+             th:href="@{'/matches/' + ${m.id}}"
+             class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-xs">
+            <span class="text-gray-400 w-16 flex-shrink-0"
+                  th:text="${#temporals.format(m.kickoffTime, 'd MMM HH:mm')}">11 Jun</span>
+            <span class="flex-1 font-medium text-gray-700"
+                  th:text="${(m.homeTeam != null ? m.homeTeam.name : m.homeTeamPlaceholder) + ' – ' + (m.awayTeam != null ? m.awayTeam.name : m.awayTeamPlaceholder)}">Home – Away</span>
+            <span th:if="${m.homeScore != null}"
+                  class="font-mono font-bold text-gray-800"
+                  th:text="${m.homeScore + ':' + m.awayScore}">2:1</span>
+            <span th:unless="${m.homeScore != null}"
+                  class="text-gray-300">—</span>
+          </a>
+        </div>
+
       </div>
     </div>
 

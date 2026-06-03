@@ -1,5 +1,6 @@
 package com.worldcup.prediction.controller;
 
+import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.dto.GroupStandingDto;
 import com.worldcup.prediction.service.GroupService;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +21,11 @@ public class GroupController {
     public String groups(Model model) {
         Map<String, List<GroupStandingDto>> groups = groupService.getAllGroupStandings();
         List<String> qualifiedThirdGroups = groupService.getQualifiedThirdPlaceGroups();
+        Map<String, List<Match>> matchesByGroup = groupService.getMatchesByGroup();
 
         model.addAttribute("groups", groups);
         model.addAttribute("qualifiedThirdGroups", qualifiedThirdGroups);
+        model.addAttribute("matchesByGroup", matchesByGroup);
         model.addAttribute("pageTitle", "Groups");
         return "groups";
     }

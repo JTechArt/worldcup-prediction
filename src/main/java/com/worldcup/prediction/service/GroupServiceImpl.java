@@ -41,6 +41,19 @@ public class GroupServiceImpl implements GroupService {
         return List.of();
     }
 
+    @Override
+    public Map<String, List<Match>> getMatchesByGroup() {
+        List<com.worldcup.prediction.domain.Group> groups = groupRepository.findAllWithTeams();
+        List<Match> groupMatches = matchRepository.findByStageWithTeams(MatchStage.GROUP);
+        Map<String, List<Match>> result = new LinkedHashMap<>();
+        for (com.worldcup.prediction.domain.Group g : groups) {
+            result.put("Group " + g.getName(), groupMatches.stream()
+                    .filter(m -> m.getGroup() != null && m.getGroup().getId().equals(g.getId()))
+                    .toList());
+        }
+        return result;
+    }
+
     private List<GroupStandingDto> computeStandings(
             com.worldcup.prediction.domain.Group group, List<Match> matches) {
 
