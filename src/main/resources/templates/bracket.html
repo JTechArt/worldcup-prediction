@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::main-content})}">
+<head><title>Knockout Bracket</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+  <style>
+    .bracket-scroll { overflow-x: auto; padding-bottom: 16px; }
+    .bracket-grid   { display:flex; gap:32px; align-items:flex-start; min-width:max-content; padding:24px 16px; }
+    .round-col      { display:flex; flex-direction:column; gap:0; }
+    .round-header   {
+      font-family:'Bebas Neue',sans-serif; font-size:1.05rem; letter-spacing:0.08em;
+      text-align:center; padding:6px 16px;
+      background:linear-gradient(135deg,#006b2a,#00c853); color:white;
+      border-radius:8px 8px 0 0; position:sticky; top:0; z-index:1;
+      overflow:hidden;
+    }
+    .round-header::after {
+      content:''; position:absolute; top:0; left:-100%; width:60%; height:100%;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);
+      animation:shimmer 2.5s infinite;
+    }
+    @keyframes shimmer { to { left:200%; } }
+
+    .matches-col { display:flex; flex-direction:column; justify-content:space-around; flex:1; gap:10px; padding:10px 0; }
+
+    .match-card {
+      background:white; border-radius:12px; border:2px solid #e2f5ea;
+      padding:10px 14px; min-width:180px;
+      box-shadow:0 2px 8px rgba(0,107,42,0.08); transition:box-shadow .2s,transform .2s;
+    }
+    .match-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,107,42,0.15); }
+    .match-card.finished { border-color:#00c853; }
+
+    .team-row { display:flex; align-items:center; gap:8px; padding:4px 0; }
+    .team-row + .team-row { border-top:1px solid #f0fdf5; }
+
+    .flag-sm { width:26px; height:26px; border-radius:50%; object-fit:cover; border:1.5px solid #e2f5ea; flex-shrink:0; }
+    .team-name { flex:1; font-size:0.83rem; font-weight:600; color:#1a3a2a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .team-name.tbd { color:#94a3b8; font-style:italic; font-weight:400; }
+
+    .score { font-family:'Bebas Neue',sans-serif; font-size:1.15rem; color:#006b2a; min-width:18px; text-align:right; }
+    .score.winner { color:#00c853; }
+
+    .tbd-dots { display:flex; gap:3px; align-items:center; }
+    .tbd-dot { width:5px; height:5px; background:#94a3b8; border-radius:50%; animation:pulseDot 1.4s ease-in-out infinite; }
+    .tbd-dot:nth-child(2) { animation-delay:.2s; }
+    .tbd-dot:nth-child(3) { animation-delay:.4s; }
+    @keyframes pulseDot { 0%,80%,100%{transform:scale(.8);opacity:.5} 40%{transform:scale(1.2);opacity:1} }
+
+    .round-col.final .match-card { border-color:#FFD600; box-shadow:0 4px 20px rgba(255,214,0,0.25); }
+    .round-col.final .round-header { background:linear-gradient(135deg,#FFD600,#FF8F00); color:#1a1a1a; }
+    .round-col.third .round-header { background:linear-gradient(135deg,#90a4ae,#546e7a); }
+  </style>
+
+  <div class="max-w-full px-6 py-8">
+
+    <div class="mb-6 animate-fade-up">
+      <h1 class="font-display text-5xl text-green-dark tracking-wider mb-1">KNOCKOUT BRACKET</h1>
+      <p class="text-gray-500 text-sm font-medium">FIFA World Cup 2026 — Knockout Rounds</p>
+    </div>
+
+    <!-- Empty state -->
+    <div th:if="${bracketByStage.isEmpty()}"
+         class="text-center py-20 text-gray-400 animate-fade-up stagger-1">
+      <div class="text-6xl mb-4">🏆</div>
+      <p class="text-xl font-semibold">Knockout rounds not started yet</p>
+      <p class="text-sm mt-2">Check back after the Group Stage!</p>
+    </div>
+
+    <!-- Bracket -->
+    <div class="bracket-scroll animate-fade-up stagger-1" th:unless="${bracketByStage.isEmpty()}">
+      <div class="bracket-grid">
+
+        <div th:each="entry, iterStat : ${bracketByStage}"
+             th:with="roundName=${entry.key}"
+             th:classappend="${roundName == 'Final'} ? ' round-col final' : (${roundName == '3rd Place'} ? ' round-col third' : ' round-col')"
+             class="round-col">
+
+          <div class="round-header" th:text="${roundName}">Round</div>
+
+          <div class="matches-col">
+            <div th:each="match : ${entry.value}"
+                 th:classappend="${match.status?.name() == 'COMPLETED'} ? ' finished' : ''"
+                 class="match-card">
+
+              <!-- Home team -->
+              <div class="team-row">
+                <img th:if="${match.homeTeam != null}"
+                     th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
+                     th:alt="${match.homeTeam.name}"
+                     class="flag-sm" />
+                <div th:unless="${match.homeTeam != null}" class="flag-sm bg-gray-100"></div>
+                <span th:if="${match.homeTeam != null}" th:text="${match.homeTeam.name}" class="team-name"></span>
+                <span th:unless="${match.homeTeam != null}" class="team-name tbd">TBD</span>
+                <span th:if="${match.status?.name() == 'COMPLETED' and match.homeScore != null}"
+                      th:text="${match.homeScore}"
+                      th:classappend="${match.homeScore > match.awayScore} ? ' winner' : ''"
+                      class="score"></span>
+                <div th:unless="${match.status?.name() == 'COMPLETED'}" class="tbd-dots">
+                  <div class="tbd-dot"></div><div class="tbd-dot"></div><div class="tbd-dot"></div>
+                </div>
+              </div>
+
+              <!-- Away team -->
+              <div class="team-row">
+                <img th:if="${match.awayTeam != null}"
+                     th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
+                     th:alt="${match.awayTeam.name}"
+                     class="flag-sm" />
+                <div th:unless="${match.awayTeam != null}" class="flag-sm bg-gray-100"></div>
+                <span th:if="${match.awayTeam != null}" th:text="${match.awayTeam.name}" class="team-name"></span>
+                <span th:unless="${match.awayTeam != null}" class="team-name tbd">TBD</span>
+                <span th:if="${match.status?.name() == 'COMPLETED' and match.awayScore != null}"
+                      th:text="${match.awayScore}"
+                      th:classappend="${match.awayScore > match.homeScore} ? ' winner' : ''"
+                      class="score"></span>
+                <div th:unless="${match.status?.name() == 'COMPLETED'}" class="tbd-dots">
+                  <div class="tbd-dot"></div><div class="tbd-dot"></div><div class="tbd-dot"></div>
+                </div>
+              </div>
+
+              <!-- Kickoff date chip -->
+              <div class="mt-1.5 text-center">
+                <span th:if="${match.kickoffTime != null}"
+                      th:text="${#temporals.format(match.kickoffTime, 'MMM d')}"
+                      class="text-xs text-gray-400 font-medium"></span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="md:hidden text-center py-2 text-xs text-gray-400">← Scroll horizontally to see all rounds →</div>
+  </div>
+
+</th:block>
+</body>
+</html>

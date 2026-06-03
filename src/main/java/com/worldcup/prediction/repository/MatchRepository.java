@@ -97,4 +97,18 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     long countByStatus(MatchStatus status);
 
     List<Match> findByPredictionWindowOpen(boolean open);
+
+    @Query("""
+            SELECT m FROM Match m
+            WHERE m.homeTeam.fifaCode = :homeFifaCode
+              AND m.awayTeam.fifaCode = :awayFifaCode
+              AND m.kickoffTime >= :start
+              AND m.kickoffTime < :end
+            """)
+    Optional<Match> findByHomeTeamFifaCodeAndAwayTeamFifaCodeAndKickoffBetween(
+            @Param("homeFifaCode") String homeFifaCode,
+            @Param("awayFifaCode") String awayFifaCode,
+            @Param("start") java.time.LocalDateTime start,
+            @Param("end")   java.time.LocalDateTime end);
+
 }

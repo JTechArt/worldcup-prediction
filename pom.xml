@@ -64,6 +64,12 @@
             <artifactId>thymeleaf-layout-dialect</artifactId>
         </dependency>
 
+        <!-- JavaMailSender for email notifications (optional — log-only when SMTP not configured) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Flyway core -->
         <dependency>
             <groupId>org.flywaydb</groupId>
