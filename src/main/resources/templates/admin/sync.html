@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout}">
+<head><title>Data Sync</title></head>
+<body>
+<th:block layout:fragment="page-title">Data Sync</th:block>
+<th:block layout:fragment="content">
+
+  <div class="max-w-2xl space-y-4">
+    <p class="text-sm text-gray-500">Manually trigger API sync jobs. Each button respects the rate limiter (10 calls/min). Skipped jobs return instantly.</p>
+
+    <div th:each="job : ${ {'teams','matches','standings','lineups','scorers'} }"
+         class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center justify-between">
+      <div>
+        <p class="font-semibold text-gray-800 capitalize" th:text="${job}">teams</p>
+        <p class="text-xs text-gray-400 mt-0.5"
+           th:text="${job == 'teams'} ? 'Upsert 48 teams + full squads' :
+                    (${job == 'matches'} ? 'Link match external IDs from API' :
+                    (${job == 'standings'} ? 'Upsert group standings from API' :
+                    (${job == 'lineups'} ? 'Fetch lineups + goals for completed matches' :
+                    'Update top scorer goal counts')))">description</p>
+      </div>
+      <form th:action="@{'/admin/sync/' + ${job}}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit"
+                class="px-4 py-2 text-sm font-semibold bg-admin-dark text-white rounded-lg hover:bg-admin-mid transition-colors duration-150">
+          Run
+        </button>
+      </form>
+    </div>
+  </div>
+
+</th:block>
+</body>
+</html>
