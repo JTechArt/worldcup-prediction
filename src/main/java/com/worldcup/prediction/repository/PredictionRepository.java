@@ -16,6 +16,12 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
 
     Optional<Prediction> findByUserIdAndMatchId(Long userId, Long matchId);
 
+    @Query("SELECT p FROM Prediction p WHERE p.user.id = :userId AND p.match.id IN :matchIds")
+    List<Prediction> findByUserIdAndMatchIdIn(@Param("userId") Long userId, @Param("matchIds") java.util.Collection<Long> matchIds);
+
+    @Query("SELECT COUNT(p) FROM Prediction p WHERE p.user.id = :userId AND p.match.id IN :matchIds")
+    long countByUserIdAndMatchIdIn(@Param("userId") Long userId, @Param("matchIds") java.util.Collection<Long> matchIds);
+
     List<Prediction> findByUserId(Long userId);
 
     List<Prediction> findByUser(com.worldcup.prediction.domain.User user);

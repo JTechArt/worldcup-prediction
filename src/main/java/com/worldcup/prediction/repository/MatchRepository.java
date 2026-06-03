@@ -36,6 +36,19 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             """)
     List<Match> findAllWithTeams();
 
+    @Query("SELECT m.roundLabel FROM Match m GROUP BY m.roundLabel ORDER BY MIN(m.kickoffTime) ASC")
+    List<String> findDistinctRoundLabels();
+
+    @Query("""
+            SELECT m FROM Match m
+            LEFT JOIN FETCH m.homeTeam
+            LEFT JOIN FETCH m.awayTeam
+            LEFT JOIN FETCH m.group
+            WHERE m.roundLabel = :roundLabel
+            ORDER BY m.kickoffTime ASC
+            """)
+    List<Match> findByRoundLabelWithTeams(@Param("roundLabel") String roundLabel);
+
     @Query("""
             SELECT m FROM Match m
             LEFT JOIN FETCH m.homeTeam

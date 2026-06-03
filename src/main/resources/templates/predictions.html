@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::main-content})}">
+<head><title>My Predictions</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+  <!-- predictions-specific CSS -->
+  <link rel="stylesheet" th:href="@{/css/predictions.css}"/>
+  <!-- Alpine x-collapse plugin for accordion -->
+  <script src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js" defer></script>
+
+  <div style="max-width:900px;margin:0 auto;padding:32px 24px 80px;position:relative;z-index:1;">
+
+    <!-- Page title -->
+    <div style="margin-bottom:24px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:4px;color:var(--green-d,#006b2a);">
+        My Predictions
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#667c70;margin-top:2px;">
+        All-or-nothing per round · Predictions lock 1 hour before kickoff
+      </div>
+    </div>
+
+    <!-- Flash messages -->
+    <div th:if="${successMessage}" class="alert alert-success">
+      <span>✅</span><span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-error">
+      <span>⚠️</span><span th:text="${errorMessage}"></span>
+    </div>
+
+    <!-- Tournament Winner Banner -->
+    <div class="winner-banner">
+      <div class="winner-banner-icon">🏆</div>
+      <div class="winner-banner-body">
+        <div class="winner-banner-title">Tournament Winner Prediction</div>
+
+        <!-- Already submitted -->
+        <div th:if="${winnerSubmitted}" class="winner-picked" style="margin-top:8px;">
+          <div class="winner-flag">
+            <img th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${winnerPick.flagCode} + '.svg'}"
+                 th:alt="${winnerPick.name}" />
+          </div>
+          <div>
+            <div class="winner-banner-sub">Your pick</div>
+            <div class="winner-team-name" th:text="${winnerPick.name}">Brazil</div>
+          </div>
+          <div class="winner-pts-badge">+10 pts if correct</div>
+        </div>
+
+        <!-- Not yet submitted -->
+        <div th:unless="${winnerSubmitted}" style="margin-top:8px;">
+          <div class="winner-banner-sub">Visible to everyone immediately. Pick wisely!</div>
+          <form th:action="@{/predictions/winner}" method="post" class="winner-banner-form" style="margin-top:12px;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <select name="teamId" class="winner-select" required>
+              <option value="">Select a team…</option>
+              <option th:each="team : ${allTeams}" th:value="${team.id}" th:text="${team.name}">Team</option>
+            </select>
+            <button type="submit" class="winner-btn">🏆 Submit Pick</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Round Navigation Tabs -->
+    <div class="round-tabs" id="round-tabs">
+
+      <!-- OPEN and PAST rounds (clickable with HTMX) -->
+      <div th:each="round : ${roundSummaries}"
+           th:if="${round.status != 'FUTURE'}"
+           class="round-tab"
+           th:classappend="${round.roundLabel == activeRoundLabel} ? 'active' : ''"
+           th:attr="hx-get=@{/predictions/round(label=${round.roundLabel})}"
+           hx-target="#round-content-wrapper"
+           hx-swap="innerHTML"
+           style="cursor:pointer;">
+        <span class="tab-status"
+              th:text="${round.status == 'PAST'} ? '✅' : '⚡'"></span>
+        <span th:text="${round.displayLabel}">MD1</span>
+        <span th:if="${round.status == 'PAST'}"
+              style="background:rgba(0,200,83,.15);border-radius:6px;padding:1px 6px;font-size:10px;color:#006b2a;"
+              th:text="|${round.pointsEarned}pts|"></span>
+        <span th:if="${round.status == 'OPEN' and round.predictedCount > 0}"
+              style="background:rgba(255,214,0,.2);border-radius:6px;padding:1px 6px;font-size:10px;color:#7a5000;"
+              th:text="|${round.predictedCount}/${round.totalMatches}|"></span>
+      </div>
+
+      <!-- FUTURE rounds (greyed out, no HTMX) -->
+      <div th:each="round : ${roundSummaries}"
+           th:if="${round.status == 'FUTURE'}"
+           class="round-tab future"
+           title="Not yet open for predictions">
+        <span class="tab-status">○</span>
+        <span th:text="${round.displayLabel}">MD2</span>
+      </div>
+
+    </div>
+
+    <!-- Round Content (HTMX swap target) -->
+    <div id="round-content-wrapper">
+      <div th:replace="~{fragments/predictions-round-content :: roundContent}"></div>
+    </div>
+
+    <!-- Past Rounds Accordion -->
+    <div class="past-rounds-section" th:if="${not #lists.isEmpty(pastRounds)}">
+      <div class="past-rounds-title">Past Rounds</div>
+
+      <div th:each="round : ${pastRounds}" class="past-round" x-data="{ open: false }">
+
+        <div class="past-round-header" @click="open = !open">
+          <div class="prh-left">
+            <div>
+              <div class="prh-label" th:text="${round.displayLabel}">Matchday 1</div>
+              <div class="prh-count"
+                   th:text="|${round.matches.size()} match${round.matches.size() == 1 ? '' : 'es'}|">6 matches</div>
+            </div>
+          </div>
+          <div class="prh-right">
+            <span class="prh-pts" th:text="|${round.totalPoints} pts|">9 pts</span>
+            <span class="prh-chevron" :class="{ open: open }">▼</span>
+          </div>
+        </div>
+
+        <div class="past-round-body" x-show="open" x-collapse>
+          <div th:each="match : ${round.matches}" class="past-match-row">
+
+            <div class="pm-teams">
+              <div class="pm-flag">
+                <img th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${match.homeTeamCode} + '.svg'}"
+                     th:alt="${match.homeTeamName}" />
+              </div>
+              <span class="pm-name" th:text="${match.homeTeamName}">France</span>
+              <span class="pm-vs">vs</span>
+              <span class="pm-name" th:text="${match.awayTeamName}">Germany</span>
+              <div class="pm-flag">
+                <img th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${match.awayTeamCode} + '.svg'}"
+                     th:alt="${match.awayTeamName}" />
+              </div>
+            </div>
+
+            <div class="pm-scores">
+              <span class="pm-actual" th:text="|${match.actualHome}–${match.actualAway}|">2–1</span>
+              <span class="pm-sep">actual · pred</span>
+              <span class="pm-predicted"
+                    th:classappend="${match.outcome == 'EXACT'} ? 'exact' : (${match.outcome == 'DRAW'} ? 'draw' : (${match.outcome == 'WINNER'} ? 'winner' : (${match.outcome == 'WRONG'} ? 'wrong' : 'none')))"
+                    th:text="${match.predictedHome != null} ? |${match.predictedHome}–${match.predictedAway}| : '—'">2–1</span>
+            </div>
+
+            <div class="pm-pts"
+                 th:classappend="${match.outcome == 'EXACT'} ? 'pts-exact' : (${match.outcome == 'DRAW'} ? 'pts-draw' : (${match.outcome == 'WINNER'} ? 'pts-winner' : (${match.outcome == 'WRONG'} ? 'pts-wrong' : 'pts-none')))"
+                 th:text="${match.outcome == 'NOT_PREDICTED'} ? '—' : |+${match.pointsEarned}|">+3</div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(pastRounds)}"
+         style="margin-top:32px;text-align:center;padding:32px;color:#667c70;font-size:13px;font-weight:600;">
+      Past round results will appear here after matches are completed.
+    </div>
+
+  </div>
+
+</th:block>
+</body>
+</html>

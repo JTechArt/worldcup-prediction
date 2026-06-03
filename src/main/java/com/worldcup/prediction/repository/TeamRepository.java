@@ -19,4 +19,6 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     List<Team> findByConfederationIgnoreCase(String confederation);
 
     boolean existsByFifaCodeIgnoreCase(String fifaCode);
+
+    List<Team> findAllByOrderByNameAsc();
 }
