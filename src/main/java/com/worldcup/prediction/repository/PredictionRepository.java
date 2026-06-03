@@ -20,6 +20,18 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
 
     List<Prediction> findByUser(com.worldcup.prediction.domain.User user);
 
+    /**
+     * Returns [userId, stage, sumPoints] aggregated for all users.
+     * Used by LeaderboardController to build the per-stage phase breakdown map.
+     */
+    @Query("""
+            SELECT p.user.id, p.match.stage, SUM(p.pointsAwarded)
+            FROM Prediction p
+            WHERE p.match.stage IS NOT NULL
+            GROUP BY p.user.id, p.match.stage
+            """)
+    List<Object[]> sumPointsByUserAndStage();
+
     List<Prediction> findByMatchId(Long matchId);
 
     boolean existsByUserIdAndMatchId(Long userId, Long matchId);
