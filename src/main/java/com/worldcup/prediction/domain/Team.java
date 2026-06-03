@@ -37,6 +37,9 @@ public class Team {
     @Column(name = "confederation", length = 20)
     private String confederation;
 
+    @Column(name = "external_id")
+    private Long externalId;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

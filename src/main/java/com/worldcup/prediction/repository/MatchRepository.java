@@ -98,6 +98,12 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 
     long countByStatus(MatchStatus status);
 
+    List<Match> findByStatusAndLineupFetchedFalse(MatchStatus status);
+
+    long countByStatusAndKickoffTimeBefore(MatchStatus status, LocalDateTime time);
+
+    long countByStatusAndUpdatedAtAfter(MatchStatus status, LocalDateTime time);
+
     List<Match> findByPredictionWindowOpen(boolean open);
 
     @Query("""

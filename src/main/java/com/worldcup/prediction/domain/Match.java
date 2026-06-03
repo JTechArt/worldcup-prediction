@@ -84,6 +84,10 @@ public class Match {
     @Column(name = "away_score_90")
     private Integer awayScore90;
 
+    @Column(name = "lineup_fetched", nullable = false)
+    @Builder.Default
+    private boolean lineupFetched = false;
+
     @Column(name = "prediction_window_open", nullable = false)
     @Builder.Default
     private boolean predictionWindowOpen = false;

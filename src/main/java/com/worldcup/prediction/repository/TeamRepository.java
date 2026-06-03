@@ -21,4 +21,6 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     boolean existsByFifaCodeIgnoreCase(String fifaCode);
 
     List<Team> findAllByOrderByNameAsc();
+
+    Optional<Team> findByExternalId(Long externalId);
 }
