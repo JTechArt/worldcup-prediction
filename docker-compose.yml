@@ -1,0 +1,36 @@
+# SQLite mode — zero external dependencies, DB persisted in a named volume.
+# Usage: docker compose up --build
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: worldcup-app
+    ports:
+      - "8080:8080"
+    volumes:
+      - worldcup-data:/data
+    environment:
+      APP_PROFILE: sqlite
+      SQLITE_PATH: /data/worldcup.db
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-placeholder}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-placeholder}
+      LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID:-placeholder}
+      LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET:-placeholder}
+      FOOTBALL_API_KEY: ${FOOTBALL_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+volumes:
+  worldcup-data:
+    driver: local
