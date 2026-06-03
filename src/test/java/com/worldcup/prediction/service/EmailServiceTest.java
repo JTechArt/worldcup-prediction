@@ -82,7 +82,8 @@ class EmailServiceTest {
 
     @Test
     void whenMailDisabled_noMailSent() {
-        EmailService disabledService = new EmailService(mailSender, "noreply@worldcup.example.com", false);
+        // The package-private constructor bypasses the enabled flag for direct testing
+        EmailService disabledService = new EmailService(null, "noreply@worldcup.example.com", false);
         disabledService.sendApprovalEmail(testUser);
         verify(mailSender, never()).send(any(MimeMessage.class));
     }

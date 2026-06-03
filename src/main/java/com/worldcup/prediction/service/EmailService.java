@@ -29,15 +29,28 @@ public class EmailService {
     private final String fromAddress;
     private final boolean enabled;
 
-    /** Spring injection — degrades gracefully when no SMTP host is configured. */
+    /**
+     * Spring injection.
+     * Set MAIL_ENABLED=true in .env (and configure SMTP_* vars) to send real emails.
+     * When disabled, all methods log intent only — the app starts without SMTP.
+     */
     @org.springframework.beans.factory.annotation.Autowired
-    public EmailService(Optional<JavaMailSender> mailSenderOpt,
+    public EmailService(@Value("${app.mail.enabled:false}") boolean mailEnabled,
+                        Optional<JavaMailSender> mailSenderOpt,
                         @Value("${app.mail.from:noreply@worldcup.example.com}") String fromAddress) {
-        this.mailSender  = mailSenderOpt.orElse(null);
         this.fromAddress = fromAddress;
-        this.enabled     = (this.mailSender != null);
-        if (!this.enabled) {
-            log.info("EmailService: no SMTP host configured — running in log-only mode");
+        if (!mailEnabled) {
+            this.mailSender = null;
+            this.enabled    = false;
+            log.info("EmailService: MAIL_ENABLED=false — running in log-only mode");
+        } else if (mailSenderOpt.isEmpty()) {
+            this.mailSender = null;
+            this.enabled    = false;
+            log.warn("EmailService: MAIL_ENABLED=true but no JavaMailSender configured (check SPRING_MAIL_HOST)");
+        } else {
+            this.mailSender = mailSenderOpt.get();
+            this.enabled    = true;
+            log.info("EmailService: mail sending enabled via {}", fromAddress);
         }
     }
 

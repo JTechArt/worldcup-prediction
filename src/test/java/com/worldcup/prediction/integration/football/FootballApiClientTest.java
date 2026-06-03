@@ -22,7 +22,7 @@ class FootballApiClientTest {
     void setUp() {
         RestTemplate restTemplate = new RestTemplate();
         mockServer = MockRestServiceServer.createServer(restTemplate);
-        client = new FootballApiClient(restTemplate, "test-api-key");
+        client = new FootballApiClient(restTemplate, true, "test-api-key");
     }
 
     @Test
@@ -82,9 +82,19 @@ class FootballApiClientTest {
     @Test
     void fetchMatches_onEmptyApiKey_returnsNull() {
         RestTemplate restTemplate2 = new RestTemplate();
-        FootballApiClient clientNoKey = new FootballApiClient(restTemplate2, "");
+        FootballApiClient clientNoKey = new FootballApiClient(restTemplate2, true, "");
 
         FootballApiResponseDto response = clientNoKey.fetchMatches();
+
+        assertThat(response).isNull();
+    }
+
+    @Test
+    void fetchMatches_whenDisabled_returnsNull() {
+        RestTemplate restTemplate2 = new RestTemplate();
+        FootballApiClient clientDisabled = new FootballApiClient(restTemplate2, false, "test-api-key");
+
+        FootballApiResponseDto response = clientDisabled.fetchMatches();
 
         assertThat(response).isNull();
     }

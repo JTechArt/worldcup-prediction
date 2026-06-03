@@ -1,0 +1,28 @@
+{
+  "properties": [
+    {
+      "name": "app.mail.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Set to true (with SPRING_MAIL_HOST configured) to send real emails. When false, all email operations log intent only."
+    },
+    {
+      "name": "app.mail.from",
+      "type": "java.lang.String",
+      "defaultValue": "noreply@worldcup.example.com",
+      "description": "Sender address used in outbound emails."
+    },
+    {
+      "name": "app.football.api.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Set to true (with football.api.key configured) to enable live match result sync from football-data.org."
+    },
+    {
+      "name": "football.api.key",
+      "type": "java.lang.String",
+      "defaultValue": "",
+      "description": "API key for football-data.org. Required when app.football.api.enabled=true."
+    }
+  ]
+}

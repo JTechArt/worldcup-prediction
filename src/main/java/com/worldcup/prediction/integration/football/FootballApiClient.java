@@ -20,17 +20,28 @@ public class FootballApiClient {
     private final RestTemplate restTemplate;
     private final String apiKey;
 
+    private final boolean enabled;
+
     public FootballApiClient(RestTemplate restTemplate,
+                             @Value("${app.football.api.enabled:false}") boolean enabled,
                              @Value("${football.api.key:}") String apiKey) {
         this.restTemplate = restTemplate;
+        this.enabled = enabled;
         this.apiKey = apiKey;
+        if (!enabled) {
+            log.info("FootballApiClient: FOOTBALL_API_ENABLED=false — live sync disabled");
+        }
     }
 
     /**
      * Fetches all WC matches from football-data.org.
-     * Returns null if the API key is not configured or the request fails.
+     * Returns null if the integration is disabled, the API key is missing, or the request fails.
      */
     public FootballApiResponseDto fetchMatches() {
+        if (!enabled) {
+            log.debug("Football API integration disabled — skipping fetch");
+            return null;
+        }
         if (apiKey == null || apiKey.isBlank()) {
             log.debug("football.api.key not configured — skipping API fetch");
             return null;
