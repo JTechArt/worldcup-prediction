@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${title} + ' · World Cup 2026'">World Cup 2026</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'wc-green':      '#00c853',
+                        'wc-dark-green': '#006b2a',
+                        'wc-orange':     '#FF5722',
+                        'wc-gold':       '#FFD600',
+                        'wc-bg':         '#f0fdf5',
+                    },
+                    fontFamily: {
+                        'display': ['Bebas Neue', 'sans-serif'],
+                        'body':    ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}" />
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}" />
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0fdf5; }
+        h1, h2, h3, .font-display { font-family: 'Bebas Neue', sans-serif; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-100%); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shimmer {
+            0%   { background-position: -200% center; }
+            100% { background-position:  200% center; }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0,200,83,0.4); }
+            50%       { box-shadow: 0 0 0 12px rgba(0,200,83,0); }
+        }
+
+        .animate-fade-up    { animation: fadeUp 0.5s ease forwards; }
+        .animate-slide-down { animation: slideDown 0.4s ease forwards; }
+        .animate-pulse-glow { animation: pulse-glow 2s infinite; }
+
+        .stagger-1 { animation-delay: 0.1s; opacity: 0; }
+        .stagger-2 { animation-delay: 0.2s; opacity: 0; }
+        .stagger-3 { animation-delay: 0.3s; opacity: 0; }
+        .stagger-4 { animation-delay: 0.4s; opacity: 0; }
+
+        .htmx-indicator { opacity: 0; transition: opacity 0.2s; }
+        .htmx-request .htmx-indicator { opacity: 1; }
+    </style>
+</head>
+
+<nav th:fragment="navbar" class="bg-wc-dark-green text-white px-6 py-3 flex items-center justify-between shadow-lg animate-slide-down">
+    <a href="/" class="font-display text-2xl tracking-wider text-wc-gold hover:text-yellow-300 transition-colors">
+        ⚽ WC2026
+    </a>
+    <div class="flex items-center gap-6 text-sm font-medium">
+        <a href="/leaderboard" class="hover:text-wc-green transition-colors">Leaderboard</a>
+        <a href="/fixtures"    class="hover:text-wc-green transition-colors">Fixtures</a>
+        <a href="/groups"      class="hover:text-wc-green transition-colors">Groups</a>
+        <a href="/bracket"     class="hover:text-wc-green transition-colors">Bracket</a>
+
+        <span sec:authorize="isAuthenticated()">
+            <a href="/predictions" class="hover:text-wc-green transition-colors">My Predictions</a>
+        </span>
+        <span sec:authorize="hasRole('ADMIN')">
+            <a href="/admin" class="text-wc-gold hover:text-yellow-300 transition-colors">Admin</a>
+        </span>
+        <span sec:authorize="isAuthenticated()">
+            <form th:action="@{/logout}" method="post" class="inline">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit"
+                        class="bg-wc-orange hover:bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-semibold transition-colors">
+                    Sign Out
+                </button>
+            </form>
+        </span>
+        <span sec:authorize="isAnonymous()">
+            <a href="/login"
+               class="bg-wc-green hover:bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold transition-colors">
+                Sign In
+            </a>
+        </span>
+    </div>
+</nav>
+
+<footer th:fragment="footer" class="bg-wc-dark-green text-green-200 text-center text-xs py-4 mt-16">
+    <p>FIFA World Cup 2026 Prediction Game &copy; 2026 &middot; Internal Use Only</p>
+</footer>
+</html>

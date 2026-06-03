@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head th:replace="~{fragments/layout :: head('Registration Pending')}"></head>
+<body class="min-h-screen bg-wc-bg flex flex-col">
+
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <main class="flex-1 flex items-center justify-center px-6 py-16">
+        <div class="max-w-lg w-full text-center">
+
+            <div class="stagger-1 animate-fade-up">
+                <div class="w-24 h-24 bg-wc-gold rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg animate-pulse-glow">
+                    <svg class="w-12 h-12 text-wc-dark-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="stagger-2 animate-fade-up">
+                <h1 class="font-display text-5xl text-wc-dark-green tracking-wide mb-4">
+                    Registration Received!
+                </h1>
+                <p class="text-gray-600 text-lg mb-2" th:if="${firstName}">
+                    Hi <strong th:text="${firstName}">there</strong>!
+                </p>
+                <p class="text-gray-600 text-base mb-8 leading-relaxed">
+                    Your registration request has been received.<br/>
+                    You'll get an email once an administrator approves your account.
+                </p>
+            </div>
+
+            <div class="stagger-3 animate-fade-up bg-white rounded-2xl shadow-md p-6 mb-8 text-left border-l-4 border-wc-green">
+                <h2 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-wc-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    What happens next?
+                </h2>
+                <ol class="text-gray-600 text-sm space-y-2 list-decimal list-inside">
+                    <li>An admin will review your registration</li>
+                    <li>You'll receive an email when approved</li>
+                    <li>Sign in again to access your predictions</li>
+                </ol>
+                <div class="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-400 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    <span th:if="${email}">Approval will be sent to <strong th:text="${email}">your email</strong>.</span>
+                    <span th:unless="${email}">Approval notification will be sent to your registered email.</span>
+                </div>
+            </div>
+
+            <div class="stagger-4 animate-fade-up flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="/leaderboard"
+                   class="inline-flex items-center justify-center gap-2 bg-wc-green hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200">
+                    View Leaderboard
+                </a>
+                <form th:action="@{/logout}" method="post" class="inline">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit"
+                            class="inline-flex items-center justify-center gap-2 border-2 border-gray-300 hover:border-gray-400 text-gray-600 font-semibold py-3 px-6 rounded-xl transition-all duration-200 w-full sm:w-auto">
+                        Sign Out
+                    </button>
+                </form>
+            </div>
+
+            <p class="mt-8 text-xs text-gray-400 stagger-4 animate-fade-up">
+                ⚽ FIFA World Cup 2026 kicks off June 11 — don't miss the predictions!
+            </p>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>
