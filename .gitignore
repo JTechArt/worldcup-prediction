@@ -37,3 +37,4 @@ logs/
 
 # Docker volumes
 postgres-data/
+:memory:*
