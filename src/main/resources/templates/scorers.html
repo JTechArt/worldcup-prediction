@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::main-content})}">
+<head><title>Top Scorers</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+<div class="max-w-2xl mx-auto px-4 py-10">
+
+  <div class="mb-8">
+    <h1 class="font-display text-5xl text-green-dark tracking-wider mb-1">TOP SCORERS</h1>
+    <p class="text-gray-500 text-sm">Updated daily during the tournament</p>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div th:if="${#lists.isEmpty(scorers)}" class="p-8 text-center text-sm text-gray-400">
+      No goals scored yet.
+    </div>
+    <table th:unless="${#lists.isEmpty(scorers)}" class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-100 text-xs text-gray-400 uppercase tracking-wide">
+          <th class="px-4 py-3 text-left w-10">#</th>
+          <th class="px-4 py-3 text-left">Player</th>
+          <th class="px-4 py-3 text-left">Team</th>
+          <th class="px-4 py-3 text-right">Goals</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        <tr th:each="p, pStat : ${scorers}" class="hover:bg-gray-50 transition-colors">
+          <td class="px-4 py-3 font-mono text-gray-400 text-xs" th:text="${pStat.count}">1</td>
+          <td class="px-4 py-3 font-medium text-gray-800" th:text="${p.name}">Player Name</td>
+          <td class="px-4 py-3 text-gray-500">
+            <div class="flex items-center gap-2">
+              <img th:if="${p.team != null}"
+                   th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${p.team.flagCode} + '.svg'}"
+                   class="w-5 h-5 rounded-full flex-shrink-0" th:alt="${p.team.name}"/>
+              <span th:text="${p.team?.name}">Country</span>
+            </div>
+          </td>
+          <td class="px-4 py-3 text-right font-bold text-green-700" th:text="${p.tournamentGoals}">5</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</th:block>
+</body>
+</html>
