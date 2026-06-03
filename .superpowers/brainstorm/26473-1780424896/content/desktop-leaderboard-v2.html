@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WC Predict 2026 — Leaderboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Bebas+Neue&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #00c853;
+    --green-dark: #007a32;
+    --green-mid: #00a845;
+    --orange: #FF5722;
+    --yellow: #FFD600;
+    --bg: #071a0d;
+    --card: rgba(255,255,255,0.06);
+    --card-solid: #0d2617;
+    --border: rgba(0,200,83,0.15);
+    --text: #ffffff;
+    --muted: rgba(255,255,255,0.5);
+    --gold: #FFD600;
+    --silver: #b0bac8;
+    --bronze: #cd7c3a;
+  }
+
+  html, body { min-height: 100vh; overflow-x: hidden; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  /* ============================================================
+     BACKGROUND — player photos + pitch atmosphere
+  ============================================================ */
+  .bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* Deep green pitch gradient base */
+  .bg-base {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,160,60,0.25) 0%, transparent 70%),
+      linear-gradient(180deg, #040d07 0%, #071a0d 40%, #040d07 100%);
+  }
+
+  /* Subtle pitch stripe texture */
+  .bg-stripes {
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      180deg,
+      rgba(0,180,60,0.04) 0px, rgba(0,180,60,0.04) 60px,
+      transparent 60px, transparent 120px
+    );
+  }
+
+  /* Player silhouette panels — left and right */
+  .player-panel {
+    position: absolute;
+    bottom: 0;
+    width: 420px;
+    height: 100%;
+    overflow: hidden;
+  }
+  .player-panel.left  { left: 0; }
+  .player-panel.right { right: 0; }
+
+  .player-img {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 85%;
+    background-size: cover;
+    background-position: top center;
+    background-repeat: no-repeat;
+    filter: grayscale(40%) brightness(0.6) saturate(1.2);
+    mask-image: linear-gradient(to right, transparent 0%, black 25%, black 75%, transparent 100%),
+                linear-gradient(to top, black 0%, black 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 25%, black 75%, transparent 100%);
+    mask-composite: intersect;
+    -webkit-mask-composite: destination-in;
+    animation: playerFloat 7s ease-in-out infinite;
+  }
+  .player-panel.left .player-img {
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Cristiano_Ronaldo_2018.jpg/800px-Cristiano_Ronaldo_2018.jpg');
+    -webkit-mask-image: linear-gradient(to right, black 0%, black 60%, transparent 100%);
+    mask-image: linear-gradient(to top, black 0%, black 80%, transparent 100%);
+    animation-delay: 0s;
+  }
+  .player-panel.right .player-img {
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg/800px-Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg');
+    background-position: top center;
+    -webkit-mask-image: linear-gradient(to left, black 0%, black 60%, transparent 100%);
+    mask-image: linear-gradient(to top, black 0%, black 80%, transparent 100%);
+    animation-delay: -3.5s;
+  }
+  @keyframes playerFloat {
+    0%, 100% { transform: scale(1.0) translateY(0px); }
+    50%       { transform: scale(1.03) translateY(-8px); }
+  }
+
+  /* Name overlays on player panels */
+  .player-name-tag {
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    letter-spacing: 4px;
+    opacity: 0.07;
+    white-space: nowrap;
+    pointer-events: none;
+    color: var(--green);
+  }
+  .player-panel.left  .player-name-tag { bottom: 60px; left: 10px; transform: rotate(-90deg) translateX(-100%); transform-origin: left bottom; }
+  .player-panel.right .player-name-tag { bottom: 60px; right: 10px; transform: rotate(90deg) translateX(100%); transform-origin: right bottom; }
+
+  /* Green glow orbs */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    animation: orbPulse 6s ease-in-out infinite alternate;
+  }
+  .orb-1 { width: 600px; height: 400px; background: rgba(0,200,83,0.12); top: -100px; left: 50%; transform: translateX(-50%); }
+  .orb-2 { width: 300px; height: 300px; background: rgba(255,87,34,0.1); bottom: 20%; right: 5%; animation-delay: -3s; }
+  @keyframes orbPulse {
+    from { opacity: 0.7; transform: translateX(-50%) scale(1); }
+    to   { opacity: 1;   transform: translateX(-50%) scale(1.1); }
+  }
+
+  /* ============================================================
+     NAVBAR
+  ============================================================ */
+  .navbar {
+    position: sticky; top: 0; z-index: 100;
+    height: 66px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px;
+    background: rgba(4, 13, 7, 0.85);
+    backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border);
+    animation: slideDown 0.5s ease both;
+  }
+  @keyframes slideDown { from { transform: translateY(-66px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: 3px;
+    color: var(--green);
+  }
+  .logo em { color: var(--orange); font-style: normal; }
+  .logo-ball {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--green), var(--green-dark));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    animation: spin 12s linear infinite;
+    box-shadow: 0 0 16px rgba(0,200,83,0.4);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .nav-links { display: flex; gap: 2px; }
+  .nav-link {
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    color: var(--muted); cursor: pointer; transition: all 0.2s;
+    text-decoration: none;
+  }
+  .nav-link:hover { background: rgba(0,200,83,0.1); color: var(--green); }
+  .nav-link.active { background: rgba(0,200,83,0.15); color: var(--green); border: 1px solid var(--border); }
+
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .predict-btn {
+    background: linear-gradient(135deg, var(--orange), #ff7043);
+    color: white; border: none; border-radius: 10px;
+    padding: 10px 22px; font-size: 13px; font-weight: 800;
+    cursor: pointer; letter-spacing: 0.5px;
+    box-shadow: 0 4px 16px rgba(255,87,34,0.4);
+    animation: glow 2.5s ease-in-out infinite;
+  }
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 4px 16px rgba(255,87,34,0.4); }
+    50%       { box-shadow: 0 4px 28px rgba(255,87,34,0.7); }
+  }
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(0,200,83,0.1); border: 1px solid var(--border);
+    border-radius: 99px; padding: 4px 14px 4px 4px;
+    font-size: 13px; font-weight: 600; color: var(--green);
+  }
+  .chip-av {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--green-mid), var(--green-dark));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; color: white;
+  }
+
+  /* ============================================================
+     MAIN CONTENT
+  ============================================================ */
+  .main {
+    position: relative; z-index: 1;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* HERO */
+  .hero { margin-bottom: 36px; animation: fadeUp 0.6s ease 0.2s both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--green);
+    margin-bottom: 8px; opacity: 0.9;
+  }
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px; line-height: 1; letter-spacing: 4px;
+    color: white; margin-bottom: 8px;
+  }
+  .hero-title span { color: var(--green); }
+  .hero-sub { color: var(--muted); font-size: 14px; font-weight: 500; }
+  .hero-sub strong { color: rgba(255,255,255,0.85); }
+
+  .kpi-row { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 20px;
+    backdrop-filter: blur(10px);
+    animation: fadeUp 0.5s ease both;
+  }
+  .kpi:nth-child(1) { animation-delay: 0.3s; }
+  .kpi:nth-child(2) { animation-delay: 0.4s; }
+  .kpi:nth-child(3) { animation-delay: 0.5s; }
+  .kpi:nth-child(4) { animation-delay: 0.6s; }
+  .kpi-val { font-size: 28px; font-weight: 900; line-height: 1; color: var(--green); }
+  .kpi-lbl { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  /* NEXT MATCH BANNER */
+  .next-match {
+    background: linear-gradient(135deg, rgba(0,168,69,0.2), rgba(0,200,83,0.08));
+    border: 1px solid rgba(0,200,83,0.3);
+    border-radius: 16px;
+    padding: 18px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px;
+    backdrop-filter: blur(10px);
+    animation: fadeUp 0.6s ease 0.35s both;
+  }
+  .nm-left { display: flex; align-items: center; gap: 16px; }
+  .nm-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--orange); animation: blink 1s ease infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .nm-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--orange); font-weight: 700; margin-bottom: 3px; }
+  .nm-match { font-size: 18px; font-weight: 800; color: white; }
+  .nm-time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .nm-btn {
+    background: var(--orange); color: white; border: none;
+    border-radius: 10px; padding: 12px 24px;
+    font-size: 13px; font-weight: 800; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(255,87,34,0.35);
+    animation: glow 2.5s ease-in-out infinite;
+    white-space: nowrap;
+  }
+
+  /* SECTION TITLE */
+  .sec-title {
+    font-size: 11px; font-weight: 800; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--green);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* LEADERBOARD */
+  .lb {
+    background: rgba(10,28,16,0.8);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    animation: fadeUp 0.6s ease 0.4s both;
+  }
+
+  .lb-head {
+    display: grid;
+    grid-template-columns: 64px 1fr 110px 90px 80px 80px;
+    padding: 14px 24px;
+    background: rgba(0,200,83,0.08);
+    border-bottom: 1px solid var(--border);
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--muted);
+    align-items: center; gap: 12px;
+  }
+
+  .lb-row {
+    display: grid;
+    grid-template-columns: 64px 1fr 110px 90px 80px 80px;
+    padding: 14px 24px;
+    align-items: center; gap: 12px;
+    border-bottom: 1px solid rgba(0,200,83,0.05);
+    transition: background 0.25s;
+    animation: rowIn 0.45s ease both;
+    cursor: default;
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-row:hover { background: rgba(0,200,83,0.06); }
+  .lb-row.is-you { background: rgba(0,200,83,0.08); border-left: 3px solid var(--green); }
+  .lb-row.r1 { background: rgba(255,214,0,0.05); }
+  .lb-row.r2 { background: rgba(176,186,200,0.04); }
+  .lb-row.r3 { background: rgba(205,124,58,0.05); }
+
+  .lb-row:nth-child(1) { animation-delay: 0.05s; }
+  .lb-row:nth-child(2) { animation-delay: 0.10s; }
+  .lb-row:nth-child(3) { animation-delay: 0.15s; }
+  .lb-row:nth-child(4) { animation-delay: 0.20s; }
+  .lb-row:nth-child(5) { animation-delay: 0.25s; }
+  .lb-row:nth-child(6) { animation-delay: 0.30s; }
+  .lb-row:nth-child(7) { animation-delay: 0.35s; }
+  .lb-row:nth-child(8) { animation-delay: 0.40s; }
+  @keyframes rowIn { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* Rank */
+  .rank-wrap { display: flex; align-items: center; gap: 6px; }
+  .rank-badge {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900;
+  }
+  .r1 .rank-badge { background: linear-gradient(135deg, #ffd600, #ff9800); color: #1a1a1a; box-shadow: 0 2px 10px rgba(255,214,0,0.4); }
+  .r2 .rank-badge { background: linear-gradient(135deg, #b0bac8, #8090a8); color: white; }
+  .r3 .rank-badge { background: linear-gradient(135deg, #cd7c3a, #a85a20); color: white; }
+  .rn .rank-badge { background: rgba(255,255,255,0.07); color: var(--muted); }
+
+  .delta {
+    font-size: 10px; font-weight: 800;
+    display: flex; flex-direction: column; align-items: center; line-height: 1.1;
+  }
+  .up   { color: var(--green); animation: arrowUp 1.2s ease infinite; }
+  .down { color: #ef4444;       animation: arrowDown 1.2s ease infinite; }
+  .same { color: var(--muted); }
+  @keyframes arrowUp   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+  @keyframes arrowDown { 0%,100%{transform:translateY(0)} 50%{transform:translateY(3px)} }
+
+  /* Player */
+  .player-wrap { display: flex; align-items: center; gap: 13px; }
+
+  .av-outer {
+    position: relative; flex-shrink: 0;
+    width: 48px; height: 48px;
+  }
+  .av-ring {
+    position: absolute; inset: -3px; border-radius: 50%;
+    animation: ringRotate 4s linear infinite;
+  }
+  .r1 .av-ring { background: conic-gradient(#ffd600, #ff9800, #ffd600); }
+  .r2 .av-ring { background: conic-gradient(#b0bac8, #8090a8, #b0bac8); }
+  .r3 .av-ring { background: conic-gradient(#cd7c3a, #a85a20, #cd7c3a); }
+  .rn .av-ring { display: none; }
+  @keyframes ringRotate { to { transform: rotate(360deg); } }
+
+  .av {
+    position: absolute; inset: 3px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 900; color: white;
+    overflow: hidden;
+  }
+  .rn .av { inset: 0; }
+
+  .p-name { font-size: 15px; font-weight: 700; color: white; }
+  .p-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .you-tag {
+    display: inline-block;
+    background: var(--green); color: #071a0d;
+    font-size: 9px; font-weight: 800; letter-spacing: 1px;
+    padding: 2px 6px; border-radius: 5px; margin-left: 6px;
+    vertical-align: middle; text-transform: uppercase;
+  }
+
+  /* Animated flag */
+  .flag-wrap { display: flex; justify-content: center; align-items: center; }
+  .flag {
+    font-size: 38px; line-height: 1;
+    filter: drop-shadow(0 3px 8px rgba(0,0,0,0.5));
+    animation: wave 3s ease-in-out infinite;
+    transform-origin: center bottom;
+    display: inline-block;
+  }
+  .lb-row:nth-child(1) .flag { animation-delay:  0.0s; }
+  .lb-row:nth-child(2) .flag { animation-delay: -0.4s; }
+  .lb-row:nth-child(3) .flag { animation-delay: -0.8s; }
+  .lb-row:nth-child(4) .flag { animation-delay: -1.2s; }
+  .lb-row:nth-child(5) .flag { animation-delay: -1.6s; }
+  .lb-row:nth-child(6) .flag { animation-delay: -2.0s; }
+  .lb-row:nth-child(7) .flag { animation-delay: -2.4s; }
+  .lb-row:nth-child(8) .flag { animation-delay: -2.8s; }
+  @keyframes wave {
+    0%,100%{ transform: rotate(-3deg) scaleX(1.00); }
+    25%    { transform: rotate( 2deg) scaleX(0.97); }
+    50%    { transform: rotate(-2deg) scaleX(1.02); }
+    75%    { transform: rotate( 3deg) scaleX(0.98); }
+  }
+
+  /* Points */
+  .pts-wrap { text-align: right; }
+  .pts-val { font-size: 26px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; color: white; }
+  .r1 .pts-val { color: var(--gold); text-shadow: 0 0 12px rgba(255,214,0,0.4); }
+  .pts-lbl { font-size: 10px; color: var(--muted); font-weight: 600; }
+
+  /* Center cols */
+  .c-col { text-align: center; font-size: 14px; font-weight: 700; color: white; }
+  .badge-sm {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 4px;
+    background: rgba(0,200,83,0.12); color: var(--green);
+    border: 1px solid rgba(0,200,83,0.2);
+    border-radius: 8px; padding: 4px 10px;
+    font-size: 12px; font-weight: 700;
+  }
+  .wflag { font-size: 28px; display: inline-block; animation: wave 3s ease-in-out infinite; }
+
+  /* ============================================================
+     BOTTOM PREDICT STRIP
+  ============================================================ */
+  .strip {
+    margin-top: 28px;
+    background: linear-gradient(135deg, rgba(0,168,69,0.15), rgba(0,80,30,0.3));
+    border: 1px solid rgba(0,200,83,0.25);
+    border-radius: 20px; padding: 26px 32px;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    backdrop-filter: blur(16px);
+    animation: fadeUp 0.6s ease 0.5s both;
+    position: relative; overflow: hidden;
+  }
+  .strip::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg, transparent, transparent 12px,
+      rgba(0,200,83,0.02) 12px, rgba(0,200,83,0.02) 24px
+    );
+  }
+  .strip-left { position: relative; }
+  .strip-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--green); margin-bottom: 8px; }
+  .strip-match { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+  .strip-score { font-size: 40px; font-weight: 900; letter-spacing: 4px; color: var(--muted); }
+  .strip-close { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .strip-btn {
+    background: linear-gradient(135deg, var(--yellow), #ffa000);
+    color: #1a1a1a; border: none; border-radius: 14px;
+    padding: 18px 36px; font-size: 15px; font-weight: 900;
+    cursor: pointer; white-space: nowrap; letter-spacing: 0.5px;
+    box-shadow: 0 4px 20px rgba(255,214,0,0.35);
+    animation: glow-y 2s ease-in-out infinite;
+    position: relative;
+  }
+  @keyframes glow-y {
+    0%,100% { box-shadow: 0 4px 20px rgba(255,214,0,0.35); }
+    50%      { box-shadow: 0 4px 32px rgba(255,214,0,0.6); transform: scale(1.02); }
+  }
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND -->
+<div class="bg">
+  <div class="bg-base"></div>
+  <div class="bg-stripes"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <!-- Ronaldo left -->
+  <div class="player-panel left">
+    <div class="player-img"></div>
+    <div class="player-name-tag">RONALDO</div>
+  </div>
+
+  <!-- Messi right -->
+  <div class="player-panel right">
+    <div class="player-img"></div>
+    <div class="player-name-tag">MESSI</div>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">
+    <div class="logo-ball">⚽</div>
+    WC PREDICT&nbsp;<em>2026</em>
+  </div>
+  <div class="nav-links">
+    <a class="nav-link active">🏆 Leaderboard</a>
+    <a class="nav-link">📅 Fixtures</a>
+    <a class="nav-link">🎯 Predictions</a>
+    <a class="nav-link">🌍 Groups</a>
+    <a class="nav-link">🗂 Bracket</a>
+  </div>
+  <div class="nav-right">
+    <button class="predict-btn">🎯 PREDICT NOW</button>
+    <div class="user-chip">
+      <div class="chip-av">AH</div>
+      Arthur H.
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">⚽ FIFA World Cup 2026 · Matchday 7</div>
+    <div class="hero-title">LEADER<span>BOARD</span></div>
+    <div class="hero-sub"><strong>42 participants</strong> · <strong>28 matches</strong> played · Updated live after each match</div>
+
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-val">148</div>
+        <div class="kpi-lbl">Your Points</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val" style="color:var(--orange)">#3</div>
+        <div class="kpi-lbl">Your Rank</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val">12</div>
+        <div class="kpi-lbl">Exact Scores</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val">🇧🇷</div>
+        <div class="kpi-lbl">Your Pick</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEXT MATCH -->
+  <div class="next-match">
+    <div class="nm-left">
+      <div class="nm-dot"></div>
+      <div>
+        <div class="nm-label">Prediction window open</div>
+        <div class="nm-match">🇫🇷 France &nbsp;vs&nbsp; 🇩🇪 Germany</div>
+        <div class="nm-time">Jun 15 · 18:00 · Closes in <strong style="color:var(--orange)">4h 22m</strong></div>
+      </div>
+    </div>
+    <button class="nm-btn">🎯 PREDICT NOW →</button>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="sec-title">🏆 Full Standings</div>
+  <div class="lb">
+    <div class="lb-head">
+      <div>Rank</div>
+      <div>Participant</div>
+      <div style="text-align:center">Fav. Team</div>
+      <div style="text-align:right">Points</div>
+      <div style="text-align:center">Exact ⚽</div>
+      <div style="text-align:center">Winner</div>
+    </div>
+
+    <!-- 1 -->
+    <div class="lb-row r1">
+      <div class="rank-wrap">
+        <div class="rank-badge">1</div>
+        <div class="delta up">▲<br>2</div>
+      </div>
+      <div class="player-wrap">
+        <div class="av-outer">
+          <div class="av-ring"></div>
+          <div class="av" style="background:linear-gradient(135deg,#FF5722,#FF8F00)">MR</div>
+        </div>
+        <div>
+          <div class="p-name">Marco Rossi</div>
+          <div class="p-sub">28 predictions · 19 wins</div>
+        </div>
+      </div>
+      <div class="flag-wrap"><span class="flag">🇮🇹</span></div>
+      <div class="pts-wrap"><div class="pts-val">167</div><div class="pts-lbl">pts</div></div>
+      <div class="c-col"><span class="badge-sm">⚽ 15</span></div>
+      <div class="c-col"><span class="wflag">🇮🇹</span></div>
+    </div>
+
+    <!-- 2 -->
+    <div class="lb-row r2">
+      <div class="rank-wrap">
+        <div class="rank-badge">2</div>
+        <div class="delta same">—</div>
+      </div>
+      <div class="player-wrap">
+        <div class="av-outer">
+          <div class="av-ring"></div>
+          <div class="av" style="background:linear-gradient(135deg,#7C3AED,#4338CA)">SD</div>
+        </div>
+        <div>
+          <div class="p-name">Sophie Durand</div>
+          <div class="p-sub">28 predictions · 17 wins</div>
+        </div>
+      </div>
+      <div class="flag-wrap"><span class="flag">🇫🇷</span></div>
+      <div class="pts-wrap"><div class="pts-val">158</div><div class="pts-lbl">pts</div></div>
+      <div class="c-col"><span class="badge-sm">⚽ 13</span></div>
+      <div class="c-col"><span class="wflag">🇫🇷</span></div>
+    </div>
+
+    <!-- 3 — YOU -->
+    <div class="lb-row r3 is-you">
+      <div class="rank-wrap">
+        <div class="rank-badge">3</div>
+        <div class="delta up">▲<br>1</div>
+      </div>
+      <div class="player-wrap">
+        <div class="av-outer">
+          <div class="av-ring"></div>
+          <div class="av" style="background:linear-gradient(135deg,#00c853,#007a32)">AH</div>
+        </div>
+        <div>
+          <div class="p-name">Arthur Ho<span class="you-tag">you</span></div>
+          <div class="p-sub">28 predictions · 16 wins</div>
+        </div>
+      </div>
+      <div class="flag-wrap"><span class="flag">🇧🇷</span></div>
+      <div class="pts-wrap"><div class="pts-val" style="color:var(--green)">148</div><div class="pts-lbl">pts</div></div>
+      <div class="c-col"><span class="badge-sm">⚽ 12</span></div>
+      <div class="c-col"><span class="wflag">🇧🇷</span></div>
+    </div>
+
+    <!-- 4 -->
+    <div class="lb-row rn">
+      <div class="rank-wrap">
+        <div class="rank-badge">4</div>
+        <div class="delta down">▼<br>2</div>
+      </div>
+      <div class="player-wrap">
+        <div class="av-outer">
+          <div class="av" style="background:linear-gradient(135deg,#0EA5E9,#0369A1)">LM</div>
+        </div>
+        <div>
+          <div class="p-name">Lena Müller</div>
+          <div class="p-sub">27 predictions · 15 wins</div>
+        </div>
+      </div>
+      <div class="flag-wrap"><span class="flag">🇩🇪</span></div>
+      <div class="pts-wrap"><div class="pts-val">141</div><div class="pts-lbl">pts</div></div>
+      <div class="c-col"><span class="badge-sm">⚽ 11</span></div>
+      <div class="c-col"><span class="wflag">🇩🇪</span></div>
+    </div>
+
+    <!-- 5 -->
+    <div class="lb-row rn">
+      <div class="rank-wrap">
+        <div class="rank-badge">5</div>
+        <div class="delta up">▲<br>3</div>
+      </div>
+      <div class="player-wrap">
+        <div class="av-outer">
+          <div class="av" style="background:linear-gradient(135deg,#F59E0B,#D97706)">CS</div>
+        </div>
+        <div>
+          <div class="p-name">Carlos Silva</div>
+          <div class="p-sub">28 predictions · 15 wins</div>
+        </div>
+      </div>
+      <div class="flag-wrap"><span class="flag">🇦🇷</span></div>
+      <div class="pts-wrap"><div class="pts-val">135</div><div class="pts-lbl">pts</div></div>
+      <div class="c-col"><span class="badge-sm">⚽ 10</span></div>
+      <div class="c-col"><span class="wflag">🇦🇷</span></div>
+    </div>
+
+    <!-- 6 -->
+    <div class="lb-row rn">
+      <div class="rank-wrap">
+        <div class="rank-badge">6</div>
+        <div class="delta same">—</div>
+      </div>
+      <div class="player-wrap">
+        <div class="av-outer">
+          <div class="av" style="background:linear-gradient(135deg,#EC4899,#BE185D)">YT</div>
+        </div>
+        <div>
+          <div class="p-name">Yuki Tanaka</div>
+          <div class="p-sub">26 predictions · 13 wins</div>
+        </div>
+      </div>
+      <div class="flag-wrap"><span class="flag">🇯🇵</span></div>
+      <div class="pts-wrap"><div class="pts-val">128</div><div class="pts-lbl">pts</div></div>
+      <div class="c-col"><span class="badge-sm">⚽ 9</span></div>
+      <div class="c-col"><span class="wflag">🇯🇵</span></div>
+    </div>
+
+    <!-- 7 -->
+    <div class="lb-row rn">
+      <div class="rank-wrap">
+        <div class="rank-badge">7</div>
+        <div class="delta down">▼<br>1</div>
+      </div>
+      <div class="player-wrap">
+        <div class="av-outer">
+          <div class="av" style="background:linear-gradient(135deg,#6366F1,#4338CA)">PK</div>
+        </div>
+        <div>
+          <div class="p-name">Priya Kapoor</div>
+          <div class="p-sub">27 predictions · 13 wins</div>
+        </div>
+      </div>
+      <div class="flag-wrap"><span class="flag">🇮🇳</span></div>
+      <div class="pts-wrap"><div class="pts-val">121</div><div class="pts-lbl">pts</div></div>
+      <div class="c-col"><span class="badge-sm">⚽ 8</span></div>
+      <div class="c-col"><span class="wflag">🇪🇸</span></div>
+    </div>
+
+    <!-- 8 -->
+    <div class="lb-row rn">
+      <div class="rank-wrap">
+        <div class="rank-badge">8</div>
+        <div class="delta up">▲<br>2</div>
+      </div>
+      <div class="player-wrap">
+        <div class="av-outer">
+          <div class="av" style="background:linear-gradient(135deg,#14B8A6,#0F766E)">JB</div>
+        </div>
+        <div>
+          <div class="p-name">James Brown</div>
+          <div class="p-sub">25 predictions · 12 wins</div>
+        </div>
+      </div>
+      <div class="flag-wrap"><span class="flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span></div>
+      <div class="pts-wrap"><div class="pts-val">115</div><div class="pts-lbl">pts</div></div>
+      <div class="c-col"><span class="badge-sm">⚽ 8</span></div>
+      <div class="c-col"><span class="wflag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span></div>
+    </div>
+
+  </div><!-- /lb -->
+
+  <!-- PREDICT STRIP -->
+  <div class="strip">
+    <div class="strip-left">
+      <div class="strip-label">🔒 Prediction window open · Closes in 4h 22m</div>
+      <div class="strip-match">🇫🇷 France &nbsp;&nbsp;vs&nbsp;&nbsp; 🇩🇪 Germany</div>
+      <div class="strip-score">— : —</div>
+      <div class="strip-close">Locks Jun 15 · 17:00 · 1 hour before kickoff</div>
+    </div>
+    <button class="strip-btn">🎯 SUBMIT YOUR PREDICTION</button>
+  </div>
+
+</main>
+</body>
+</html>

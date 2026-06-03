@@ -1,0 +1,248 @@
+<style>
+  .direction-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 24px;
+  }
+  .direction-card {
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+  .direction-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+  .direction-card.selected { border-color: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,0.3); }
+
+  /* Option A: Midnight Stadium */
+  .theme-midnight { background: #0a0e1a; }
+  .midnight-header {
+    background: linear-gradient(135deg, #0a0e1a 0%, #0d1b3e 50%, #0a0e1a 100%);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .midnight-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(255,210,0,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 0%, rgba(255,210,0,0.15) 0%, transparent 60%);
+  }
+  .midnight-title { color: #FFD700; font-size: 18px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; position: relative; }
+  .midnight-sub { color: rgba(255,255,255,0.6); font-size: 12px; position: relative; }
+  .midnight-body { background: #0d1b3e; padding: 16px; }
+  .midnight-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,210,0,0.2); border-radius: 10px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .midnight-score { color: #FFD700; font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .midnight-team { color: #fff; font-size: 12px; font-weight: 600; }
+  .midnight-pts { color: #00d4ff; font-size: 11px; font-weight: 700; }
+  .midnight-btn { background: linear-gradient(135deg, #FFD700, #FF8C00); color: #0a0e1a; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 800; font-size: 11px; margin-top: 8px; width: 100%; }
+  .midnight-label { color: rgba(255,255,255,0.4); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .stars { color: #FFD700; font-size: 14px; letter-spacing: 2px; margin-bottom: 4px; }
+
+  /* Option B: Vivid Pitch */
+  .theme-pitch { background: #f0faf0; }
+  .pitch-header {
+    background: linear-gradient(135deg, #00873D 0%, #00a845 40%, #005C20 100%);
+    padding: 20px;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    position: relative;
+    overflow: hidden;
+  }
+  .pitch-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      180deg,
+      rgba(0,0,0,0.05) 0px,
+      rgba(0,0,0,0.05) 20px,
+      transparent 20px,
+      transparent 40px
+    );
+  }
+  .pitch-title { color: #fff; font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; position: relative; text-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  .pitch-sub { color: rgba(255,255,255,0.85); font-size: 12px; position: relative; }
+  .pitch-body { background: #f5fff5; padding: 16px; }
+  .pitch-card { background: #fff; border: 2px solid #00873D; border-radius: 10px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,135,61,0.1); }
+  .pitch-score { color: #00873D; font-size: 20px; font-weight: 900; }
+  .pitch-team { color: #1a1a1a; font-size: 12px; font-weight: 700; }
+  .pitch-pts { color: #FF4500; font-size: 11px; font-weight: 800; background: #FFF3E0; padding: 2px 6px; border-radius: 4px; }
+  .pitch-btn { background: linear-gradient(135deg, #00873D, #00a845); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 800; font-size: 11px; margin-top: 8px; width: 100%; }
+  .pitch-label { color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .pitch-badge { background: #FF4500; color: white; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 99px; display: inline-block; margin-bottom: 4px; }
+
+  /* Option C: Trophy Gold */
+  .theme-trophy { background: #1a0a00; }
+  .trophy-header {
+    background: linear-gradient(135deg, #8B0000 0%, #C41E3A 40%, #6B0000 100%);
+    padding: 20px;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    position: relative;
+    overflow: hidden;
+  }
+  .trophy-header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(255,215,0,0.2) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .trophy-title { color: #FFD700; font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; position: relative; }
+  .trophy-sub { color: rgba(255,215,0,0.6); font-size: 12px; position: relative; }
+  .trophy-body { background: #1a0a00; padding: 16px; }
+  .trophy-card { background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,215,0,0.03)); border: 1px solid rgba(255,215,0,0.25); border-radius: 10px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .trophy-score { color: #FFD700; font-size: 20px; font-weight: 900; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+  .trophy-team { color: #f0d080; font-size: 12px; font-weight: 600; }
+  .trophy-pts { color: #C41E3A; font-size: 11px; font-weight: 800; background: rgba(196,30,58,0.2); padding: 2px 6px; border-radius: 4px; }
+  .trophy-btn { background: linear-gradient(135deg, #FFD700, #FFA500); color: #1a0a00; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 900; font-size: 11px; margin-top: 8px; width: 100%; }
+  .trophy-label { color: rgba(255,215,0,0.4); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .trophy-crown { color: #FFD700; font-size: 20px; margin-bottom: 2px; }
+
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .tag { font-size: 10px; padding: 3px 8px; border-radius: 99px; font-weight: 700; }
+</style>
+
+<h2>What visual direction feels right?</h2>
+<p class="subtitle">Choose the design personality for the World Cup Prediction app — these mockups show nav, a leaderboard card, and color palette for each direction.</p>
+
+<div class="direction-grid">
+
+  <!-- Option A: Midnight Stadium -->
+  <div class="direction-card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="midnight-header">
+      <div class="stars">★ ★ ★ ★ ★</div>
+      <div class="midnight-title">⚽ WC Predict 2026</div>
+      <div class="midnight-sub">Stadium · Leaderboard · Predictions</div>
+    </div>
+    <div class="midnight-body">
+      <div class="midnight-label">Leaderboard</div>
+      <div class="midnight-card">
+        <div>
+          <div class="midnight-team">🇧🇷 Arthur Ho</div>
+          <div class="midnight-pts">↑ 3 places</div>
+        </div>
+        <div style="text-align:right">
+          <div class="midnight-score">148</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:10px">pts</div>
+        </div>
+      </div>
+      <div class="midnight-card">
+        <div>
+          <div class="midnight-team">🇫🇷 Marie Dupont</div>
+          <div class="midnight-pts">→ same</div>
+        </div>
+        <div style="text-align:right">
+          <div class="midnight-score">142</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:10px">pts</div>
+        </div>
+      </div>
+      <button class="midnight-btn">PREDICT NEXT MATCH →</button>
+    </div>
+    <div style="background:#0a0e1a;padding:10px 16px;">
+      <div class="tag-row">
+        <span class="tag" style="background:rgba(255,215,0,0.15);color:#FFD700">Dark theme</span>
+        <span class="tag" style="background:rgba(0,212,255,0.15);color:#00d4ff">Electric blue</span>
+        <span class="tag" style="background:rgba(255,140,0,0.15);color:#FF8C00">Gold accent</span>
+      </div>
+      <div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:6px">Cinematic · Premium · Stadium lights</div>
+    </div>
+  </div>
+
+  <!-- Option B: Vivid Pitch -->
+  <div class="direction-card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="pitch-header">
+      <div class="pitch-badge">LIVE ● MATCHDAY 3</div>
+      <div class="pitch-title">⚽ WC Predict 2026</div>
+      <div class="pitch-sub">Stadium · Leaderboard · Predictions</div>
+    </div>
+    <div class="pitch-body">
+      <div class="pitch-label">Leaderboard</div>
+      <div class="pitch-card">
+        <div>
+          <div class="pitch-team">🇧🇷 Arthur Ho</div>
+          <div style="color:#00873D;font-size:10px;font-weight:700">↑ +3 places</div>
+        </div>
+        <div style="text-align:right">
+          <div class="pitch-score">148</div>
+          <div style="color:#888;font-size:10px">pts</div>
+        </div>
+      </div>
+      <div class="pitch-card">
+        <div>
+          <div class="pitch-team">🇫🇷 Marie Dupont</div>
+          <div style="color:#888;font-size:10px">→ same position</div>
+        </div>
+        <div style="text-align:right">
+          <div class="pitch-score">142</div>
+          <div style="color:#888;font-size:10px">pts</div>
+        </div>
+      </div>
+      <button class="pitch-btn">PREDICT NEXT MATCH →</button>
+    </div>
+    <div style="background:#e8f5e8;padding:10px 16px;">
+      <div class="tag-row">
+        <span class="tag" style="background:#00873D;color:#fff">Pitch green</span>
+        <span class="tag" style="background:#FF4500;color:#fff">Fire orange</span>
+        <span class="tag" style="background:#fff;color:#333;border:1px solid #ccc">Light theme</span>
+      </div>
+      <div style="color:#555;font-size:10px;margin-top:6px">Energetic · Festive · Matchday vibes</div>
+    </div>
+  </div>
+
+  <!-- Option C: Trophy Gold -->
+  <div class="direction-card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="trophy-header">
+      <div class="trophy-crown">🏆</div>
+      <div class="trophy-title">WC Predict 2026</div>
+      <div class="trophy-sub">Stadium · Leaderboard · Predictions</div>
+    </div>
+    <div class="trophy-body">
+      <div class="trophy-label">Leaderboard</div>
+      <div class="trophy-card">
+        <div>
+          <div class="trophy-team">🇧🇷 Arthur Ho</div>
+          <div style="color:rgba(255,215,0,0.5);font-size:10px">↑ +3 places</div>
+        </div>
+        <div style="text-align:right">
+          <div class="trophy-score">148</div>
+          <div style="color:rgba(255,215,0,0.4);font-size:10px">pts</div>
+        </div>
+      </div>
+      <div class="trophy-card">
+        <div>
+          <div class="trophy-team">🇫🇷 Marie Dupont</div>
+          <div style="color:rgba(255,215,0,0.3);font-size:10px">→ same</div>
+        </div>
+        <div style="text-align:right">
+          <div class="trophy-score">142</div>
+          <div style="color:rgba(255,215,0,0.4);font-size:10px">pts</div>
+        </div>
+      </div>
+      <button class="trophy-btn">PREDICT NEXT MATCH →</button>
+    </div>
+    <div style="background:#120700;padding:10px 16px;">
+      <div class="tag-row">
+        <span class="tag" style="background:rgba(255,215,0,0.2);color:#FFD700">Trophy gold</span>
+        <span class="tag" style="background:rgba(196,30,58,0.3);color:#ff6b80">Crimson red</span>
+        <span class="tag" style="background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5)">Near black</span>
+      </div>
+      <div style="color:rgba(255,215,0,0.4);font-size:10px;margin-top:6px">Prestigious · Championship · Official feel</div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WC Predict 2026 — Leaderboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&display=swap');
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --green:#00c853; --green-d:#006b2a; --green-m:#00a845;
+    --orange:#FF5722; --yellow:#FFD600;
+    --card:#fff; --text:#0d1a10; --muted:#667c70;
+    --border:rgba(0,160,70,0.15);
+    --pw:220px;   /* player column width */
+    --tw:68px;    /* total column width  */
+    --row-bg:#fff;
+  }
+  html,body { min-height:100vh; font-family:'Inter',sans-serif; background:#f0fdf5; color:var(--text); overflow-x:hidden; }
+
+  /* BG */
+  .bg-wrap { position:fixed;inset:0;z-index:0;pointer-events:none; }
+  .bg-ph { position:absolute;inset:0;background:url('https://footiehound.com/wp-content/uploads/2025/08/cropped-football-prediction-today.jpg') center/cover;filter:brightness(1.05)saturate(1.1);animation:bgK 20s ease-in-out infinite alternate; }
+  @keyframes bgK { from{transform:scale(1)} to{transform:scale(1.06)translateX(-15px)} }
+  .bg-ov { position:absolute;inset:0;background:linear-gradient(to bottom,rgba(240,253,245,.86),rgba(240,253,245,.82)); }
+  .bg-st { position:absolute;inset:0;background-image:repeating-linear-gradient(180deg,rgba(0,180,60,.025) 0,rgba(0,180,60,.025) 60px,transparent 60px,transparent 120px); }
+
+  /* NAV */
+  .nav { position:sticky;top:0;z-index:300;width:100%;height:60px;padding:0 36px;display:flex;align-items:center;justify-content:space-between;background:rgba(240,253,245,.93);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);box-shadow:0 2px 14px rgba(0,160,70,.07);animation:navIn .5s ease both; }
+  @keyframes navIn { from{opacity:0;transform:translateY(-60px)} to{opacity:1;transform:translateY(0)} }
+  .logo { display:flex;align-items:center;gap:10px;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--green-d); }
+  .logo em { color:var(--orange);font-style:normal; }
+  .logo-ball { width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--green-m),var(--green-d));display:flex;align-items:center;justify-content:center;font-size:18px;animation:spin 12s linear infinite;box-shadow:0 2px 12px rgba(0,200,83,.4); }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .nav-links { display:flex;gap:2px; }
+  .nav-a { padding:7px 13px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;cursor:pointer;transition:all .2s; }
+  .nav-a:hover { background:rgba(0,200,83,.1);color:var(--green-d); }
+  .nav-a.on { background:rgba(0,200,83,.13);color:var(--green-d);border:1px solid var(--border); }
+  .nav-r { display:flex;align-items:center;gap:10px; }
+  .predict-btn { background:linear-gradient(135deg,var(--orange),#ff6d47);color:white;border:none;border-radius:10px;padding:9px 18px;font-size:13px;font-weight:800;cursor:pointer;animation:oB 2.5s ease-in-out infinite; }
+  @keyframes oB { 0%,100%{box-shadow:0 3px 12px rgba(255,87,34,.35)} 50%{box-shadow:0 3px 24px rgba(255,87,34,.65)} }
+  .user-chip { display:flex;align-items:center;gap:8px;background:rgba(0,200,83,.1);border:1px solid var(--border);border-radius:99px;padding:4px 13px 4px 4px;font-size:13px;font-weight:700;color:var(--green-d); }
+  .chip-av { width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--green-m),var(--green-d));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white; }
+
+  /* PAGE */
+  .page { position:relative;z-index:1;width:100%;padding:28px 36px 80px; }
+  .hero-row { display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:22px;animation:fUp .6s ease .2s both; }
+  @keyframes fUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .hero-eye { font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--green-m);margin-bottom:4px; }
+  .hero-title { font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;letter-spacing:4px; }
+  .hero-title em { color:var(--green);font-style:normal; }
+  .hero-sub { color:var(--muted);font-size:14px;margin-top:4px; }
+  .hero-sub b { color:var(--text); }
+  .kpi-row { display:flex;gap:10px;margin-top:12px;flex-wrap:wrap; }
+  .kpi { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 15px;box-shadow:0 2px 8px rgba(0,160,70,.07);transition:all .2s;animation:fUp .5s ease both; }
+  .kpi:hover{transform:translateY(-2px)}.kpi:nth-child(1){animation-delay:.3s}.kpi:nth-child(2){animation-delay:.4s}.kpi:nth-child(3){animation-delay:.5s}
+  .kpi-v { font-size:22px;font-weight:900;color:var(--green);line-height:1; }
+  .kpi-l { font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px; }
+  .nm-pill { background:linear-gradient(135deg,var(--orange),#ff6d47);color:white;border-radius:14px;padding:13px 18px;min-width:240px;animation:fUp .5s ease .4s both;box-shadow:0 6px 18px rgba(255,87,34,.3); }
+  .nm-pill-top { font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:.85;margin-bottom:4px; }
+  .nm-pill-match { font-size:14px;font-weight:900;margin-bottom:4px; }
+  .nm-pill-time { font-size:11px;opacity:.8;margin-bottom:10px; }
+  .nm-pill-btn { background:white;color:var(--orange);border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;width:100%; }
+
+  /* Controls */
+  .controls { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;animation:fUp .5s ease .3s both; }
+  .legend { display:flex;gap:12px;flex-wrap:wrap; }
+  .leg { display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text); }
+  .ld { width:11px;height:11px;border-radius:3px; }
+  .l-ex .ld{background:rgba(0,200,83,.45)}.l-wi .ld{background:rgba(255,195,0,.65)}
+  .l-dr .ld{background:rgba(60,120,255,.35)}.l-wr .ld{background:rgba(239,68,68,.3)}.l-no .ld{background:rgba(0,0,0,.07)}
+  .stage-nav { display:flex;gap:5px;flex-wrap:wrap; }
+  .stage-btn { padding:5px 10px;border-radius:7px;font-size:11px;font-weight:700;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap; }
+  .stage-btn:hover { background:rgba(0,200,83,.1);color:var(--green-d);border-color:var(--green-m); }
+  .stage-btn.current { background:var(--green-d);color:white;border-color:var(--green-d); }
+
+  /* ═══════════════════════════════════════════════════
+     TABLE — KEY: single container with overflow-x:auto
+     NO overflow:hidden on any ancestor of sticky cells!
+  ═══════════════════════════════════════════════════ */
+  .tbl-wrap {
+    /* Single scroll container — overflow-x:auto here, nothing else */
+    overflow-x: auto;
+    /* border-radius + overflow = visual clip, but sticky STILL WORKS
+       because position:sticky sticks to the NEAREST overflow ancestor,
+       which IS this element. */
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 28px rgba(0,0,0,.09);
+    background: var(--card);
+    animation: fUp .6s ease .35s both;
+    scroll-behavior: smooth;
+    /* scrollbar style */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,160,70,.25) rgba(0,160,70,.04);
+  }
+  .tbl-wrap::-webkit-scrollbar { height:6px; }
+  .tbl-wrap::-webkit-scrollbar-track { background:rgba(0,160,70,.04); }
+  .tbl-wrap::-webkit-scrollbar-thumb { background:rgba(0,160,70,.25);border-radius:3px; }
+
+  table { border-collapse:collapse; width:max-content; }
+
+  /* ── STICKY PLAYER COLUMN ──────────────────────────────────────
+     CRITICAL: background must be 100% opaque — any rgba/transparent
+     value lets scrolling game cells bleed through the sticky column.
+     We set explicit solid colors per row type instead of inheriting
+     the row's --row-bg variable (which may be semi-transparent).
+  ─────────────────────────────────────────────────────────────── */
+  .cp {
+    position: sticky !important;
+    left: 0;
+    z-index: 4;
+    /* Explicit opaque white — NEVER inherit a transparent value */
+    background: #ffffff;
+    width: var(--pw);
+    min-width: var(--pw);
+    max-width: var(--pw);
+    border-right: 2px solid rgba(0,160,70,0.2) !important;
+    /* Shadow seals the edge so scrolled content cannot visually bleed through */
+    box-shadow: 6px 0 12px -4px rgba(0,0,0,0.14);
+  }
+  /* Even rows */
+  tr.dr:nth-child(even) td.cp { background: #f8fefb; }
+  /* YOU row — opaque solid green tint, NOT rgba */
+  tr.dr.you td.cp { background: #d6f7e4; }
+  /* Hover — opaque */
+  tr.dr:hover td.cp { background: #eafff3 !important; }
+
+  /* Total sticky right */
+  .ct {
+    position: sticky !important;
+    right: 0;
+    z-index: 4;
+    background: #ffffff;
+    width: var(--tw);
+    min-width: var(--tw);
+    border-left: 2px solid rgba(0,160,70,0.2) !important;
+    box-shadow: -4px 0 8px -2px rgba(0,0,0,0.1);
+  }
+  tr.dr:nth-child(even) td.ct { background: #f8fefb; }
+  tr.dr.you td.ct { background: #d6f7e4; }
+  tr.dr:hover td.ct { background: #eafff3 !important; }
+
+  /* thead sticky cells need extra z so they stack above tbody sticky */
+  thead .cp { z-index: 6; background: rgba(0,160,70,0.07) !important; box-shadow: 6px 0 12px -4px rgba(0,0,0,0.14); }
+  thead .ct { z-index: 6; background: rgba(0,160,70,0.07) !important; }
+
+  /* Phase header row */
+  tr.ph td, tr.ph th { padding:0; border:none; height:32px; }
+  .phc {
+    height:32px; display:flex; align-items:center; gap:6px;
+    padding:0 12px; white-space:nowrap;
+    font-size:10px; font-weight:800; letter-spacing:2px; text-transform:uppercase;
+    color:white; position:relative; overflow:hidden;
+  }
+  .phc::before { content:'';position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);animation:sw 3.5s ease-in-out infinite; }
+  @keyframes sw { 0%{left:-80%}55%{left:130%}100%{left:130%} }
+  .g1 .phc{background:linear-gradient(90deg,#004d1e,#00a845)}
+  .g2 .phc{background:linear-gradient(90deg,#1e6000,#52b800)}
+  .g3 .phc{background:linear-gradient(90deg,#005a45,#00b890)}
+  .r32c .phc{background:linear-gradient(90deg,#162060,#3a5acc);border-bottom:3px solid #6080ff}
+  .r16c .phc{background:linear-gradient(90deg,#4a1560,#a030cc)}
+  .qfc  .phc{background:linear-gradient(90deg,#5c2800,#c05800)}
+  .sfc  .phc{background:linear-gradient(90deg,#5a0015,#c0002a)}
+  .finc .phc{background:linear-gradient(90deg,#4a3c00,#c89000)}
+
+  /* Game header row */
+  tr.gh th {
+    background:rgba(0,160,70,.07); border-bottom:2px solid rgba(0,160,70,.2);
+    border-right:1px solid rgba(0,160,70,.1); padding:0; vertical-align:top;
+    z-index: 2;  /* so it's below sticky player column */
+    position: relative;
+  }
+  tr.gh th.cp { background:rgba(0,160,70,.07); vertical-align:middle; z-index:6; }
+  tr.gh th.ct { background:rgba(0,160,70,.07); vertical-align:middle; text-align:center; padding:0 6px; font-size:9px; font-weight:800; color:var(--green-d); letter-spacing:1px; text-transform:uppercase; z-index:6; }
+
+  /* FIFA branding in player col header */
+  .fifa-hd { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 10px;height:100%; }
+  .fifa-hd img { height:32px;width:auto;object-fit:contain; }
+  .fifa-lbl { font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--green-d);line-height:1; }
+  .fifa-sub { font-size:8px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase; }
+  .fifa-fallback { display:none;flex-direction:column;align-items:center;gap:1px; }
+
+  .ghi { display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 3px;min-width:78px; }
+  .ghd { font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase; }
+  .ghf { display:flex;align-items:center;gap:2px;font-size:17px;line-height:1; }
+  .ghv { font-size:8px;font-weight:700;color:var(--muted); }
+  .ghs { font-size:11px;font-weight:900;letter-spacing:1px;color:var(--text);background:rgba(0,0,0,.07);border-radius:4px;padding:2px 6px;margin-top:1px;font-variant-numeric:tabular-nums;white-space:nowrap; }
+  .ghs.tbd { color:var(--muted);background:rgba(0,0,0,.04);display:flex;align-items:center;gap:2px;font-size:10px; }
+  .pd { width:3px;height:3px;border-radius:50%;background:rgba(0,160,70,.4);animation:pdA 1.4s ease-in-out infinite; }
+  .pd:nth-child(2){animation-delay:.2s}.pd:nth-child(3){animation-delay:.4s}
+  @keyframes pdA { 0%,100%{opacity:.3;transform:scale(1)} 50%{opacity:1;transform:scale(1.5)} }
+
+  /* Data rows — ALL backgrounds must be 100% opaque */
+  tr.dr td {
+    border-right:1px solid rgba(0,160,70,.06);
+    border-bottom:1px solid rgba(0,160,70,.06);
+    vertical-align:middle;
+    background: #ffffff;
+    transition: background .1s;
+    z-index: 1;
+    position: relative;
+  }
+  tr.dr:nth-child(even) td { background: #f8fefb; }
+  tr.dr.you td { background: #edfff5; }           /* opaque, no rgba */
+  tr.dr:hover td { background: #eafff3 !important; }
+  tr.dr.you td.cp { border-left:3px solid var(--green) !important; }
+  tr.dr:last-child td { border-bottom:none; }
+
+  /* Player cell */
+  .pc { display:flex;align-items:center;gap:9px;padding:9px 10px; }
+
+  /* Rank badge */
+  .rk { width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0; }
+  .rk-1 { background:linear-gradient(135deg,#ffd600,#ff9800);color:#1a1a1a;box-shadow:0 1px 6px rgba(255,214,0,.5); }
+  .rk-2 { background:linear-gradient(135deg,#b0bac8,#8090a8);color:white; }
+  .rk-3 { background:linear-gradient(135deg,#cd7c3a,#a85a20);color:white; }
+  .rk-n { background:rgba(0,0,0,.06);color:var(--muted); }
+
+  /* ── AVATAR: photo with wide flag overlapping the bottom ── */
+  .av {
+    position: relative;
+    width: 50px;
+    height: 62px;   /* 50px photo + 12px overflow for flag */
+    flex-shrink: 0;
+  }
+  .av-photo {
+    position: absolute;
+    top: 0; left: 0;
+    width: 50px; height: 50px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  }
+  .av-photo img { width:100%;height:100%;object-fit:cover;display:block; }
+
+  /* ── FLAG BAR — wide ribbon overlapping bottom of photo ─────────
+     .av is 50px wide × 62px tall.
+     Photo: absolute top:0, 50×50px.
+     Flag bar: bottom:0 → spans from 42px to 62px (top) which means
+     it overlaps the photo by 8px (photo ends at 50px, flag starts at 42px).
+     Width: 68px = 9px beyond photo on each side.
+  ─────────────────────────────────────────────────────────────── */
+  .av-flag {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 68px;
+    height: 22px;
+
+    /* Frosted glass over the photo bottom */
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 0 0 10px 10px;
+    border: 1.5px solid rgba(255,255,255,0.9);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    animation: flagW 2.5s ease-in-out infinite;
+    transform-origin: center bottom;
+  }
+
+  /* The emoji itself — scaled wide to fill the bar */
+  .flag-em {
+    display: inline-block;
+    font-size: 20px;
+    line-height: 1;
+    /* scaleX stretches the emoji to fill the 68px bar width */
+    transform: scaleX(2.4);
+    transform-origin: center center;
+    /* Prevent shimmer pseudo from clipping the emoji */
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Shimmer sweep across the flag bar */
+  .av-flag::after {
+    content: '';
+    position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent);
+    animation: fSh 2.5s ease-in-out infinite;
+    z-index: 0;
+  }
+  @keyframes fSh { 0%{left:-60%} 55%{left:120%} 100%{left:120%} }
+
+  @keyframes flagW {
+    0%,100% { transform: translateX(-50%) scaleX(1.00) rotate(-1.5deg); }
+    30%     { transform: translateX(-50%) scaleX(0.97) rotate( 1.8deg); }
+    65%     { transform: translateX(-50%) scaleX(1.02) rotate(-1.0deg); }
+  }
+  tbody tr:nth-child(1) .av-flag{animation-delay:0s}    tbody tr:nth-child(2) .av-flag{animation-delay:-.35s}
+  tbody tr:nth-child(3) .av-flag{animation-delay:-.7s}  tbody tr:nth-child(4) .av-flag{animation-delay:-1.05s}
+  tbody tr:nth-child(5) .av-flag{animation-delay:-1.4s} tbody tr:nth-child(6) .av-flag{animation-delay:-1.75s}
+  tbody tr:nth-child(7) .av-flag{animation-delay:-2.1s} tbody tr:nth-child(8) .av-flag{animation-delay:-2.45s}
+  tbody tr:nth-child(9) .av-flag{animation-delay:-.15s} tbody tr:nth-child(10) .av-flag{animation-delay:-.5s}
+  tbody tr:nth-child(11) .av-flag{animation-delay:-.85s}tbody tr:nth-child(12) .av-flag{animation-delay:-1.2s}
+  tbody tr:nth-child(13) .av-flag{animation-delay:-1.55s}tbody tr:nth-child(14) .av-flag{animation-delay:-1.9s}
+  tbody tr:nth-child(15) .av-flag{animation-delay:-2.25s}
+
+  .pn { font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:106px; }
+  .ytag { display:inline-block;background:var(--green);color:white;font-size:7px;font-weight:800;padding:1px 3px;border-radius:3px;margin-left:3px;vertical-align:middle; }
+  .pm { font-size:10px;color:var(--muted);margin-top:1px; }
+
+  /* Total cell */
+  td.ct { text-align:center;padding:8px 6px; }
+  .tv { font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1; }
+  .tl { font-size:8px;color:var(--muted);font-weight:600;margin-top:1px; }
+
+  /* Prediction cells */
+  .pred { text-align:center;padding:5px 2px;min-width:78px; }
+  .px { background:rgba(0,200,83,.13); }
+  .pw { background:rgba(255,195,0,.18); }
+  .pdr{ background:rgba(60,120,255,.11); }
+  .wr { background:rgba(239,68,68,.09); }
+  .nd { background:transparent; }
+  .op { background:rgba(0,200,83,.08);border:1.5px dashed rgba(0,200,83,.5) !important; }
+  .cur{ background:rgba(58,90,204,.05) !important; }
+  .cur.px { background:rgba(0,200,83,.18) !important; }
+  .cur.pw { background:rgba(255,195,0,.22) !important; }
+  .cur.pdr{ background:rgba(60,120,255,.15) !important; }
+  .cur.wr { background:rgba(239,68,68,.13) !important; }
+  .cur.op { background:rgba(0,200,83,.12) !important; }
+  .cur.nd { background:rgba(58,90,204,.05) !important; }
+
+  .sv { font-size:12px;font-weight:800;letter-spacing:.7px;font-variant-numeric:tabular-nums;line-height:1; }
+  .px .sv{color:#005a20}.pw .sv{color:#7a5000}.pdr .sv{color:#1e3fa0}.wr .sv{color:#b91c1c}
+  .nd .sv,.op .sv{color:var(--muted);font-size:10px}
+  .sb { display:inline-block;font-size:8px;font-weight:800;border-radius:3px;padding:1px 4px;margin-top:2px; }
+  .px .sb{background:rgba(0,200,83,.2);color:#005a20}
+  .pw .sb{background:rgba(255,195,0,.3);color:#7a5000}
+  .pdr .sb{background:rgba(60,120,255,.2);color:#1e3fa0}
+  .wr .sb{background:rgba(239,68,68,.15);color:#b91c1c}
+  .dots { display:flex;gap:2px;justify-content:center;margin-top:2px; }
+
+  /* STRIP */
+  .strip{margin-top:20px;background:linear-gradient(135deg,var(--green-d),var(--green-m));border-radius:18px;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;gap:24px;box-shadow:0 6px 22px rgba(0,130,60,.2);animation:fUp .6s ease .5s both;position:relative;overflow:hidden;}
+  .strip::after{content:'⚽';position:absolute;right:190px;top:50%;transform:translateY(-50%);font-size:90px;opacity:.06;animation:spin 20s linear infinite;}
+  .sl{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px;}
+  .sm{font-size:18px;font-weight:900;color:white;margin-bottom:5px;}
+  .ss{font-size:34px;font-weight:900;letter-spacing:4px;color:rgba(255,255,255,.3);}
+  .st{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px;}
+  .sb2{background:linear-gradient(135deg,var(--yellow),#ffa000);color:#0d1a10;border:none;border-radius:12px;padding:13px 28px;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap;z-index:1;position:relative;animation:gP 2s ease-in-out infinite;}
+  @keyframes gP{0%,100%{box-shadow:0 4px 16px rgba(255,214,0,.3)}50%{box-shadow:0 4px 28px rgba(255,214,0,.6);transform:scale(1.02)}}
+</style>
+</head>
+<body>
+<div class="bg-wrap"><div class="bg-ph"></div><div class="bg-ov"></div><div class="bg-st"></div></div>
+
+<nav class="nav">
+  <div class="logo"><div class="logo-ball">⚽</div>WC PREDICT&nbsp;<em>2026</em></div>
+  <div class="nav-links">
+    <a class="nav-a">🏠 Home</a>
+    <a class="nav-a on">🏆 Leaderboard</a>
+    <a class="nav-a">📅 Fixtures</a>
+    <a class="nav-a">🗂 Bracket</a>
+  </div>
+  <div class="nav-r">
+    <button class="predict-btn">🎯 PREDICT NOW</button>
+    <div class="user-chip"><div class="chip-av">AH</div>Arthur H.</div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="hero-row">
+    <div>
+      <div class="hero-eye">⚽ FIFA World Cup 2026 · Now: Round of 32</div>
+      <div class="hero-title">LEADER<em>BOARD</em></div>
+      <div class="hero-sub"><b>42 participants</b> · <b>48 matches</b> played · ← scroll to see all rounds →</div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-v">148</div><div class="kpi-l">Your Points</div></div>
+        <div class="kpi"><div class="kpi-v" style="color:var(--orange)">#3</div><div class="kpi-l">Rank</div></div>
+        <div class="kpi"><div class="kpi-v">12</div><div class="kpi-l">Exact Scores</div></div>
+      </div>
+    </div>
+    <div class="nm-pill">
+      <div class="nm-pill-top">⚡ Open · Closes in 4h 22m</div>
+      <div class="nm-pill-match">🇫🇷 France vs 🇩🇪 Germany</div>
+      <div class="nm-pill-time">Jul 3 · 18:00 · Round of 32</div>
+      <button class="nm-pill-btn">🎯 Submit Prediction →</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="legend">
+      <div class="leg l-ex"><div class="ld"></div>Exact +3</div>
+      <div class="leg l-wi"><div class="ld"></div>Winner +1</div>
+      <div class="leg l-dr"><div class="ld"></div>Draw +2</div>
+      <div class="leg l-wr"><div class="ld"></div>Wrong 0</div>
+      <div class="leg l-no"><div class="ld"></div>Pending</div>
+    </div>
+    <div class="stage-nav">
+      <button class="stage-btn" onclick="go('gs1')">GS R1</button>
+      <button class="stage-btn" onclick="go('gs2')">GS R2</button>
+      <button class="stage-btn" onclick="go('gs3')">GS R3</button>
+      <button class="stage-btn current" onclick="go('r32')">► R32</button>
+      <button class="stage-btn" onclick="go('r16')">R16</button>
+      <button class="stage-btn" onclick="go('qf')">QF</button>
+      <button class="stage-btn" onclick="go('sf')">SF</button>
+      <button class="stage-btn" onclick="go('fin')">🏆 Final</button>
+    </div>
+  </div>
+
+  <!-- SINGLE container, overflow-x:auto, no child overflow wrapper -->
+  <div class="tbl-wrap" id="tw">
+  <table id="pt" cellspacing="0" cellpadding="0">
+  <thead id="thead-el"></thead>
+  <tbody id="tbody-el"></tbody>
+  </table>
+  </div>
+
+  <div class="strip">
+    <div>
+      <div class="sl">🔒 Prediction window open — R32</div>
+      <div class="sm">🇫🇷 France &nbsp;&nbsp;vs&nbsp;&nbsp; 🇩🇪 Germany</div>
+      <div class="ss">— : —</div>
+      <div class="st">Locks Jul 3 · 17:00 · 1h before kickoff</div>
+    </div>
+    <button class="sb2">🎯 SUBMIT YOUR PREDICTION</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   DATA
+══════════════════════════════════════════════════════════════ */
+const PEOPLE = [
+  { name:'Marco Rossi',   pts:167, wins:19, img:'https://i.pravatar.cc/150?img=12', flag:'🇮🇹', rank:1  },
+  { name:'Sophie Durand', pts:158, wins:17, img:'https://i.pravatar.cc/150?img=47', flag:'🇫🇷', rank:2  },
+  { name:'Arthur Ho',     pts:148, wins:16, img:'https://i.pravatar.cc/150?img=33', flag:'🇧🇷', rank:3, you:true },
+  { name:'Lena Müller',   pts:141, wins:15, img:'https://i.pravatar.cc/150?img=5',  flag:'🇩🇪', rank:4  },
+  { name:'Mbappé fan',    pts:135, wins:15, img:'https://i.pravatar.cc/150?img=51', flag:'🇫🇷', rank:5  },
+  { name:'Yuki Tanaka',   pts:128, wins:13, img:'https://i.pravatar.cc/150?img=45', flag:'🇯🇵', rank:6  },
+  { name:'Priya Kapoor',  pts:121, wins:13, img:'https://i.pravatar.cc/150?img=26', flag:'🇮🇳', rank:7  },
+  { name:'James Brown',   pts:115, wins:12, img:'https://i.pravatar.cc/150?img=60', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', rank:8  },
+  { name:'Ricardo Costa', pts:108, wins:11, img:'https://i.pravatar.cc/150?img=3',  flag:'🇵🇹', rank:9  },
+  { name:'Tom Wilson',    pts:99,  wins:10, img:'https://i.pravatar.cc/150?img=68', flag:'🇺🇸', rank:10 },
+  { name:'Amara Diallo',  pts:95,  wins:10, img:'https://i.pravatar.cc/150?img=36', flag:'🇸🇳', rank:11 },
+  { name:'Carlos Silva',  pts:88,  wins:9,  img:'https://i.pravatar.cc/150?img=13', flag:'🇦🇷', rank:12 },
+  { name:'Hana Nakamura', pts:82,  wins:8,  img:'https://i.pravatar.cc/150?img=29', flag:'🇯🇵', rank:13 },
+  { name:'Felix Bauer',   pts:76,  wins:8,  img:'https://i.pravatar.cc/150?img=17', flag:'🇩🇪', rank:14 },
+  { name:'Sara González', pts:68,  wins:7,  img:'https://i.pravatar.cc/150?img=44', flag:'🇪🇸', rank:15 },
+];
+
+/* Game definitions per phase */
+const PHASES = [
+  { id:'gs1', label:'⚽ Group Stage R1 · Jun 12–14', cls:'g1',
+    games:[
+      {d:'Jun 12·15h',f:'🇺🇸',f2:'🇲🇽',s:'2–1'},{d:'Jun 12·18h',f:'🇧🇷',f2:'🇦🇷',s:'1–1'},
+      {d:'Jun 13·15h',f:'🇫🇷',f2:'🇩🇪',s:'3–0'},{d:'Jun 13·18h',f:'🇪🇸',f2:'🇵🇹',s:'2–0'},
+      {d:'Jun 14·15h',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',f2:'🇯🇵',s:'1–2'},{d:'Jun 14·18h',f:'🇳🇱',f2:'🇮🇹',s:'1–1'},
+      {d:'Jun 12·21h',f:'🇲🇦',f2:'🇨🇦',s:'0–2'},{d:'Jun 13·21h',f:'🇺🇾',f2:'🇰🇷',s:'1–0'},
+      {d:'Jun 14·15h',f:'🇨🇭',f2:'🇸🇦',s:'2–1'},{d:'Jun 14·21h',f:'🇦🇺',f2:'🇳🇬',s:'1–1'},
+    ]
+  },
+  { id:'gs2', label:'⚽ Group Stage R2 · Jun 17–19', cls:'g2',
+    games:[
+      {d:'Jun 17·15h',f:'🇺🇸',f2:'🇧🇷',s:'0–2'},{d:'Jun 17·18h',f:'🇦🇷',f2:'🇲🇽',s:'2–0'},
+      {d:'Jun 18·15h',f:'🇫🇷',f2:'🇯🇵',s:'1–0'},{d:'Jun 18·18h',f:'🇩🇪',f2:'🇮🇹',s:'2–1'},
+      {d:'Jun 19·15h',f:'🇪🇸',f2:'🇳🇱',s:'0–0'},{d:'Jun 19·18h',f:'🇵🇹',f2:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',s:'2–1'},
+      {d:'Jun 17·21h',f:'🇨🇦',f2:'🇰🇷',s:'1–1'},{d:'Jun 18·21h',f:'🇲🇦',f2:'🇺🇾',s:'0–1'},
+      {d:'Jun 19·21h',f:'🇸🇦',f2:'🇦🇺',s:'0–2'},{d:'Jun 19·15h',f:'🇳🇬',f2:'🇨🇭',s:'1–0'},
+    ]
+  },
+  { id:'gs3', label:'⚽ Group Stage R3 · Jun 22–26', cls:'g3',
+    games:[
+      {d:'Jun 22·18h',f:'🇧🇷',f2:'🇲🇽',s:'3–1'},{d:'Jun 22·18h',f:'🇺🇸',f2:'🇦🇷',s:'1–1'},
+      {d:'Jun 25·18h',f:'🇩🇪',f2:'🇯🇵',s:'2–0'},{d:'Jun 25·18h',f:'🇫🇷',f2:'🇮🇹',s:'2–1'},
+      {d:'Jun 26·18h',f:'🇪🇸',f2:'🇵🇹',s:'1–0'},{d:'Jun 26·18h',f:'🇳🇱',f2:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',s:'2–0'},
+      {d:'Jun 23·18h',f:'🇨🇦',f2:'🇲🇦',s:'2–0'},{d:'Jun 23·18h',f:'🇰🇷',f2:'🇺🇾',s:'1–2'},
+      {d:'Jun 24·18h',f:'🇦🇺',f2:'🇸🇦',s:'1–0'},{d:'Jun 24·18h',f:'🇨🇭',f2:'🇳🇬',s:'2–2'},
+    ]
+  },
+  { id:'r32', label:'🏆 Round of 32 · Jul 1–4  ◀ NOW', cls:'r32c', current:true,
+    games:[
+      {d:'Jul 1·15h',f:'🇦🇷',f2:'🇨🇦',s:'2–0'},{d:'Jul 1·18h',f:'🇧🇷',f2:'🇩🇪',s:'2–1'},
+      {d:'Jul 2·15h',f:'🇫🇷',f2:'🇯🇵',s:'3–0'},{d:'Jul 2·18h',f:'🇺🇸',f2:'🇮🇹',s:'0–1'},
+      {d:'Jul 3·15h',f:'🇪🇸',f2:'🇵🇹',tbd:true},{d:'Jul 3·18h',f:'🇫🇷',f2:'🇩🇪',tbd:true},
+      {d:'Jul 4·15h',f:'🇳🇱',f2:'🇰🇷',tbd:true},{d:'Jul 4·18h',f:'🇲🇦',f2:'🇦🇺',tbd:true},
+    ]
+  },
+  { id:'r16', label:'🏆 Round of 16 · Jul 7–9', cls:'r16c',
+    games:[
+      {d:'Jul 7·18h',f:'🇧🇷',f2:'🇦🇷',tbd:true},{d:'Jul 8·15h',f:'🇮🇹',f2:'🇪🇸',tbd:true},
+      {d:'Jul 8·18h',f:'🇫🇷',f2:'🇳🇱',tbd:true},{d:'Jul 9·18h',f:'🇵🇹',f2:'🇺🇸',tbd:true},
+      {d:'Jul 9·15h',f:'TBD',f2:'TBD',tbd:true},
+    ]
+  },
+  { id:'qf', label:'⚔️ Quarter-Finals · Jul 12–13', cls:'qfc',
+    games:[
+      {d:'Jul 12·18h',f:'TBD',f2:'TBD',tbd:true},{d:'Jul 13·15h',f:'TBD',f2:'TBD',tbd:true},
+      {d:'Jul 13·18h',f:'TBD',f2:'TBD',tbd:true},
+    ]
+  },
+  { id:'sf', label:'⚔️ Semi-Finals · Jul 16–17', cls:'sfc',
+    games:[
+      {d:'Jul 16·18h',f:'TBD',f2:'TBD',tbd:true},{d:'Jul 17·18h',f:'TBD',f2:'TBD',tbd:true},
+    ]
+  },
+  { id:'fin', label:'🏆 Final · Jul 19', cls:'finc',
+    games:[{d:'Jul 19·18h',f:'🏆',f2:'🏆',tbd:true}]
+  },
+];
+
+// Total game columns
+const ALL_GAMES = [];
+const PHASE_COL = {}; // phase id → start col index
+PHASES.forEach(ph => {
+  PHASE_COL[ph.id] = ALL_GAMES.length;
+  ph.games.forEach(g => ALL_GAMES.push({ ...g, phase:ph.id, current:!!ph.current }));
+});
+const NCOLS = ALL_GAMES.length;
+
+// Find R32 range
+const R32_START = PHASE_COL['r32'];
+const R32_END   = PHASE_COL['r32'] + PHASES.find(p=>p.id==='r32').games.length;
+
+/* ── GENERATE PREDICTION STATES ── */
+const STATES = ['px','pw','pdr','wr'];
+const LABELS = { px:'+3 exact', pw:'+1 win', pdr:'+2 draw', wr:'0 wrong' };
+function rnd(n){ return Math.floor(Math.random()*n); }
+
+// Seed random for reproducibility
+let seed = 42;
+function sr(){ seed=(seed*9301+49297)%233280; return seed/233280; }
+
+function genRow(personIdx){
+  const row = [];
+  ALL_GAMES.forEach((g, ci) => {
+    if(g.tbd){
+      // R32 first 4 cols played, next 4 open for YOU (personIdx=2), pending for others
+      if(g.phase==='r32' && ci < R32_START+4){
+        // played
+        row.push({ s: STATES[rnd(4)], score: '1–0' });
+      } else if(g.phase==='r32' || g.phase==='r16'){
+        if(personIdx===2){ row.push({ s:'op' }); }
+        else { row.push({ s:'nd' }); }
+      } else {
+        row.push({ s:'nd' });
+      }
+    } else {
+      // played game — give each person a random result
+      row.push({ s: STATES[Math.floor(sr()*4)], score: g.s });
+    }
+  });
+  return row;
+}
+
+const ROWS = PEOPLE.map((_,i)=>genRow(i));
+
+/* ── BUILD THEAD ── */
+const thead = document.getElementById('thead-el');
+
+// Phase header row
+let phRow = '<tr class="ph">';
+phRow += `<th class="cp g1"><div class="phc"></div></th>`;
+PHASES.forEach(ph => {
+  phRow += `<th colspan="${ph.games.length}" class="${ph.cls}" id="ph-${ph.id}"><div class="phc">${ph.label}</div></th>`;
+});
+phRow += `<th class="ct finc"><div class="phc" style="justify-content:center;font-size:9px">PTS</div></th>`;
+phRow += '</tr>';
+
+// Game header row
+let ghRow = '<tr class="gh">';
+ghRow += `<th class="cp">
+  <div class="fifa-hd">
+    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/9/9c/2026_FIFA_World_Cup_official_emblem.svg/120px-2026_FIFA_World_Cup_official_emblem.svg.png"
+         onerror="this.style.display='none';document.getElementById('ffall').style.display='flex'" alt="FIFA 2026">
+    <div id="ffall" class="fifa-fallback"><span style="font-size:26px">🏆</span></div>
+    <div class="fifa-lbl">FIFA 2026</div>
+    <div class="fifa-sub">World Cup</div>
+  </div>
+</th>`;
+
+ALL_GAMES.forEach(g => {
+  const score = g.tbd
+    ? `<div class="ghs tbd"><div class="pd"></div><div class="pd"></div><div class="pd"></div></div>`
+    : `<div class="ghs">${g.s}</div>`;
+  ghRow += `<th><div class="ghi"><div class="ghd">${g.d}</div><div class="ghf">${g.f}<span class="ghv">v</span>${g.f2}</div>${score}</div></th>`;
+});
+ghRow += `<th class="ct">Total</th></tr>`;
+
+thead.innerHTML = phRow + ghRow;
+
+/* ── BUILD TBODY ── */
+const tbody = document.getElementById('tbody-el');
+let html = '';
+PEOPLE.forEach((p, pi) => {
+  const row = ROWS[pi];
+  const rkc = p.rank===1?'rk-1':p.rank===2?'rk-2':p.rank===3?'rk-3':'rk-n';
+  const tcol = p.rank===1?'#c8900a':p.rank===2?'#607080':p.rank===3?'var(--green)':'var(--text)';
+  const ytag = p.you ? '<span class="ytag">YOU</span>' : '';
+
+  let cells = '';
+  row.forEach((cell, ci) => {
+    const isCur = ALL_GAMES[ci].current;
+    const curC  = isCur ? ' cur' : '';
+    if(cell.s === 'op'){
+      cells += `<td class="pred op${curC}"><div style="font-size:13px">🔒</div><div style="font-size:7px;font-weight:800;color:var(--green-d);margin-top:1px">PREDICT</div></td>`;
+    } else if(cell.s === 'nd'){
+      cells += `<td class="pred nd${curC}"><div class="sv">—</div></td>`;
+    } else {
+      cells += `<td class="pred ${cell.s}${curC}"><div class="sv">${cell.score}</div><div class="sb">${LABELS[cell.s]}</div></td>`;
+    }
+  });
+
+  html += `<tr class="dr${p.you?' you':''}">
+    <td class="cp">
+      <div class="pc">
+        <div class="rk ${rkc}">${p.rank}</div>
+        <div class="av">
+          <div class="av-photo"><img src="${p.img}" alt="" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=00a845&color=fff&size=80'"></div>
+          <div class="av-flag"><span class="flag-em">${p.flag}</span></div>
+        </div>
+        <div>
+          <div class="pn">${p.name}${ytag}</div>
+          <div class="pm">${p.wins} wins</div>
+        </div>
+      </div>
+    </td>
+    ${cells}
+    <td class="ct"><div class="tv" style="color:${tcol}">${p.pts}</div><div class="tl">pts</div></td>
+  </tr>`;
+});
+tbody.innerHTML = html;
+
+/* ── JUMP TO PHASE ── */
+function go(id){
+  const ph = document.getElementById('ph-'+id);
+  const tw = document.getElementById('tw');
+  if(!ph||!tw) return;
+  // Player column width in px
+  const pw = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--pw')) || 220;
+  const twR = tw.getBoundingClientRect();
+  const phR = ph.getBoundingClientRect();
+  tw.scrollTo({ left: tw.scrollLeft + phR.left - twR.left - pw, behavior:'smooth' });
+}
+
+// Auto-scroll to current phase
+window.addEventListener('load', ()=> setTimeout(()=>go('r32'), 800));
+</script>
+</body>
+</html>

@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WC Predict 2026 — Leaderboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green:   #00c853;
+    --green-d: #006b2a;
+    --green-m: #00a845;
+    --orange:  #FF5722;
+    --yellow:  #FFD600;
+    --bg:      #f0fdf5;
+    --card:    rgba(255,255,255,0.96);
+    --text:    #0d1a10;
+    --muted:   #667c70;
+    --border:  rgba(0,160,70,0.15);
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+  /* ── BG ─────────────────────────────────────── */
+  .bg-wrap { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .bg-photo {
+    position: absolute; inset: 0;
+    background-image: url('https://footiehound.com/wp-content/uploads/2025/08/cropped-football-prediction-today.jpg');
+    background-size: cover; background-position: center;
+    animation: bgKB 20s ease-in-out infinite alternate;
+    filter: brightness(1.05) saturate(1.1);
+  }
+  @keyframes bgKB { from{transform:scale(1)translateX(0)} to{transform:scale(1.07)translateX(-20px)} }
+  .bg-overlay {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(to bottom, rgba(240,253,245,.82) 0%, rgba(240,253,245,.78) 50%, rgba(240,253,245,.88) 100%),
+      linear-gradient(135deg, rgba(0,200,83,.06) 0%, transparent 50%, rgba(255,214,0,.04) 100%);
+    backdrop-filter: blur(1px);
+  }
+  .bg-stripes {
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(180deg,rgba(0,180,60,.03) 0,rgba(0,180,60,.03) 60px,transparent 60px,transparent 120px);
+  }
+
+  /* ── NAVBAR ──────────────────────────────────── */
+  .nav {
+    position: sticky; top: 0; z-index: 200; width: 100%; height: 62px; padding: 0 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(240,253,245,.92); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border); box-shadow: 0 2px 20px rgba(0,160,70,.08);
+    animation: navIn .5s ease both;
+  }
+  @keyframes navIn { from{opacity:0;transform:translateY(-62px)} to{opacity:1;transform:translateY(0)} }
+  .logo { display:flex;align-items:center;gap:10px;font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--green-d); }
+  .logo em { color:var(--orange);font-style:normal; }
+  .logo-ball { width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--green-m),var(--green-d));display:flex;align-items:center;justify-content:center;font-size:20px;animation:spin 12s linear infinite;box-shadow:0 2px 14px rgba(0,200,83,.4); }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .nav-links { display:flex;gap:2px; }
+  .nav-a { padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;cursor:pointer;transition:all .2s; }
+  .nav-a:hover { background:rgba(0,200,83,.1);color:var(--green-d); }
+  .nav-a.on { background:rgba(0,200,83,.13);color:var(--green-d);border:1px solid var(--border); }
+  .nav-r { display:flex;align-items:center;gap:10px; }
+  .predict-btn { background:linear-gradient(135deg,var(--orange),#ff6d47);color:white;border:none;border-radius:10px;padding:9px 20px;font-size:13px;font-weight:800;cursor:pointer;animation:oBlink 2.5s ease-in-out infinite; }
+  @keyframes oBlink { 0%,100%{box-shadow:0 3px 12px rgba(255,87,34,.35)} 50%{box-shadow:0 3px 24px rgba(255,87,34,.65)} }
+  .user-chip { display:flex;align-items:center;gap:8px;background:rgba(0,200,83,.1);border:1px solid var(--border);border-radius:99px;padding:4px 14px 4px 4px;font-size:13px;font-weight:700;color:var(--green-d); }
+  .chip-av { width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--green-m),var(--green-d));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white; }
+
+  /* ── PAGE ────────────────────────────────────── */
+  .page { position:relative;z-index:1;width:100%;padding:36px 40px 80px; }
+
+  /* HERO */
+  .hero-row { display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:32px;animation:fadeUp .6s ease .2s both; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  .hero-eye { font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--green-m);margin-bottom:5px; }
+  .hero-title { font-family:'Bebas Neue',sans-serif;font-size:58px;line-height:1;letter-spacing:4px;color:var(--text); }
+  .hero-title em { color:var(--green);font-style:normal; }
+  .hero-sub { color:var(--muted);font-size:14px;margin-top:4px; }
+  .hero-sub b { color:var(--text); }
+  .kpi-row { display:flex;gap:10px;margin-top:14px;flex-wrap:wrap; }
+  .kpi { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 18px;box-shadow:0 2px 10px rgba(0,160,70,.07);transition:all .2s;animation:fadeUp .5s ease both; }
+  .kpi:hover{transform:translateY(-2px);box-shadow:0 4px 18px rgba(0,160,70,.13)}
+  .kpi:nth-child(1){animation-delay:.3s}.kpi:nth-child(2){animation-delay:.4s}.kpi:nth-child(3){animation-delay:.5s}.kpi:nth-child(4){animation-delay:.6s}
+  .kpi-v { font-size:26px;font-weight:900;color:var(--green);line-height:1; }
+  .kpi-l { font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px; }
+  .nm-pill { background:linear-gradient(135deg,var(--orange),#ff6d47);color:white;border-radius:14px;padding:14px 22px;min-width:260px;animation:fadeUp .5s ease .4s both;box-shadow:0 6px 20px rgba(255,87,34,.3); }
+  .nm-pill-top { font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:.85;margin-bottom:5px; }
+  .nm-pill-match { font-size:16px;font-weight:900;margin-bottom:4px; }
+  .nm-pill-time { font-size:12px;opacity:.8;margin-bottom:12px; }
+  .nm-pill-btn { background:white;color:var(--orange);border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:800;cursor:pointer;width:100%; }
+
+  .sec { font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--green-d);margin-bottom:16px;display:flex;align-items:center;gap:10px; }
+  .sec::after { content:'';flex:1;height:2px;background:linear-gradient(to right,rgba(0,160,70,.2),transparent); }
+
+  /* ── TABLE ───────────────────────────────────── */
+  .table-scroll {
+    width: 100%; overflow-x: auto;
+    border-radius: 16px; border: 1px solid var(--border);
+    box-shadow: 0 4px 32px rgba(0,0,0,.09); background: var(--card);
+    animation: fadeUp .6s ease .35s both;
+    scroll-behavior: smooth;
+  }
+  /* Custom scrollbar */
+  .table-scroll::-webkit-scrollbar { height: 6px; }
+  .table-scroll::-webkit-scrollbar-track { background: rgba(0,160,70,.05); border-radius: 3px; }
+  .table-scroll::-webkit-scrollbar-thumb { background: rgba(0,160,70,.3); border-radius: 3px; }
+
+  .pred-table {
+    border-collapse: collapse;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  /* Sticky columns */
+  .col-player { position:sticky;left:0;z-index:10;background:var(--card); }
+  .col-total  { position:sticky;right:0;z-index:10;background:var(--card);border-left:2px solid var(--border); }
+
+  /* ── PHASE HEADER ROW ── animated, separated ── */
+  tr.phase-hd td {
+    padding: 0;
+    border: none;
+  }
+  .phase-inner {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 16px;
+    font-size: 11px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase;
+    color: white; position: relative; overflow: hidden;
+  }
+  /* Each phase has its own gradient + animated shimmer */
+  .phase-gs1  .phase-inner { background: linear-gradient(135deg, #006b2a 0%, #00a845 60%, #00c853 100%); }
+  .phase-gs2  .phase-inner { background: linear-gradient(135deg, #1a6800 0%, #3d9900 60%, #52c800 100%); }
+  .phase-gs3  .phase-inner { background: linear-gradient(135deg, #006b55 0%, #00a882 60%, #00c8a0 100%); }
+  .phase-r32  .phase-inner { background: linear-gradient(135deg, #1a2f6b 0%, #2952c8 60%, #4272f5 100%); }
+  .phase-r16  .phase-inner { background: linear-gradient(135deg, #5a1a6b 0%, #9b2dc8 60%, #bf52f5 100%); }
+  .phase-qf   .phase-inner { background: linear-gradient(135deg, #6b3400 0%, #c86000 60%, #f58020 100%); }
+  .phase-sf   .phase-inner { background: linear-gradient(135deg, #6b0020 0%, #c8003a 60%, #f52060 100%); }
+  .phase-fin  .phase-inner { background: linear-gradient(135deg, #5a4a00 0%, #c8a000 60%, #ffd600 100%); }
+
+  /* Animated shimmer sweep */
+  .phase-inner::before {
+    content: '';
+    position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+    animation: phaseSweep 3s ease-in-out infinite;
+  }
+  @keyframes phaseSweep {
+    0%   { left: -100%; }
+    60%  { left: 140%; }
+    100% { left: 140%; }
+  }
+
+  /* Gap between phase sections */
+  tr.phase-gap td {
+    height: 8px;
+    background: rgba(0,160,70,.04);
+    border: none;
+    border-top: 1px solid rgba(0,160,70,.1);
+  }
+
+  /* ── GAME HEADER ── */
+  tr.game-hd th {
+    background: rgba(0,160,70,.07);
+    border-bottom: 2px solid rgba(0,160,70,.2);
+    border-right: 1px solid rgba(0,160,70,.1);
+    padding: 0; vertical-align: top;
+  }
+  tr.game-hd th.col-player {
+    background: rgba(0,160,70,.07); padding: 10px 16px;
+    font-size: 22px; text-align: left;
+    display: revert; /* let th be a cell */
+  }
+  tr.game-hd th.col-total {
+    background: rgba(0,160,70,.07); padding: 10px 14px;
+    font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--green-d); text-align: center;
+  }
+
+  .game-th {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 8px 6px; min-width: 90px;
+  }
+  .game-date { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .game-flags { display:flex;align-items:center;gap:3px;font-size:20px;line-height:1; }
+  .game-vs { font-size: 9px; font-weight: 700; color: var(--muted); }
+  .game-score {
+    font-size: 13px; font-weight: 900; letter-spacing: 1px;
+    color: var(--text); background: rgba(0,0,0,.07);
+    border-radius: 6px; padding: 2px 8px; margin-top: 1px;
+    font-variant-numeric: tabular-nums;
+  }
+  .game-score.tbd {
+    color: var(--muted); background: rgba(0,0,0,.04);
+    display: flex; align-items: center; gap: 2px; font-size: 10px;
+  }
+  .pdot { width:4px;height:4px;border-radius:50%;background:rgba(0,160,70,.35);animation:pdotP 1.4s ease-in-out infinite; }
+  .pdot:nth-child(2){animation-delay:.2s} .pdot:nth-child(3){animation-delay:.4s}
+  @keyframes pdotP { 0%,100%{opacity:.3;transform:scale(1)} 50%{opacity:1;transform:scale(1.4)} }
+
+  /* ── DATA ROWS ── */
+  tr.data-row td {
+    border-right: 1px solid rgba(0,160,70,.07);
+    border-bottom: 1px solid rgba(0,160,70,.06);
+    vertical-align: middle; transition: background .15s;
+  }
+  tr.data-row:hover td { background: rgba(0,200,83,.04); }
+  tr.data-row:hover td.col-player, tr.data-row:hover td.col-total { background: rgba(0,200,83,.07); }
+  tr.data-row.you td { background: rgba(0,200,83,.05); }
+  tr.data-row.you td.col-player { border-left: 3px solid var(--green); background: rgba(0,200,83,.08); }
+  tr.data-row:last-child td { border-bottom: none; }
+  tr.data-row:nth-child(1){animation-delay:.04s}tr.data-row:nth-child(2){animation-delay:.08s}
+  tr.data-row:nth-child(3){animation-delay:.12s}tr.data-row:nth-child(4){animation-delay:.16s}
+  tr.data-row:nth-child(5){animation-delay:.20s}
+
+  /* PLAYER CELL */
+  .player-td { display:flex;align-items:center;gap:12px;padding:10px 16px;min-width:200px; }
+
+  /* ── AVATAR — square photo + wide animated flag ribbon ── */
+  .av-wrap { position:relative;width:44px;height:58px;flex-shrink:0; }
+  .av-photo { width:44px;height:44px;border-radius:10px;overflow:hidden;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.15); }
+  .av-photo img { width:100%;height:100%;object-fit:cover;display:block; }
+
+  /* Wide flag ribbon under avatar */
+  .av-flag-bar {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 52px; /* wider than the avatar */
+    height: 18px;
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; line-height: 1;
+    background: rgba(255,255,255,.9);
+    box-shadow: 0 2px 6px rgba(0,0,0,.2);
+    animation: flagRibbonWave 2.5s ease-in-out infinite;
+    transform-origin: center bottom;
+    overflow: hidden;
+  }
+  /* The shimmer sweep on the ribbon */
+  .av-flag-bar::after {
+    content: '';
+    position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent);
+    animation: ribbonShimmer 2.5s ease-in-out infinite;
+  }
+  @keyframes ribbonShimmer {
+    0%   { left: -60%; }
+    60%  { left: 120%; }
+    100% { left: 120%; }
+  }
+  @keyframes flagRibbonWave {
+    0%,100% { transform:translateX(-50%) rotate(-2.5deg) scaleX(1.0); }
+    30%     { transform:translateX(-50%) rotate( 2deg)   scaleX(0.97); }
+    65%     { transform:translateX(-50%) rotate(-1.5deg) scaleX(1.02); }
+  }
+
+  .p-name  { font-size:13px;font-weight:700;color:var(--text); }
+  .p-you   { display:inline-block;background:var(--green);color:white;font-size:8px;font-weight:800;letter-spacing:1px;padding:1px 4px;border-radius:4px;margin-left:4px;vertical-align:middle; }
+  .p-meta  { font-size:10px;color:var(--muted);margin-top:1px; }
+
+  /* TOTAL COL */
+  td.col-total { text-align:center;padding:10px 14px; }
+  .total-v { font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1; }
+  .total-l { font-size:9px;color:var(--muted);font-weight:600;margin-top:1px; }
+
+  /* ── PREDICTION CELLS ── */
+  .pred { text-align:center;padding:7px 4px;min-width:90px;vertical-align:middle; }
+  .p-exact   { background:rgba(0,200,83,.14); }
+  .p-winner  { background:rgba(255,200,0,.2); }
+  .p-draw    { background:rgba(70,130,255,.13); }
+  .p-wrong   { background:rgba(239,68,68,.1); }
+  .p-pending { background:transparent; }
+
+  .pred-v { font-size:14px;font-weight:800;letter-spacing:1px;font-variant-numeric:tabular-nums;line-height:1; }
+  .p-exact  .pred-v { color:#005a20; }
+  .p-winner .pred-v { color:#7a5500; }
+  .p-draw   .pred-v { color:#2040a0; }
+  .p-wrong  .pred-v { color:#b91c1c; }
+  .p-pending .pred-v { color:var(--muted);font-size:11px; }
+
+  .pred-badge { display:inline-block;font-size:9px;font-weight:800;border-radius:4px;padding:1px 5px;margin-top:3px;letter-spacing:.3px; }
+  .p-exact  .pred-badge { background:rgba(0,200,83,.2);color:#005a20; }
+  .p-winner .pred-badge { background:rgba(255,200,0,.3);color:#7a5500; }
+  .p-draw   .pred-badge { background:rgba(70,130,255,.2);color:#2040a0; }
+  .p-wrong  .pred-badge { background:rgba(239,68,68,.15);color:#b91c1c; }
+
+  /* Legend */
+  .legend { display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;animation:fadeUp .5s ease .3s both; }
+  .leg { display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--text); }
+  .leg-dot { width:14px;height:14px;border-radius:4px; }
+  .l-ex .leg-dot{background:rgba(0,200,83,.4)}
+  .l-wi .leg-dot{background:rgba(255,200,0,.6)}
+  .l-dr .leg-dot{background:rgba(70,130,255,.4)}
+  .l-wr .leg-dot{background:rgba(239,68,68,.3)}
+  .l-no .leg-dot{background:rgba(0,0,0,.08)}
+
+  /* STRIP */
+  .strip{margin-top:28px;background:linear-gradient(135deg,var(--green-d),var(--green-m));border-radius:20px;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px;box-shadow:0 8px 28px rgba(0,130,60,.2);animation:fadeUp .6s ease .5s both;position:relative;overflow:hidden;}
+  .strip::after{content:'⚽';position:absolute;right:200px;top:50%;transform:translateY(-50%);font-size:110px;opacity:.06;animation:spin 20s linear infinite;}
+  .s-lbl{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:6px;}
+  .s-match{font-size:20px;font-weight:900;color:white;margin-bottom:6px;}
+  .s-score{font-size:38px;font-weight:900;letter-spacing:4px;color:rgba(255,255,255,.3);}
+  .s-time{font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;}
+  .s-btn{background:linear-gradient(135deg,var(--yellow),#ffa000);color:#0d1a10;border:none;border-radius:14px;padding:16px 34px;font-size:15px;font-weight:900;cursor:pointer;white-space:nowrap;z-index:1;position:relative;animation:goldenPulse 2s ease-in-out infinite;}
+  @keyframes goldenPulse{0%,100%{box-shadow:0 4px 18px rgba(255,214,0,.3)}50%{box-shadow:0 4px 34px rgba(255,214,0,.6);transform:scale(1.02)}}
+</style>
+</head>
+<body>
+<div class="bg-wrap">
+  <div class="bg-photo"></div>
+  <div class="bg-overlay"></div>
+  <div class="bg-stripes"></div>
+</div>
+
+<nav class="nav">
+  <div class="logo"><div class="logo-ball">⚽</div>WC PREDICT&nbsp;<em>2026</em></div>
+  <div class="nav-links">
+    <a class="nav-a">🏠 Home</a>
+    <a class="nav-a on">🏆 Leaderboard</a>
+    <a class="nav-a">📅 Fixtures</a>
+    <a class="nav-a">🎯 Predictions</a>
+    <a class="nav-a">🌍 Groups</a>
+    <a class="nav-a">🗂 Bracket</a>
+  </div>
+  <div class="nav-r">
+    <button class="predict-btn">🎯 PREDICT NOW</button>
+    <div class="user-chip"><div class="chip-av">AH</div>Arthur H.</div>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="hero-row">
+    <div>
+      <div class="hero-eye">⚽ FIFA World Cup 2026 · Matchday 7</div>
+      <div class="hero-title">LEADER<em>BOARD</em></div>
+      <div class="hero-sub"><b>42 participants</b> · <b>28 matches</b> completed</div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-v">148</div><div class="kpi-l">Your Points</div></div>
+        <div class="kpi"><div class="kpi-v" style="color:var(--orange)">#3</div><div class="kpi-l">Your Rank</div></div>
+        <div class="kpi"><div class="kpi-v">12</div><div class="kpi-l">Exact Scores</div></div>
+        <div class="kpi"><div class="kpi-v">19</div><div class="kpi-l">pts behind #1</div></div>
+      </div>
+    </div>
+    <div class="nm-pill">
+      <div class="nm-pill-top">⚡ Open now · Closes in 4h 22m</div>
+      <div class="nm-pill-match">🇫🇷 France &nbsp;vs&nbsp; 🇩🇪 Germany</div>
+      <div class="nm-pill-time">June 15 · 18:00 kickoff</div>
+      <button class="nm-pill-btn">🎯 Submit Your Prediction →</button>
+    </div>
+  </div>
+
+  <div class="sec">🗓 Round-by-Round Prediction Breakdown</div>
+
+  <div class="legend">
+    <div class="leg l-ex"><div class="leg-dot"></div> Exact score (+3)</div>
+    <div class="leg l-wi"><div class="leg-dot"></div> Correct winner (+1)</div>
+    <div class="leg l-dr"><div class="leg-dot"></div> Correct draw (+2)</div>
+    <div class="leg l-wr"><div class="leg-dot"></div> Wrong (0)</div>
+    <div class="leg l-no"><div class="leg-dot"></div> Not played yet</div>
+  </div>
+
+  <div class="table-scroll">
+  <table class="pred-table" cellspacing="0" cellpadding="0">
+
+    <!-- ══════ GROUP STAGE — ROUND 1 ══════════════ -->
+    <tr class="phase-hd phase-gs1">
+      <td class="col-player" colspan="1"><div class="phase-inner">⚽ Group Stage — Round 1 &nbsp;·&nbsp; Jun 12–14, 2026</div></td>
+      <td colspan="6"><div class="phase-inner">⚽ Group Stage — Round 1 &nbsp;·&nbsp; Jun 12–14, 2026</div></td>
+      <td class="col-total"><div class="phase-inner" style="justify-content:center">Pts</div></td>
+    </tr>
+    <tr class="game-hd">
+      <th class="col-player">🏆</th>
+      <th><div class="game-th"><div class="game-date">Jun 12 · 15:00</div><div class="game-flags">🇺🇸 <span class="game-vs">vs</span> 🇲🇽</div><div class="game-score">2–1</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jun 12 · 18:00</div><div class="game-flags">🇧🇷 <span class="game-vs">vs</span> 🇦🇷</div><div class="game-score">1–1</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jun 13 · 15:00</div><div class="game-flags">🇫🇷 <span class="game-vs">vs</span> 🇩🇪</div><div class="game-score">3–0</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jun 13 · 18:00</div><div class="game-flags">🏴󠁧󠁢󠁥󠁮󠁧󠁿 <span class="game-vs">vs</span> 🇯🇵</div><div class="game-score">1–2</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jun 14 · 15:00</div><div class="game-flags">🇪🇸 <span class="game-vs">vs</span> 🇵🇹</div><div class="game-score">2–0</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jun 14 · 18:00</div><div class="game-flags">🇮🇹 <span class="game-vs">vs</span> 🇳🇱</div><div class="game-score">1–1</div></div></th>
+      <th class="col-total">Pts</th>
+    </tr>
+    <!-- DATA -->
+    <tr class="data-row r1">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=12" alt="Marco"></div><div class="av-flag-bar">🇮🇹</div></div><div><div class="p-name">Marco Rossi</div><div class="p-meta">#1 · 19 wins</div></div></div></td>
+      <td class="pred p-exact"><div class="pred-v">2–1</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-draw"><div class="pred-v">0–0</div><div class="pred-badge">+2 draw</div></td>
+      <td class="pred p-exact"><div class="pred-v">3–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-wrong"><div class="pred-v">1–0</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-exact"><div class="pred-v">1–1</div><div class="pred-badge">+3 exact</div></td>
+      <td class="col-total"><div class="total-v" style="color:#c8900a">12</div><div class="total-l">pts</div></td>
+    </tr>
+    <tr class="data-row r2">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=47" alt="Sophie"></div><div class="av-flag-bar">🇫🇷</div></div><div><div class="p-name">Sophie Durand</div><div class="p-meta">#2 · 17 wins</div></div></div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-exact"><div class="pred-v">1–1</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-winner"><div class="pred-v">2–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-exact"><div class="pred-v">1–2</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-wrong"><div class="pred-v">1–0</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-draw"><div class="pred-v">2–2</div><div class="pred-badge">+2 draw</div></td>
+      <td class="col-total"><div class="total-v" style="color:#607080">10</div><div class="total-l">pts</div></td>
+    </tr>
+    <tr class="data-row r3 you">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=33" alt="Arthur"></div><div class="av-flag-bar">🇧🇷</div></div><div><div class="p-name">Arthur Ho <span class="p-you">YOU</span></div><div class="p-meta">#3 · 16 wins</div></div></div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-draw"><div class="pred-v">2–2</div><div class="pred-badge">+2 draw</div></td>
+      <td class="pred p-exact"><div class="pred-v">3–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-wrong"><div class="pred-v">2–0</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-exact"><div class="pred-v">2–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-wrong"><div class="pred-v">2–0</div><div class="pred-badge">0 wrong</div></td>
+      <td class="col-total"><div class="total-v" style="color:var(--green)">9</div><div class="total-l">pts</div></td>
+    </tr>
+    <tr class="data-row rn">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=5" alt="Lena"></div><div class="av-flag-bar">🇩🇪</div></div><div><div class="p-name">Lena Müller</div><div class="p-meta">#4 · 15 wins</div></div></div></td>
+      <td class="pred p-exact"><div class="pred-v">2–1</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-wrong"><div class="pred-v">2–0</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-winner"><div class="pred-v">2–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-wrong"><div class="pred-v">0–0</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-exact"><div class="pred-v">1–1</div><div class="pred-badge">+3 exact</div></td>
+      <td class="col-total"><div class="total-v">8</div><div class="total-l">pts</div></td>
+    </tr>
+    <tr class="data-row rn">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=51" alt="Kylian"></div><div class="av-flag-bar">🇫🇷</div></div><div><div class="p-name">Mbappé fan</div><div class="p-meta">#5 · 15 wins</div></div></div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-wrong"><div class="pred-v">2–1</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-exact"><div class="pred-v">3–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-exact"><div class="pred-v">1–2</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-wrong"><div class="pred-v">1–0</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-winner"><div class="pred-v">1–1</div><div class="pred-badge">+1 winner</div></td>
+      <td class="col-total"><div class="total-v">8</div><div class="total-l">pts</div></td>
+    </tr>
+
+    <!-- GAP -->
+    <tr class="phase-gap"><td colspan="8"></td></tr>
+
+    <!-- ══════ GROUP STAGE — ROUND 2 ══════════════ -->
+    <tr class="phase-hd phase-gs2">
+      <td class="col-player" colspan="1"><div class="phase-inner">⚽ Group Stage — Round 2 &nbsp;·&nbsp; Jun 17–19, 2026</div></td>
+      <td colspan="6"><div class="phase-inner">⚽ Group Stage — Round 2 &nbsp;·&nbsp; Jun 17–19, 2026</div></td>
+      <td class="col-total"><div class="phase-inner" style="justify-content:center">Pts</div></td>
+    </tr>
+    <tr class="game-hd">
+      <th class="col-player">🏆</th>
+      <th><div class="game-th"><div class="game-date">Jun 17 · 15:00</div><div class="game-flags">🇺🇸 <span class="game-vs">vs</span> 🇧🇷</div><div class="game-score">0–2</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jun 17 · 18:00</div><div class="game-flags">🇦🇷 <span class="game-vs">vs</span> 🇲🇽</div><div class="game-score">2–0</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jun 18 · 15:00</div><div class="game-flags">🇩🇪 <span class="game-vs">vs</span> 🇯🇵</div><div class="game-score">2–1</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jun 18 · 18:00</div><div class="game-flags">🇫🇷 <span class="game-vs">vs</span> 🇳🇱</div><div class="game-score">1–0</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jun 19 · 15:00</div><div class="game-flags">🇪🇸 <span class="game-vs">vs</span> 🇮🇹</div><div class="game-score">1–1</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jun 19 · 18:00</div><div class="game-flags">🇵🇹 <span class="game-vs">vs</span> 🏴󠁧󠁢󠁥󠁮󠁧󠁿</div><div class="game-score">2–0</div></div></th>
+      <th class="col-total">Pts</th>
+    </tr>
+    <tr class="data-row r1">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=12" alt="Marco"></div><div class="av-flag-bar">🇮🇹</div></div><div><div class="p-name">Marco Rossi</div><div class="p-meta">#1</div></div></div></td>
+      <td class="pred p-winner"><div class="pred-v">0–1</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-exact"><div class="pred-v">2–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-exact"><div class="pred-v">1–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-draw"><div class="pred-v">0–0</div><div class="pred-badge">+2 draw</div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="col-total"><div class="total-v" style="color:#c8900a">11</div><div class="total-l">pts</div></td>
+    </tr>
+    <tr class="data-row r2">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=47" alt="Sophie"></div><div class="av-flag-bar">🇫🇷</div></div><div><div class="p-name">Sophie Durand</div><div class="p-meta">#2</div></div></div></td>
+      <td class="pred p-exact"><div class="pred-v">0–2</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-wrong"><div class="pred-v">1–1</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-exact"><div class="pred-v">2–1</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-winner"><div class="pred-v">2–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-draw"><div class="pred-v">1–1</div><div class="pred-badge">+2 draw</div></td>
+      <td class="pred p-exact"><div class="pred-v">2–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="col-total"><div class="total-v" style="color:#607080">12</div><div class="total-l">pts</div></td>
+    </tr>
+    <tr class="data-row r3 you">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=33" alt="Arthur"></div><div class="av-flag-bar">🇧🇷</div></div><div><div class="p-name">Arthur Ho <span class="p-you">YOU</span></div><div class="p-meta">#3</div></div></div></td>
+      <td class="pred p-exact"><div class="pred-v">0–2</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-exact"><div class="pred-v">1–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-wrong"><div class="pred-v">0–1</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-exact"><div class="pred-v">2–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="col-total"><div class="total-v" style="color:var(--green)">11</div><div class="total-l">pts</div></td>
+    </tr>
+    <tr class="data-row rn">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=5" alt="Lena"></div><div class="av-flag-bar">🇩🇪</div></div><div><div class="p-name">Lena Müller</div><div class="p-meta">#4</div></div></div></td>
+      <td class="pred p-wrong"><div class="pred-v">1–0</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-exact"><div class="pred-v">2–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-exact"><div class="pred-v">2–1</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-winner"><div class="pred-v">2–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-draw"><div class="pred-v">0–0</div><div class="pred-badge">+2 draw</div></td>
+      <td class="pred p-wrong"><div class="pred-v">1–0</div><div class="pred-badge">0 wrong</div></td>
+      <td class="col-total"><div class="total-v">9</div><div class="total-l">pts</div></td>
+    </tr>
+    <tr class="data-row rn">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=51" alt="Kylian"></div><div class="av-flag-bar">🇫🇷</div></div><div><div class="p-name">Mbappé fan</div><div class="p-meta">#5</div></div></div></td>
+      <td class="pred p-winner"><div class="pred-v">0–1</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-exact"><div class="pred-v">1–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-wrong"><div class="pred-v">2–1</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="col-total"><div class="total-v">7</div><div class="total-l">pts</div></td>
+    </tr>
+
+    <!-- GAP -->
+    <tr class="phase-gap"><td colspan="8"></td></tr>
+
+    <!-- ══════ ROUND OF 32 ══════════════ -->
+    <tr class="phase-hd phase-r32">
+      <td class="col-player" colspan="1"><div class="phase-inner">🏆 Round of 32 &nbsp;·&nbsp; Jul 1–4, 2026</div></td>
+      <td colspan="6"><div class="phase-inner">🏆 Round of 32 &nbsp;·&nbsp; Jul 1–4, 2026</div></td>
+      <td class="col-total"><div class="phase-inner" style="justify-content:center">Pts</div></td>
+    </tr>
+    <tr class="game-hd">
+      <th class="col-player">🏆</th>
+      <th><div class="game-th"><div class="game-date">Jul 1 · 18:00</div><div class="game-flags">🇧🇷 <span class="game-vs">vs</span> 🇩🇪</div><div class="game-score">2–1</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jul 2 · 15:00</div><div class="game-flags">🇫🇷 <span class="game-vs">vs</span> 🇯🇵</div><div class="game-score">3–0</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jul 2 · 18:00</div><div class="game-flags">🇦🇷 <span class="game-vs">vs</span> 🇵🇹</div><div class="game-score">1–1<br><span style="font-size:9px;color:var(--muted)">(4–3 pen)</span></div></div></th>
+      <th><div class="game-th"><div class="game-date">Jul 3 · 15:00</div><div class="game-flags">🇺🇸 <span class="game-vs">vs</span> 🇮🇹</div><div class="game-score">0–1</div></div></th>
+      <th><div class="game-th"><div class="game-date">Jul 3 · 18:00</div><div class="game-flags">🇪🇸 <span class="game-vs">vs</span> 🏴󠁧󠁢󠁥󠁮󠁧󠁿</div><div class="game-score tbd"><div class="pdot"></div><div class="pdot"></div><div class="pdot"></div></div></div></th>
+      <th><div class="game-th"><div class="game-date">Jul 4 · 18:00</div><div class="game-flags">🇳🇱 <span class="game-vs">vs</span> 🇲🇽</div><div class="game-score tbd"><div class="pdot"></div><div class="pdot"></div><div class="pdot"></div></div></div></th>
+      <th class="col-total">Pts</th>
+    </tr>
+    <tr class="data-row r1">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=12" alt="Marco"></div><div class="av-flag-bar">🇮🇹</div></div><div><div class="p-name">Marco Rossi</div><div class="p-meta">#1</div></div></div></td>
+      <td class="pred p-exact"><div class="pred-v">2–1</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-winner"><div class="pred-v">2–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-draw"><div class="pred-v">0–0</div><div class="pred-badge">+2 draw</div></td>
+      <td class="pred p-exact"><div class="pred-v">0–1</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-pending"><div class="pred-v">1–0</div><div style="display:flex;gap:2px;justify-content:center;margin-top:4px"><div class="pdot"></div><div class="pdot"></div><div class="pdot"></div></div></td>
+      <td class="pred p-pending"><div class="pred-v">2–1</div><div style="display:flex;gap:2px;justify-content:center;margin-top:4px"><div class="pdot"></div><div class="pdot"></div><div class="pdot"></div></div></td>
+      <td class="col-total"><div class="total-v" style="color:#c8900a">9</div><div class="total-l">pts</div></td>
+    </tr>
+    <tr class="data-row r2">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=47" alt="Sophie"></div><div class="av-flag-bar">🇫🇷</div></div><div><div class="p-name">Sophie Durand</div><div class="p-meta">#2</div></div></div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-exact"><div class="pred-v">3–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-wrong"><div class="pred-v">2–0</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-exact"><div class="pred-v">0–1</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-pending"><div class="pred-v">2–0</div><div style="display:flex;gap:2px;justify-content:center;margin-top:4px"><div class="pdot"></div><div class="pdot"></div><div class="pdot"></div></div></td>
+      <td class="pred p-pending"><div class="pred-v">1–0</div><div style="display:flex;gap:2px;justify-content:center;margin-top:4px"><div class="pdot"></div><div class="pdot"></div><div class="pdot"></div></div></td>
+      <td class="col-total"><div class="total-v" style="color:#607080">7</div><div class="total-l">pts</div></td>
+    </tr>
+    <tr class="data-row r3 you">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=33" alt="Arthur"></div><div class="av-flag-bar">🇧🇷</div></div><div><div class="p-name">Arthur Ho <span class="p-you">YOU</span></div><div class="p-meta">#3</div></div></div></td>
+      <td class="pred p-exact"><div class="pred-v">2–1</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-winner"><div class="pred-v">2–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-draw"><div class="pred-v">1–1</div><div class="pred-badge">+2 draw</div></td>
+      <td class="pred p-wrong"><div class="pred-v">1–0</div><div class="pred-badge">0 wrong</div></td>
+      <!-- OPEN PREDICTIONS — dashed green -->
+      <td class="pred" style="background:rgba(0,200,83,.1);border:2px dashed rgba(0,200,83,.5)"><div style="font-size:18px">🔒</div><div style="font-size:9px;font-weight:800;color:var(--green-d);margin-top:2px">PREDICT!</div></td>
+      <td class="pred" style="background:rgba(0,200,83,.1);border:2px dashed rgba(0,200,83,.5)"><div style="font-size:18px">🔒</div><div style="font-size:9px;font-weight:800;color:var(--green-d);margin-top:2px">PREDICT!</div></td>
+      <td class="col-total"><div class="total-v" style="color:var(--green)">6</div><div class="total-l">pts</div></td>
+    </tr>
+    <tr class="data-row rn">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=5" alt="Lena"></div><div class="av-flag-bar">🇩🇪</div></div><div><div class="p-name">Lena Müller</div><div class="p-meta">#4</div></div></div></td>
+      <td class="pred p-winner"><div class="pred-v">1–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-exact"><div class="pred-v">3–0</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-wrong"><div class="pred-v">1–0</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-winner"><div class="pred-v">0–2</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-pending"><div class="pred-v">1–0</div><div style="display:flex;gap:2px;justify-content:center;margin-top:4px"><div class="pdot"></div><div class="pdot"></div><div class="pdot"></div></div></td>
+      <td class="pred p-pending"><div class="pred-v">2–0</div><div style="display:flex;gap:2px;justify-content:center;margin-top:4px"><div class="pdot"></div><div class="pdot"></div><div class="pdot"></div></div></td>
+      <td class="col-total"><div class="total-v">5</div><div class="total-l">pts</div></td>
+    </tr>
+    <tr class="data-row rn">
+      <td class="col-player"><div class="player-td"><div class="av-wrap"><div class="av-photo"><img src="https://i.pravatar.cc/150?img=51" alt="Kylian"></div><div class="av-flag-bar">🇫🇷</div></div><div><div class="p-name">Mbappé fan</div><div class="p-meta">#5</div></div></div></td>
+      <td class="pred p-exact"><div class="pred-v">2–1</div><div class="pred-badge">+3 exact</div></td>
+      <td class="pred p-winner"><div class="pred-v">2–0</div><div class="pred-badge">+1 winner</div></td>
+      <td class="pred p-draw"><div class="pred-v">2–2</div><div class="pred-badge">+2 draw</div></td>
+      <td class="pred p-wrong"><div class="pred-v">2–0</div><div class="pred-badge">0 wrong</div></td>
+      <td class="pred p-pending"><div class="pred-v">1–0</div><div style="display:flex;gap:2px;justify-content:center;margin-top:4px"><div class="pdot"></div><div class="pdot"></div><div class="pdot"></div></div></td>
+      <td class="pred p-pending"><div class="pred-v">1–1</div><div style="display:flex;gap:2px;justify-content:center;margin-top:4px"><div class="pdot"></div><div class="pdot"></div><div class="pdot"></div></div></td>
+      <td class="col-total"><div class="total-v">6</div><div class="total-l">pts</div></td>
+    </tr>
+
+  </table>
+  </div>
+
+  <div class="strip">
+    <div>
+      <div class="s-lbl">🔒 Prediction window open now</div>
+      <div class="s-match">🇫🇷 France &nbsp;&nbsp;&nbsp;vs&nbsp;&nbsp;&nbsp; 🇩🇪 Germany</div>
+      <div class="s-score">— : —</div>
+      <div class="s-time">Locks June 15 · 17:00 · 1h before kickoff</div>
+    </div>
+    <button class="s-btn">🎯 SUBMIT YOUR PREDICTION</button>
+  </div>
+
+</div>
+</body>
+</html>
