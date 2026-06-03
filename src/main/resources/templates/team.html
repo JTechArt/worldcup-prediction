@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::main-content})}">
+<head><title>Team</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+<div class="max-w-4xl mx-auto px-4 py-10 space-y-8">
+
+  <!-- Team header -->
+  <div class="flex items-center gap-6">
+    <img th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${team.flagCode} + '.svg'}"
+         class="w-20 h-20 rounded-full shadow-lg" th:alt="${team.name}"/>
+    <div>
+      <h1 class="font-display text-4xl text-gray-900" th:text="${team.name}">Team Name</h1>
+      <p class="text-sm text-gray-500 mt-1" th:text="${team.confederation}">UEFA</p>
+    </div>
+  </div>
+
+  <!-- Matches -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <h2 class="font-bold text-gray-700 text-sm uppercase tracking-wide mb-4">Matches</h2>
+    <div th:if="${#lists.isEmpty(matches)}" class="text-sm text-gray-400">No matches found.</div>
+    <div class="space-y-2">
+      <a th:each="m : ${matches}"
+         th:href="@{'/matches/' + ${m.id}}"
+         class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+        <span class="text-xs text-gray-400 w-24 flex-shrink-0"
+              th:text="${#temporals.format(m.kickoffTime, 'd MMM HH:mm')}">11 Jun 19:00</span>
+        <span class="font-medium text-gray-800"
+              th:text="${(m.homeTeam != null ? m.homeTeam.name : m.homeTeamPlaceholder) + ' vs ' + (m.awayTeam != null ? m.awayTeam.name : m.awayTeamPlaceholder)}">Home vs Away</span>
+        <span th:if="${m.homeScore != null}" class="ml-auto font-mono font-bold text-gray-900"
+              th:text="${m.homeScore + ' – ' + m.awayScore}">2 – 1</span>
+        <span th:unless="${m.homeScore != null}" class="ml-auto text-xs text-gray-400">Upcoming</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Squad -->
+  <div th:if="${not #lists.isEmpty(players)}"
+       class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <h2 class="font-bold text-gray-700 text-sm uppercase tracking-wide mb-4">Squad</h2>
+    <div th:each="pos : ${ {'Goalkeeper','Defender','Midfielder','Forward'} }" class="mb-4">
+      <p class="text-xs font-semibold text-gray-400 uppercase mb-2" th:text="${pos}">Position</p>
+      <div class="space-y-1">
+        <div th:each="p : ${players}"
+             th:if="${p.position != null and p.position.contains(pos.substring(0,3))}"
+             class="flex items-center gap-3 text-sm py-1">
+          <span class="w-6 text-right font-mono text-gray-400 text-xs"
+                th:text="${p.shirtNumber != null ? p.shirtNumber : '–'}">1</span>
+          <span class="font-medium text-gray-800" th:text="${p.name}">Player Name</span>
+          <span th:if="${p.tournamentGoals > 0}"
+                class="ml-auto text-xs font-semibold text-green-700"
+                th:text="${p.tournamentGoals + ' ⚽'}">3 ⚽</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div th:if="${#lists.isEmpty(players)}" class="text-sm text-gray-400 text-center py-4">
+    Squad data not yet available. Run bootstrap to populate.
+  </div>
+
+</div>
+</th:block>
+</body>
+</html>

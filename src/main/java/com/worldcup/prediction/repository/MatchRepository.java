@@ -108,6 +108,15 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 
     @Query("""
             SELECT m FROM Match m
+            LEFT JOIN FETCH m.homeTeam
+            LEFT JOIN FETCH m.awayTeam
+            WHERE m.homeTeam.id = :teamId OR m.awayTeam.id = :teamId
+            ORDER BY m.kickoffTime ASC
+            """)
+    List<Match> findByTeamIdOrderByKickoffTimeAsc(@Param("teamId") Long teamId);
+
+    @Query("""
+            SELECT m FROM Match m
             WHERE m.homeTeam.fifaCode = :homeFifaCode
               AND m.awayTeam.fifaCode = :awayFifaCode
               AND m.kickoffTime >= :start
