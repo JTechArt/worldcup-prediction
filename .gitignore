@@ -1,0 +1,39 @@
+# Maven
+target/
+*.jar
+*.war
+*.class
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.eclipse
+.classpath
+.project
+.settings/
+
+# Spring Boot
+application-local.properties
+application-secrets.properties
+
+# Environment
+.env
+*.env
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
+# Docker volumes
+postgres-data/
