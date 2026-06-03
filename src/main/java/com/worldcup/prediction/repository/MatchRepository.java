@@ -53,6 +53,7 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             SELECT m FROM Match m
             LEFT JOIN FETCH m.homeTeam
             LEFT JOIN FETCH m.awayTeam
+            LEFT JOIN FETCH m.group
             WHERE m.stage = :stage
             ORDER BY m.kickoffTime ASC
             """)
@@ -62,6 +63,7 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             SELECT m FROM Match m
             LEFT JOIN FETCH m.homeTeam
             LEFT JOIN FETCH m.awayTeam
+            LEFT JOIN FETCH m.group
             WHERE m.predictionWindowOpen = true
             ORDER BY m.kickoffTime ASC
             """)

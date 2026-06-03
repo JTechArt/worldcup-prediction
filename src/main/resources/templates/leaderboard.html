@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
-      th:replace="~{layout/base :: layout(~{::main-content})}">
-<head><title>Leaderboard</title></head>
-<body>
-<th:block th:fragment="main-content">
-
-  <!-- Override base layout to dark theme for this page -->
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Leaderboard — WC Predict 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Bebas+Neue&display=swap"
+        rel="stylesheet"/>
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <style>
-    body { background: #050e08 !important; color: white !important; }
-    main { background: transparent !important; }
-    footer { background: rgba(3,10,5,0.95) !important; border-top: 1px solid rgba(0,200,83,0.18) !important; }
-    footer a, footer span, footer div { color: rgba(255,255,255,0.45) !important; }
-    footer a:hover { color: white !important; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100vh; background: #050e08; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
 
     :root {
       --green:      #00c853;
@@ -25,6 +26,7 @@
       --muted:      rgba(255,255,255,0.45);
     }
 
+    /* Background decorations */
     .bg-base { position: fixed; inset: 0; z-index: 0; pointer-events: none;
       background: radial-gradient(ellipse 100% 40% at 50% 0%, rgba(0,160,60,0.16) 0%, transparent 70%),
                   linear-gradient(180deg, #030a05 0%, #071a0d 50%, #030a05 100%); }
@@ -35,75 +37,104 @@
     .orb-br  { width: 320px; height: 320px; background: #FF5722; bottom: 10%; right: 5%; animation-delay: -3s; z-index: 0; }
     @keyframes orbPulse { from { opacity: 0.12; } to { opacity: 0.20; } }
 
-    .main { position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:44px 24px 100px; }
+    /* Navbar — matches layout/base.html style */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 64px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+      background: rgba(0,107,42,0.95);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0,200,83,0.2);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+      animation: navIn 0.5s ease both;
+    }
+    @keyframes navIn { from { opacity:0; transform:translateY(-64px); } to { opacity:1; transform:translateY(0); } }
 
-    .hero { margin-bottom:32px;animation:fadeUp 0.6s ease 0.2s both; }
+    .logo { display:flex; align-items:center; gap:10px; font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:3px; color:white; text-decoration:none; }
+    .logo em { color: #FFD600; font-style: normal; }
+    .logo-ball { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--green),var(--green-dark)); display:flex; align-items:center; justify-content:center; font-size:20px; animation:spin 12s linear infinite; box-shadow:0 0 18px rgba(0,200,83,0.35); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .nav-links { display:flex; gap:2px; }
+    .nav-link { padding:8px 14px; border-radius:8px; font-size:13px; font-weight:600; color:rgba(255,255,255,0.7); text-decoration:none; transition:all 0.2s; }
+    .nav-link:hover { background:rgba(255,255,255,0.1); color:white; }
+    .nav-link.active { background:rgba(255,255,255,0.12); color:white; }
+
+    .nav-right { display:flex; align-items:center; gap:10px; }
+    .predict-btn { background:linear-gradient(135deg,var(--orange),#ff7043); color:white; border:none; border-radius:10px; padding:9px 18px; font-size:13px; font-weight:800; cursor:pointer; text-decoration:none; animation:btnGlow 2.5s ease-in-out infinite; }
+    @keyframes btnGlow { 0%,100%{box-shadow:0 4px 14px rgba(255,87,34,0.4)}50%{box-shadow:0 4px 28px rgba(255,87,34,0.7)} }
+    .sign-in-btn { background:rgba(255,255,255,0.12); color:white; border:1px solid rgba(255,255,255,0.25); border-radius:10px; padding:9px 18px; font-size:13px; font-weight:700; text-decoration:none; transition:all 0.2s; }
+    .sign-in-btn:hover { background:rgba(255,255,255,0.2); }
+
+    /* Avatar dropdown */
+    .av-btn { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.08); border:1px solid var(--border); border-radius:99px; padding:4px 12px 4px 4px; cursor:pointer; }
+    .av-sm  { width:28px; height:28px; border-radius:50%; overflow:hidden; background:linear-gradient(135deg,var(--green),var(--green-dark)); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:white; }
+    .av-sm img { width:100%; height:100%; object-fit:cover; }
+    .av-name { font-size:13px; font-weight:600; color:rgba(255,255,255,0.85); }
+
+    /* Main content */
+    .main { position:relative; z-index:1; max-width:1040px; margin:0 auto; padding:80px 24px 100px; }
+
+    .hero { margin-bottom:32px; animation:fadeUp 0.6s ease 0.2s both; }
     @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-    .hero-eye { font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--green);margin-bottom:8px; }
-    .hero-title { font-family:'Bebas Neue',sans-serif;font-size:64px;line-height:1;letter-spacing:4px;color:white;margin-bottom:8px; }
-    .hero-title em { color:var(--green);font-style:normal; }
-    .hero-sub { color:var(--muted);font-size:14px; }
+    .hero-eye { font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--green); margin-bottom:8px; }
+    .hero-title { font-family:'Bebas Neue',sans-serif; font-size:64px; line-height:1; letter-spacing:4px; color:white; margin-bottom:8px; }
+    .hero-title em { color:var(--green); font-style:normal; }
+    .hero-sub { color:var(--muted); font-size:14px; }
     .hero-sub b { color:rgba(255,255,255,0.85); }
 
-    .kpi-row { display:flex;gap:10px;margin-top:18px;flex-wrap:wrap; }
-    .kpi { background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:14px;padding:14px 20px;backdrop-filter:blur(12px);transition:border-color 0.2s;animation:fadeUp 0.5s ease both; }
+    .kpi-row { display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+    .kpi { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:14px; padding:14px 20px; backdrop-filter:blur(12px); transition:border-color 0.2s; animation:fadeUp 0.5s ease both; }
     .kpi:hover { border-color:rgba(0,200,83,0.35); }
     .kpi:nth-child(1){animation-delay:.3s}.kpi:nth-child(2){animation-delay:.4s}.kpi:nth-child(3){animation-delay:.5s}.kpi:nth-child(4){animation-delay:.6s}
-    .kpi-val { font-size:28px;font-weight:900;color:var(--green);line-height:1; }
-    .kpi-lbl { font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:3px; }
+    .kpi-val { font-size:28px; font-weight:900; color:var(--green); line-height:1; }
+    .kpi-lbl { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:3px; }
 
-    .phase-nav { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;animation:fadeUp 0.5s ease 0.35s both; }
-    .phase-btn { padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.04);font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.2s;text-decoration:none; }
-    .phase-btn:hover { background:rgba(0,200,83,0.1);color:var(--green);border-color:rgba(0,200,83,0.3); }
+    .phase-nav { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; animation:fadeUp 0.5s ease 0.35s both; }
+    .phase-btn { padding:7px 14px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.04); font-size:12px; font-weight:700; color:var(--muted); cursor:pointer; transition:all 0.2s; text-decoration:none; }
+    .phase-btn:hover { background:rgba(0,200,83,0.1); color:var(--green); border-color:rgba(0,200,83,0.3); }
 
-    .sec-hd { font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:10px; }
-    .sec-hd::after { content:'';flex:1;height:1px;background:var(--border); }
+    .sec-hd { font-size:11px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:var(--green); margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+    .sec-hd::after { content:''; flex:1; height:1px; background:var(--border); }
 
-    .lb-outer { display:flex;background:rgba(8,22,12,0.88);border:1px solid var(--border);border-radius:20px;overflow:hidden;backdrop-filter:blur(20px);animation:fadeUp 0.6s ease 0.4s both;min-height:200px; }
+    .lb-outer { display:flex; background:rgba(8,22,12,0.88); border:1px solid var(--border); border-radius:20px; overflow:hidden; backdrop-filter:blur(20px); animation:fadeUp 0.6s ease 0.4s both; min-height:200px; }
 
-    .lb-players { flex-shrink:0;width:260px;border-right:1px solid var(--border);display:flex;flex-direction:column; }
-    .lb-players-head { height:52px;display:flex;align-items:center;padding:0 20px;background:rgba(0,200,83,0.07);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);flex-shrink:0; }
+    .lb-players { flex-shrink:0; width:260px; border-right:1px solid var(--border); display:flex; flex-direction:column; }
+    .lb-players-head { height:52px; display:flex; align-items:center; padding:0 20px; background:rgba(0,200,83,0.07); border-bottom:1px solid var(--border); font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); flex-shrink:0; }
 
-    .lb-scroll-wrap { flex:1;overflow-x:auto;display:flex;flex-direction:column;min-width:0;scrollbar-width:thin;scrollbar-color:rgba(0,200,83,0.3) transparent; }
+    .lb-scroll-wrap { flex:1; overflow-x:auto; display:flex; flex-direction:column; min-width:0; scrollbar-width:thin; scrollbar-color:rgba(0,200,83,0.3) transparent; }
     .lb-scroll-wrap::-webkit-scrollbar { height:6px; }
     .lb-scroll-wrap::-webkit-scrollbar-track { background:transparent; }
-    .lb-scroll-wrap::-webkit-scrollbar-thumb { background:rgba(0,200,83,0.3);border-radius:3px; }
+    .lb-scroll-wrap::-webkit-scrollbar-thumb { background:rgba(0,200,83,0.3); border-radius:3px; }
 
-    .phase-header-row { display:flex;height:52px;flex-shrink:0;border-bottom:1px solid var(--border);background:rgba(0,200,83,0.07); }
-    .phase-cell { min-width:80px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;border-right:1px solid var(--border);position:relative;overflow:hidden;cursor:pointer; }
+    .phase-header-row { display:flex; height:52px; flex-shrink:0; border-bottom:1px solid var(--border); background:rgba(0,200,83,0.07); }
+    .phase-cell { min-width:80px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase; border-right:1px solid var(--border); position:relative; overflow:hidden; cursor:pointer; }
     .phase-cell:last-child { border-right:none; }
-    .phase-cell::after { content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.15) 50%,transparent 100%);transform:translateX(-100%);animation:shimmer 3s ease infinite; }
+    .phase-cell::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.15) 50%,transparent 100%); transform:translateX(-100%); animation:shimmer 3s ease infinite; }
     @keyframes shimmer { to { transform: translateX(200%); } }
-    .phase-gs    { background:linear-gradient(135deg,rgba(0,100,40,0.35),rgba(0,60,20,0.2));color:#4ade80; }
-    .phase-r32   { background:linear-gradient(135deg,rgba(30,80,120,0.35),rgba(10,50,90,0.2));color:#60a5fa; }
-    .phase-r16   { background:linear-gradient(135deg,rgba(80,40,120,0.35),rgba(50,20,90,0.2));color:#a78bfa; }
-    .phase-qf    { background:linear-gradient(135deg,rgba(120,60,20,0.35),rgba(90,40,10,0.2));color:#fb923c; }
-    .phase-sf    { background:linear-gradient(135deg,rgba(160,30,30,0.35),rgba(120,10,10,0.2));color:#f87171; }
-    .phase-3rd   { background:linear-gradient(135deg,rgba(80,80,20,0.35),rgba(50,50,10,0.2));color:#d4d428; }
-    .phase-final { background:linear-gradient(135deg,rgba(180,140,0,0.45),rgba(120,90,0,0.3));color:#fbbf24; }
-    .phase-gs::after   { animation-delay:0s; }
-    .phase-r32::after  { animation-delay:0.8s; }
-    .phase-r16::after  { animation-delay:1.4s; }
-    .phase-qf::after   { animation-delay:2.0s; }
-    .phase-sf::after   { animation-delay:2.4s; }
-    .phase-3rd::after  { animation-delay:2.6s; }
-    .phase-final::after{ animation-delay:2.8s; }
+    .phase-gs    { background:linear-gradient(135deg,rgba(0,100,40,0.35),rgba(0,60,20,0.2)); color:#4ade80; }.phase-gs::after { animation-delay:0s; }
+    .phase-r32   { background:linear-gradient(135deg,rgba(30,80,120,0.35),rgba(10,50,90,0.2)); color:#60a5fa; }.phase-r32::after { animation-delay:0.8s; }
+    .phase-r16   { background:linear-gradient(135deg,rgba(80,40,120,0.35),rgba(50,20,90,0.2)); color:#a78bfa; }.phase-r16::after { animation-delay:1.4s; }
+    .phase-qf    { background:linear-gradient(135deg,rgba(120,60,20,0.35),rgba(90,40,10,0.2)); color:#fb923c; }.phase-qf::after { animation-delay:2.0s; }
+    .phase-sf    { background:linear-gradient(135deg,rgba(160,30,30,0.35),rgba(120,10,10,0.2)); color:#f87171; }.phase-sf::after { animation-delay:2.4s; }
+    .phase-3rd   { background:linear-gradient(135deg,rgba(80,80,20,0.35),rgba(50,50,10,0.2)); color:#d4d428; }.phase-3rd::after { animation-delay:2.6s; }
+    .phase-final { background:linear-gradient(135deg,rgba(180,140,0,0.45),rgba(120,90,0,0.3)); color:#fbbf24; }.phase-final::after { animation-delay:2.8s; }
 
-    .lb-scroll-body { display:flex;flex-direction:column; }
-    .phase-row { display:flex;height:64px;flex-shrink:0;border-bottom:1px solid rgba(0,200,83,0.05);align-items:center; }
+    .lb-scroll-body { display:flex; flex-direction:column; }
+    .phase-row { display:flex; height:64px; flex-shrink:0; border-bottom:1px solid rgba(0,200,83,0.05); align-items:center; }
     .phase-row:last-child { border-bottom:none; }
-    .phase-pts-cell { min-width:80px;flex-shrink:0;height:100%;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,200,83,0.06);font-size:15px;font-weight:700;color:rgba(255,255,255,0.7); }
+    .phase-pts-cell { min-width:80px; flex-shrink:0; height:100%; display:flex; align-items:center; justify-content:center; border-right:1px solid rgba(0,200,83,0.06); font-size:15px; font-weight:700; color:rgba(255,255,255,0.7); }
     .phase-pts-cell:last-child { border-right:none; }
-    .cell-exact   { background:rgba(0,200,83,0.12);color:#4ade80; }
-    .cell-winner  { background:rgba(255,214,0,0.08);color:#fbbf24; }
-    .cell-draw    { background:rgba(96,165,250,0.1);color:#60a5fa; }
+    .cell-exact   { background:rgba(0,200,83,0.12); color:#4ade80; }
+    .cell-winner  { background:rgba(255,214,0,0.08); color:#fbbf24; }
+    .cell-draw    { background:rgba(96,165,250,0.1); color:#60a5fa; }
     .cell-zero    { color:rgba(255,255,255,0.25); }
     .cell-pending { color:rgba(255,255,255,0.15); }
 
-    .lb-totals { flex-shrink:0;width:160px;border-left:1px solid var(--border);display:flex;flex-direction:column; }
-    .lb-totals-head { height:52px;display:flex;align-items:center;justify-content:flex-end;padding:0 20px;background:rgba(0,200,83,0.07);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted); }
+    .lb-totals { flex-shrink:0; width:160px; border-left:1px solid var(--border); display:flex; flex-direction:column; }
+    .lb-totals-head { height:52px; display:flex; align-items:center; justify-content:flex-end; padding:0 20px; background:rgba(0,200,83,0.07); border-bottom:1px solid var(--border); font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
 
-    .player-row { display:flex;align-items:center;gap:12px;padding:0 16px;height:64px;flex-shrink:0;border-bottom:1px solid rgba(0,200,83,0.05);transition:background 0.2s;animation:rowIn 0.4s ease both;cursor:default; }
+    .player-row { display:flex; align-items:center; gap:12px; padding:0 16px; height:64px; flex-shrink:0; border-bottom:1px solid rgba(0,200,83,0.05); transition:background 0.2s; animation:rowIn 0.4s ease both; cursor:default; }
     .player-row:last-child { border-bottom:none; }
     .player-row:hover { background:rgba(0,200,83,0.05); }
     .player-row.rank-1 { background:linear-gradient(90deg,rgba(255,214,0,0.08),transparent); }
@@ -112,194 +143,255 @@
     .player-row.is-you { border-left:3px solid var(--green); }
     @keyframes rowIn { from{opacity:0;transform:translateX(-12px)} to{opacity:1;transform:translateX(0)} }
 
-    .rank-badge { width:32px;height:32px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900; }
-    .rank-1 .rank-badge { background:linear-gradient(135deg,#ffd600,#ff9800);color:#1a1a1a;box-shadow:0 2px 10px rgba(255,214,0,0.45); }
-    .rank-2 .rank-badge { background:linear-gradient(135deg,#b0bac8,#8090a8);color:white; }
-    .rank-3 .rank-badge { background:linear-gradient(135deg,#cd7c3a,#a85a20);color:white; }
-    .rank-other .rank-badge { background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.45); }
+    .rank-badge { width:32px; height:32px; border-radius:9px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; }
+    .rank-1 .rank-badge { background:linear-gradient(135deg,#ffd600,#ff9800); color:#1a1a1a; box-shadow:0 2px 10px rgba(255,214,0,0.45); }
+    .rank-2 .rank-badge { background:linear-gradient(135deg,#b0bac8,#8090a8); color:white; }
+    .rank-3 .rank-badge { background:linear-gradient(135deg,#cd7c3a,#a85a20); color:white; }
+    .rank-other .rank-badge { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.45); }
 
-    .rank-delta { font-size:10px;font-weight:800;width:14px;flex-shrink:0; }
-    .rank-delta.up { color:var(--green);animation:arrowUp 1.3s ease infinite; }
-    .rank-delta.dn { color:var(--orange);animation:arrowDn 1.3s ease infinite; }
+    .rank-delta { font-size:10px; font-weight:800; width:14px; flex-shrink:0; }
+    .rank-delta.up { color:var(--green); animation:arrowUp 1.3s ease infinite; }
+    .rank-delta.dn { color:var(--orange); animation:arrowDn 1.3s ease infinite; }
     .rank-delta.eq { color:var(--muted); }
     @keyframes arrowUp { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
     @keyframes arrowDn { 0%,100%{transform:translateY(0)} 50%{transform:translateY(3px)} }
 
-    .av-wrap { position:relative;width:40px;height:40px;flex-shrink:0; }
-    .av-ring { position:absolute;inset:-2px;border-radius:50%;animation:rotRing 4s linear infinite; }
+    .av-wrap { position:relative; width:40px; height:40px; flex-shrink:0; }
+    .av-ring { position:absolute; inset:-2px; border-radius:50%; animation:rotRing 4s linear infinite; }
     .rank-1 .av-ring { background:conic-gradient(#ffd600,#ff9800,#ffd600); }
     .rank-2 .av-ring { background:conic-gradient(#b0bac8,#8090a8,#b0bac8); }
     .rank-3 .av-ring { background:conic-gradient(#cd7c3a,#a85a20,#cd7c3a); }
     .rank-other .av-ring { display:none; }
     @keyframes rotRing { to { transform:rotate(360deg); } }
-    .av { position:absolute;inset:2px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--green),var(--green-dark));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:white; }
+    .av { position:absolute; inset:2px; border-radius:50%; overflow:hidden; background:linear-gradient(135deg,var(--green),var(--green-dark)); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; color:white; }
     .rank-other .av { inset:0; }
-    .av img { width:100%;height:100%;object-fit:cover; }
+    .av img { width:100%; height:100%; object-fit:cover; }
 
-    .flag-badge { position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;overflow:hidden;border:1.5px solid #050e08;animation:flagWave3d 3.5s ease-in-out infinite; }
-    .flag-badge img { width:100%;height:100%;object-fit:cover; }
+    .flag-badge { position:absolute; bottom:-2px; right:-2px; width:16px; height:16px; border-radius:50%; overflow:hidden; border:1.5px solid #050e08; animation:flagWave3d 3.5s ease-in-out infinite; }
+    .flag-badge img { width:100%; height:100%; object-fit:cover; }
     @keyframes flagWave3d { 0%,100%{transform:perspective(200px) rotateY(0deg)} 25%{transform:perspective(200px) rotateY(-18deg)} 75%{transform:perspective(200px) rotateY(18deg)} }
 
-    .p-name { font-size:13px;font-weight:800;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px; }
-    .p-meta { font-size:10px;color:var(--muted);margin-top:2px; }
-    .you-lbl { font-size:9px;font-weight:900;background:var(--green);color:#000;border-radius:4px;padding:1px 5px;letter-spacing:1px; }
+    .p-name { font-size:13px; font-weight:800; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:6px; }
+    .p-meta { font-size:10px; color:var(--muted); margin-top:2px; }
+    .you-lbl { font-size:9px; font-weight:900; background:var(--green); color:#000; border-radius:4px; padding:1px 5px; letter-spacing:1px; }
 
-    .total-row { display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0 16px;height:64px;border-bottom:1px solid rgba(0,200,83,0.05);flex-shrink:0; }
+    .total-row { display:flex; align-items:center; justify-content:flex-end; gap:8px; padding:0 16px; height:64px; border-bottom:1px solid rgba(0,200,83,0.05); flex-shrink:0; }
     .total-row:last-child { border-bottom:none; }
-    .pts-val { font-size:22px;font-weight:900; }
-    .rank-1 .pts-val { color:#ffd600;text-shadow:0 0 12px rgba(255,214,0,0.5); }
+    .pts-val { font-size:22px; font-weight:900; }
+    .rank-1 .pts-val { color:#ffd600; text-shadow:0 0 12px rgba(255,214,0,0.5); }
     .rank-2 .pts-val { color:#d0d8e8; }
     .rank-3 .pts-val { color:#dda060; }
     .rank-other .pts-val { color:white; }
-    .pts-lbl { font-size:10px;color:var(--muted);font-weight:600; }
-    .exact-badge { display:inline-flex;align-items:center;gap:3px;background:rgba(0,200,83,0.1);color:var(--green);border:1px solid rgba(0,200,83,0.2);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700; }
+    .pts-lbl { font-size:10px; color:var(--muted); font-weight:600; }
+    .exact-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(0,200,83,0.1); color:var(--green); border:1px solid rgba(0,200,83,0.2); border-radius:6px; padding:2px 7px; font-size:10px; font-weight:700; }
+
+    /* Footer */
+    footer { background:rgba(0,30,10,0.95); border-top:1px solid var(--border); padding:24px; text-align:center; }
+    footer a { color:rgba(255,255,255,0.45); text-decoration:none; font-size:12px; margin:0 12px; }
+    footer a:hover { color:white; }
+    footer .copy { font-size:11px; color:rgba(255,255,255,0.25); margin-top:10px; }
   </style>
 
-  <!-- Fixed dark background decorations -->
-  <div class="bg-base" aria-hidden="true"></div>
-  <div class="bg-stripes" aria-hidden="true"></div>
-  <div class="orb orb-top" aria-hidden="true"></div>
-  <div class="orb orb-br" aria-hidden="true"></div>
+  <!-- CSRF meta for HTMX -->
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
 
-  <div class="main">
+<div class="bg-base" aria-hidden="true"></div>
+<div class="bg-stripes" aria-hidden="true"></div>
+<div class="orb orb-top" aria-hidden="true"></div>
+<div class="orb orb-br" aria-hidden="true"></div>
 
-    <!-- Hero -->
-    <div class="hero">
-      <div class="hero-eye">⚽ FIFA World Cup 2026</div>
-      <div class="hero-title">LEADER<em>BOARD</em></div>
-      <div class="hero-sub">
-        <b th:text="${totalParticipants} + ' participants'">0 participants</b>
-        · Rankings update after each final whistle
+<!-- Navbar — same structure as layout/base.html -->
+<nav class="navbar">
+  <a th:href="@{/}" class="logo">
+    <div class="logo-ball">⚽</div>
+    WC PREDICT&nbsp;<em>2026</em>
+  </a>
+
+  <div class="nav-links">
+    <a th:href="@{/leaderboard}" class="nav-link active">🏆 Leaderboard</a>
+    <a th:href="@{/fixtures}"    class="nav-link">📅 Fixtures</a>
+    <a th:href="@{/groups}"      class="nav-link">🌍 Groups</a>
+    <a th:href="@{/bracket}"     class="nav-link">🎯 Bracket</a>
+    <a th:href="@{/predictions}" class="nav-link" sec:authorize="isAuthenticated()">⚡ Predict</a>
+  </div>
+
+  <div class="nav-right">
+    <a th:href="@{/predictions}" class="predict-btn" sec:authorize="isAuthenticated()">⚡ PREDICT</a>
+
+    <div class="relative" x-data="{ open: false }" sec:authorize="isAuthenticated()">
+      <button @click="open = !open" class="av-btn">
+        <div class="av-sm">
+          <img th:if="${#authentication.getPrincipal().getAvatarUrl() != null}"
+               th:src="${#authentication.getPrincipal().getAvatarUrl()}"
+               onerror="this.style.display='none'"/>
+          <span th:text="${#authentication.getPrincipal().getInitials()}">?</span>
+        </div>
+        <span class="av-name" th:text="${#authentication.getPrincipal().getDisplayName()}">User</span>
+      </button>
+      <div x-show="open" @click.outside="open = false"
+           x-transition
+           style="position:absolute;right:0;top:48px;width:160px;background:#0d1f10;border:1px solid rgba(0,200,83,0.2);border-radius:12px;padding:4px;z-index:999;display:none;">
+        <a th:href="@{/home}" style="display:block;padding:10px 14px;font-size:13px;color:rgba(255,255,255,0.7);text-decoration:none;border-radius:8px;transition:all .15s;"
+           onmouseover="this.style.background='rgba(0,200,83,0.1)'" onmouseout="this.style.background=''">🏠 Home</a>
+        <form th:action="@{/logout}" method="post">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <button type="submit" style="width:100%;padding:10px 14px;font-size:13px;color:#ff6b6b;background:none;border:none;cursor:pointer;text-align:left;border-radius:8px;"
+                  onmouseover="this.style.background='rgba(255,87,34,0.1)'" onmouseout="this.style.background=''">🚪 Sign out</button>
+        </form>
       </div>
+    </div>
 
-      <!-- KPI strip — authenticated users only -->
-      <div class="kpi-row" sec:authorize="isAuthenticated()" th:if="${currentUserEntry != null}">
-        <div class="kpi">
-          <div class="kpi-val" th:text="${currentUserEntry.totalPoints}">0</div>
-          <div class="kpi-lbl">Your Points</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-val" style="color:var(--orange)" th:text="'#' + ${currentUserEntry.rank}">-</div>
-          <div class="kpi-lbl">Your Rank</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-val" th:text="${currentUserEntry.exactCount}">0</div>
-          <div class="kpi-lbl">Exact Scores</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-val"
-               th:text="${entries != null and !entries.isEmpty() ? entries[0].totalPoints - currentUserEntry.totalPoints : 0}">0</div>
-          <div class="kpi-lbl">Pts to #1</div>
-        </div>
+    <a th:href="@{/}" class="sign-in-btn" sec:authorize="isAnonymous()">Sign In</a>
+  </div>
+</nav>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eye">⚽ FIFA World Cup 2026</div>
+    <div class="hero-title">LEADER<em>BOARD</em></div>
+    <div class="hero-sub">
+      <b th:text="${totalParticipants} + ' participants'">0 participants</b>
+      · Rankings update after each final whistle
+    </div>
+
+    <div class="kpi-row" sec:authorize="isAuthenticated()" th:if="${currentUserEntry != null}">
+      <div class="kpi">
+        <div class="kpi-val" th:text="${currentUserEntry.totalPoints}">0</div>
+        <div class="kpi-lbl">Your Points</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val" style="color:var(--orange)" th:text="'#' + ${currentUserEntry.rank}">-</div>
+        <div class="kpi-lbl">Your Rank</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val" th:text="${currentUserEntry.exactCount}">0</div>
+        <div class="kpi-lbl">Exact Scores</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val"
+             th:text="${entries != null and !entries.isEmpty() ? entries[0].totalPoints - currentUserEntry.totalPoints : 0}">0</div>
+        <div class="kpi-lbl">Pts to #1</div>
       </div>
     </div>
+  </div>
 
-    <!-- Phase jump buttons -->
-    <div class="phase-nav">
-      <a th:each="stage : ${stages}"
-         th:href="'#stage-' + ${stage.name().toLowerCase()}"
-         th:text="${stage.shortLabel}"
-         th:class="'phase-btn ' + ${stage.cssClass}">GS</a>
-    </div>
+  <!-- Phase jump buttons -->
+  <div class="phase-nav">
+    <a th:each="stage : ${stages}"
+       th:href="'#stage-' + ${stage.name().toLowerCase()}"
+       th:text="${stage.shortLabel}"
+       th:class="'phase-btn ' + ${stage.cssClass}">GS</a>
+  </div>
 
-    <div class="sec-hd">
-      🏆 Full Standings —
-      <span th:text="${totalParticipants} + ' participants'">0 participants</span>
-    </div>
+  <div class="sec-hd">
+    🏆 Full Standings —
+    <span th:text="${totalParticipants} + ' participants'">0 participants</span>
+  </div>
 
-    <!-- 3-panel leaderboard -->
-    <div class="lb-outer" id="leaderboard-table">
+  <!-- 3-panel leaderboard -->
+  <div class="lb-outer" id="leaderboard-table">
 
-      <!-- Panel 1: Fixed player column -->
-      <div class="lb-players">
-        <div class="lb-players-head">Participant</div>
-        <th:block th:each="entry, iter : ${entries}">
-          <div th:class="'player-row ' + ${entry.rankCssClass}"
-               th:classappend="${#authentication != null and !#authentication.principal.equals('anonymousUser') and #authentication.principal.userId == entry.userId ? ' is-you' : ''}"
-               th:style="'animation-delay:' + (${iter.index} * 0.04) + 's'">
+    <div class="lb-players">
+      <div class="lb-players-head">Participant</div>
+      <th:block th:each="entry, iter : ${entries}">
+        <div th:class="'player-row ' + ${entry.rankCssClass}"
+             th:classappend="${#authentication != null and !#authentication.principal.equals('anonymousUser') and #authentication.principal.userId == entry.userId ? ' is-you' : ''}"
+             th:style="'animation-delay:' + (${iter.index} * 0.04) + 's'">
 
-            <div class="rank-badge"><span th:text="${entry.rank}">1</span></div>
+          <div class="rank-badge"><span th:text="${entry.rank}">1</span></div>
 
-            <div th:class="'rank-delta ' + (${entry.rankChange > 0} ? 'up' : (${entry.rankChange < 0} ? 'dn' : 'eq'))">
-              <span th:if="${entry.rankChange > 0}">▲</span>
-              <span th:if="${entry.rankChange < 0}">▼</span>
-              <span th:if="${entry.rankChange == 0}">—</span>
+          <div th:class="'rank-delta ' + (${entry.rankChange > 0} ? 'up' : (${entry.rankChange < 0} ? 'dn' : 'eq'))">
+            <span th:if="${entry.rankChange > 0}">▲</span>
+            <span th:if="${entry.rankChange < 0}">▼</span>
+            <span th:if="${entry.rankChange == 0}">—</span>
+          </div>
+
+          <div class="av-wrap">
+            <div class="av-ring"></div>
+            <div class="av">
+              <img th:if="${entry.avatarUrl != null}" th:src="${entry.avatarUrl}"
+                   th:alt="${entry.displayName}" onerror="this.style.display='none'"/>
+              <span th:if="${entry.avatarUrl == null}" th:text="${entry.initials}">AB</span>
             </div>
-
-            <div class="av-wrap">
-              <div class="av-ring"></div>
-              <div class="av">
-                <img th:if="${entry.avatarUrl != null}" th:src="${entry.avatarUrl}"
-                     th:alt="${entry.displayName}" onerror="this.style.display='none'"/>
-                <span th:if="${entry.avatarUrl == null}" th:text="${entry.initials}">AB</span>
-              </div>
-              <div class="flag-badge" th:if="${entry.predictedWinnerFlagCode != null}">
-                <img th:src="${entry.flagUrl}" th:alt="${entry.predictedWinnerFlagCode}"/>
-              </div>
-            </div>
-
-            <div>
-              <div class="p-name">
-                <span th:text="${entry.displayName}">Player</span>
-                <span class="you-lbl"
-                      sec:authorize="isAuthenticated()"
-                      th:if="${#authentication.principal.userId == entry.userId}">YOU</span>
-              </div>
-              <div class="p-meta"
-                   th:text="${entry.exactCount} + ' exact · ' + ${entry.correctWinnerCount} + ' winner'">
-                0 exact · 0 winner
-              </div>
+            <div class="flag-badge" th:if="${entry.predictedWinnerFlagCode != null}">
+              <img th:src="${entry.flagUrl}" th:alt="${entry.predictedWinnerFlagCode}"/>
             </div>
           </div>
-        </th:block>
-      </div>
 
-      <!-- Panel 2: Scrollable stage columns -->
-      <div class="lb-scroll-wrap" id="stage-scroll">
-        <div class="phase-header-row">
+          <div>
+            <div class="p-name">
+              <span th:text="${entry.displayName}">Player</span>
+              <span class="you-lbl" sec:authorize="isAuthenticated()"
+                    th:if="${#authentication.principal.userId == entry.userId}">YOU</span>
+            </div>
+            <div class="p-meta"
+                 th:text="${entry.exactCount} + ' exact · ' + ${entry.correctWinnerCount} + ' winner'">
+              0 exact · 0 winner
+            </div>
+          </div>
+        </div>
+      </th:block>
+    </div>
+
+    <div class="lb-scroll-wrap" id="stage-scroll">
+      <div class="phase-header-row">
+        <div th:each="stage : ${stages}"
+             th:id="'stage-' + ${stage.name().toLowerCase()}"
+             th:class="'phase-cell ' + ${stage.cssClass}"
+             th:text="${stage.shortLabel}">GS</div>
+      </div>
+      <div class="lb-scroll-body">
+        <div class="phase-row" th:each="entry : ${entries}">
           <div th:each="stage : ${stages}"
-               th:id="'stage-' + ${stage.name().toLowerCase()}"
-               th:class="'phase-cell ' + ${stage.cssClass}"
-               th:text="${stage.shortLabel}">GS</div>
-        </div>
-        <div class="lb-scroll-body">
-          <div class="phase-row" th:each="entry : ${entries}">
-            <div th:each="stage : ${stages}"
-                 th:with="pts=${phasePoints != null ? phasePoints.get(entry.userId)?.get(stage) : null}"
-                 th:class="'phase-pts-cell ' + (${pts == null} ? 'cell-pending' : (${pts >= 3} ? 'cell-exact' : (${pts == 2} ? 'cell-draw' : (${pts == 1} ? 'cell-winner' : 'cell-zero'))))">
-              <span th:text="${pts != null ? pts : '·'}">·</span>
-            </div>
+               th:with="pts=${phasePoints != null ? phasePoints.get(entry.userId)?.get(stage) : null}"
+               th:class="'phase-pts-cell ' + (${pts == null} ? 'cell-pending' : (${pts >= 3} ? 'cell-exact' : (${pts == 2} ? 'cell-draw' : (${pts == 1} ? 'cell-winner' : 'cell-zero'))))">
+            <span th:text="${pts != null ? pts : '·'}">·</span>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Panel 3: Fixed total column -->
-      <div class="lb-totals">
-        <div class="lb-totals-head">Total</div>
-        <div th:each="entry : ${entries}" th:class="'total-row ' + ${entry.rankCssClass}">
-          <div class="pts-val" th:text="${entry.totalPoints}">0</div>
-          <div class="pts-lbl">pts</div>
-          <div class="exact-badge">⚽ <span th:text="${entry.exactCount}">0</span></div>
-        </div>
+    <div class="lb-totals">
+      <div class="lb-totals-head">Total</div>
+      <div th:each="entry : ${entries}" th:class="'total-row ' + ${entry.rankCssClass}">
+        <div class="pts-val" th:text="${entry.totalPoints}">0</div>
+        <div class="pts-lbl">pts</div>
+        <div class="exact-badge">⚽ <span th:text="${entry.exactCount}">0</span></div>
       </div>
-
     </div>
 
   </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.phase-btn').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.preventDefault();
-          const id = btn.getAttribute('href').substring(1);
-          const target = document.getElementById(id);
-          if (target) target.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-        });
+</main>
+
+<footer>
+  <div>
+    <a th:href="@{/leaderboard}">Leaderboard</a>
+    <a th:href="@{/fixtures}">Fixtures</a>
+    <a th:href="@{/groups}">Groups</a>
+    <a th:href="@{/bracket}">Bracket</a>
+  </div>
+  <div class="copy">FIFA World Cup 2026 · Internal Prediction Game</div>
+</footer>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.phase-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        const id = btn.getAttribute('href').substring(1);
+        const target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
       });
     });
-  </script>
+  });
+</script>
 
-</th:block>
 </body>
 </html>
