@@ -39,7 +39,13 @@ public class LineupSyncService {
                 log.warn("Match id={} has no externalId — skipping lineup fetch", match.getId());
                 continue;
             }
-            long extId = Long.parseLong(match.getExternalId());
+            long extId;
+            try {
+                extId = Long.parseLong(match.getExternalId());
+            } catch (NumberFormatException e) {
+                log.warn("Match id={} has non-numeric externalId='{}' — skipping", match.getId(), match.getExternalId());
+                continue;
+            }
             FootballApiMatchDetailDto detail = rateLimiter.call(() -> client.fetchMatchDetail(extId));
             if (detail == null) continue;
 

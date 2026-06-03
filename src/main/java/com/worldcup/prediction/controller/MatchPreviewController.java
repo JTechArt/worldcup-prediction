@@ -5,6 +5,7 @@ import com.worldcup.prediction.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,8 +20,9 @@ public class MatchPreviewController {
     private final MatchGoalRepository goalRepository;
 
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public String matchPreview(@PathVariable Long id, Model model) {
-        Match match = matchRepository.findById(id)
+        Match match = matchRepository.findByIdWithTeams(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("match", match);
         model.addAttribute("goals", goalRepository.findByMatchIdOrderByMinuteAsc(id));

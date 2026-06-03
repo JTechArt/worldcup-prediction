@@ -53,6 +53,7 @@ public class StandingSyncService {
             }
             Group group = groupOpt.get();
 
+            if (groupDto.table() == null) continue;
             for (FootballApiStandingEntryDto entry : groupDto.table()) {
                 if (entry.team() == null) continue;
                 Optional<Team> teamOpt = Optional.empty();

@@ -32,6 +32,15 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             LEFT JOIN FETCH m.homeTeam
             LEFT JOIN FETCH m.awayTeam
             LEFT JOIN FETCH m.group
+            WHERE m.id = :id
+            """)
+    Optional<Match> findByIdWithTeams(@Param("id") Long id);
+
+    @Query("""
+            SELECT m FROM Match m
+            LEFT JOIN FETCH m.homeTeam
+            LEFT JOIN FETCH m.awayTeam
+            LEFT JOIN FETCH m.group
             ORDER BY m.kickoffTime ASC
             """)
     List<Match> findAllWithTeams();

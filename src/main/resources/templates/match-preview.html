@@ -25,14 +25,14 @@
 
       <!-- Score / time -->
       <div class="text-center">
-        <div th:if="${match.homeScore != null}" class="font-display text-5xl text-gray-900 tracking-wider"
+        <div th:if="${match.homeScore != null and match.awayScore != null}" class="font-display text-5xl text-gray-900 tracking-wider"
              th:text="${match.homeScore + ' – ' + match.awayScore}">0 – 0</div>
         <div th:unless="${match.homeScore != null}" class="font-display text-3xl text-gray-400"
              th:text="${#temporals.format(match.kickoffTime, 'HH:mm')}">19:00</div>
         <div class="text-xs text-gray-400 mt-1"
              th:text="${#temporals.format(match.kickoffTime, 'EEE d MMM yyyy')}">Mon 11 Jun 2026</div>
         <div th:if="${match.venue != null}" class="text-xs text-gray-400 mt-0.5"
-             th:text="${match.venue + ', ' + match.city}">Stadium, City</div>
+             th:text="${match.venue + (match.city != null ? ', ' + match.city : '')}">Stadium, City</div>
       </div>
 
       <!-- Away team -->
