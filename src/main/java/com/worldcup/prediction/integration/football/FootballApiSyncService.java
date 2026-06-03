@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,17 @@ public class FootballApiSyncService {
     private final FootballApiClient apiClient;
     private final MatchRepository matchRepository;
     private final MatchAdminService matchAdminService;
+
+    /**
+     * Checks if there are any SCHEDULED matches with kickoff in the past.
+     * These are candidates for result fetching.
+     *
+     * @return true if there are actionable matches
+     */
+    public boolean hasActionableMatches() {
+        return matchRepository.countByStatusAndKickoffTimeBefore(
+                MatchStatus.SCHEDULED, LocalDateTime.now()) > 0;
+    }
 
     /**
      * Fetches results from football-data.org, updates COMPLETED matches,

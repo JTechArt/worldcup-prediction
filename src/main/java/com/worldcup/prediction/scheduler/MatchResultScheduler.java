@@ -15,19 +15,19 @@ public class MatchResultScheduler {
 
     private final FootballApiSyncService syncService;
 
-    /**
-     * Polls football-data.org every 5 minutes for new results.
-     * fixedDelay means next run starts 5 minutes after previous run completes.
-     */
     @Scheduled(fixedDelay = 300_000)
     public void syncAndScore() {
         try {
+            if (!syncService.hasActionableMatches()) {
+                log.debug("MatchResultScheduler: no actionable matches — skipping");
+                return;
+            }
             List<Long> finished = syncService.syncResults();
             if (!finished.isEmpty()) {
                 log.info("Scheduler: {} match(es) newly finished and scored: {}", finished.size(), finished);
             }
         } catch (Exception e) {
-            log.error("Scheduler: unexpected error during match result sync — will retry next cycle", e);
+            log.error("Scheduler: unexpected error — will retry next cycle", e);
         }
     }
 }

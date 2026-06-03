@@ -22,6 +22,7 @@ class MatchResultSchedulerTest {
 
     @Test
     void syncAndScore_callsSyncService() {
+        when(syncService.hasActionableMatches()).thenReturn(true);
         when(syncService.syncResults()).thenReturn(List.of(1L, 2L));
         scheduler.syncAndScore();
         verify(syncService, times(1)).syncResults();
@@ -29,6 +30,7 @@ class MatchResultSchedulerTest {
 
     @Test
     void syncAndScore_whenSyncReturnsEmpty_doesNotThrow() {
+        when(syncService.hasActionableMatches()).thenReturn(true);
         when(syncService.syncResults()).thenReturn(List.of());
         scheduler.syncAndScore();
         verify(syncService, times(1)).syncResults();
@@ -36,8 +38,16 @@ class MatchResultSchedulerTest {
 
     @Test
     void syncAndScore_whenSyncThrows_doesNotPropagate() {
+        when(syncService.hasActionableMatches()).thenReturn(true);
         when(syncService.syncResults()).thenThrow(new RuntimeException("network failure"));
         scheduler.syncAndScore(); // must not throw
         verify(syncService, times(1)).syncResults();
+    }
+
+    @Test
+    void syncAndScore_whenNoActionableMatches_skips() {
+        when(syncService.hasActionableMatches()).thenReturn(false);
+        scheduler.syncAndScore();
+        verify(syncService, never()).syncResults();
     }
 }
