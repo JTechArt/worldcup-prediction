@@ -34,7 +34,7 @@ public class FootballApiSyncService {
      */
     @Transactional
     public List<Long> syncResults() {
-        FootballApiResponseDto response = apiClient.fetchMatches();
+        FootballApiResponseDto response = apiClient.fetchAllMatches();
         if (response == null || response.matches() == null) {
             log.debug("No API response to sync");
             return List.of();

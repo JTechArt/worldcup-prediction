@@ -1,6 +1,8 @@
 package com.worldcup.prediction.integration.football;
 
 import com.worldcup.prediction.integration.football.dto.FootballApiResponseDto;
+import com.worldcup.prediction.integration.football.dto.FootballApiTeamsResponseDto;
+import com.worldcup.prediction.integration.football.dto.FootballApiMatchDetailDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -56,7 +58,7 @@ class FootballApiClientTest {
                 .andExpect(header("X-Auth-Token", "test-api-key"))
                 .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 
-        FootballApiResponseDto response = client.fetchMatches();
+        FootballApiResponseDto response = client.fetchAllMatches();
 
         mockServer.verify();
         assertThat(response).isNotNull();
@@ -73,7 +75,7 @@ class FootballApiClientTest {
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
 
-        FootballApiResponseDto response = client.fetchMatches();
+        FootballApiResponseDto response = client.fetchAllMatches();
 
         mockServer.verify();
         assertThat(response).isNull();
@@ -84,7 +86,7 @@ class FootballApiClientTest {
         RestTemplate restTemplate2 = new RestTemplate();
         FootballApiClient clientNoKey = new FootballApiClient(restTemplate2, true, "");
 
-        FootballApiResponseDto response = clientNoKey.fetchMatches();
+        FootballApiResponseDto response = clientNoKey.fetchAllMatches();
 
         assertThat(response).isNull();
     }
@@ -94,8 +96,62 @@ class FootballApiClientTest {
         RestTemplate restTemplate2 = new RestTemplate();
         FootballApiClient clientDisabled = new FootballApiClient(restTemplate2, false, "test-api-key");
 
-        FootballApiResponseDto response = clientDisabled.fetchMatches();
+        FootballApiResponseDto response = clientDisabled.fetchAllMatches();
 
         assertThat(response).isNull();
+    }
+
+    @Test
+    void fetchTeamsWithSquads_returnsParsedTeams() {
+        String json = """
+            { "count": 1, "teams": [{
+              "id": 773, "name": "Germany", "shortName": "Germany", "tla": "GER",
+              "squad": [{ "id": 3359, "name": "Neuer", "position": "Goalkeeper",
+                          "dateOfBirth": "1986-03-27", "nationality": "Germany", "shirtNumber": 1 }]
+            }]}
+            """;
+        mockServer.expect(requestTo("https://api.football-data.org/v4/competitions/WC/teams"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
+
+        FootballApiTeamsResponseDto resp = client.fetchTeamsWithSquads();
+
+        mockServer.verify();
+        assertThat(resp.teams()).hasSize(1);
+        assertThat(resp.teams().get(0).tla()).isEqualTo("GER");
+        assertThat(resp.teams().get(0).squad()).hasSize(1);
+        assertThat(resp.teams().get(0).squad().get(0).name()).isEqualTo("Neuer");
+    }
+
+    @Test
+    void fetchMatchDetail_returnsParsedDetail() {
+        String json = """
+            { "id": 436780, "status": "FINISHED", "matchday": 1, "stage": "GROUP_STAGE",
+              "group": "GROUP_A",
+              "homeTeam": { "id": 773, "name": "Germany", "tla": "GER" },
+              "awayTeam": { "id": 9,   "name": "Australia", "tla": "AUS" },
+              "score": { "fullTime": { "home": 2, "away": 1 } },
+              "goals": [{ "minute": 23, "type": "REGULAR",
+                          "team": { "id": 773, "tla": "GER" },
+                          "scorer": { "id": 3359, "name": "M\\u00fcller" } }],
+              "lineups": [
+                { "team": { "id": 773, "tla": "GER" },
+                  "startXI": [{ "player": { "id": 3359, "name": "Neuer" }, "position": "Goalkeeper", "shirtNumber": 1 }],
+                  "substitutes": [] }
+              ]
+            }
+            """;
+        mockServer.expect(requestTo("https://api.football-data.org/v4/matches/436780"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
+
+        FootballApiMatchDetailDto detail = client.fetchMatchDetail(436780L);
+
+        mockServer.verify();
+        assertThat(detail).isNotNull();
+        assertThat(detail.goals()).hasSize(1);
+        assertThat(detail.goals().get(0).scorer().name()).isEqualTo("Müller");
+        assertThat(detail.lineups()).hasSize(1);
+        assertThat(detail.lineups().get(0).startXI()).hasSize(1);
     }
 }

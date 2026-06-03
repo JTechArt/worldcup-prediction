@@ -1,12 +1,9 @@
 package com.worldcup.prediction.integration.football;
 
-import com.worldcup.prediction.integration.football.dto.FootballApiResponseDto;
+import com.worldcup.prediction.integration.football.dto.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -15,11 +12,15 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class FootballApiClient {
 
-    private static final String API_URL = "https://api.football-data.org/v4/competitions/WC/matches";
+    private static final String BASE = "https://api.football-data.org/v4";
+    private static final String MATCHES_URL   = BASE + "/competitions/WC/matches";
+    private static final String TEAMS_URL     = BASE + "/competitions/WC/teams";
+    private static final String STANDINGS_URL = BASE + "/competitions/WC/standings";
+    private static final String MATCH_URL     = BASE + "/matches/{id}";
+    private static final String SCORERS_URL   = BASE + "/competitions/WC/scorers?limit=20";
 
     private final RestTemplate restTemplate;
     private final String apiKey;
-
     private final boolean enabled;
 
     public FootballApiClient(RestTemplate restTemplate,
@@ -28,36 +29,52 @@ public class FootballApiClient {
         this.restTemplate = restTemplate;
         this.enabled = enabled;
         this.apiKey = apiKey;
-        if (!enabled) {
-            log.info("FootballApiClient: FOOTBALL_API_ENABLED=false — live sync disabled");
+        if (!enabled) log.info("FootballApiClient: disabled — live sync off");
+    }
+
+    public FootballApiResponseDto fetchAllMatches() {
+        return get(MATCHES_URL, FootballApiResponseDto.class);
+    }
+
+    public FootballApiTeamsResponseDto fetchTeamsWithSquads() {
+        return get(TEAMS_URL, FootballApiTeamsResponseDto.class);
+    }
+
+    public FootballApiStandingsResponseDto fetchStandings() {
+        return get(STANDINGS_URL, FootballApiStandingsResponseDto.class);
+    }
+
+    public FootballApiMatchDetailDto fetchMatchDetail(long matchId) {
+        if (!enabled || apiKey.isBlank()) return null;
+        HttpEntity<Void> req = new HttpEntity<>(authHeaders());
+        try {
+            return restTemplate.exchange(MATCH_URL, HttpMethod.GET, req,
+                    FootballApiMatchDetailDto.class, matchId).getBody();
+        } catch (RestClientException e) {
+            log.warn("Failed to fetch match detail id={}: {}", matchId, e.getMessage());
+            return null;
         }
     }
 
-    /**
-     * Fetches all WC matches from football-data.org.
-     * Returns null if the integration is disabled, the API key is missing, or the request fails.
-     */
-    public FootballApiResponseDto fetchMatches() {
-        if (!enabled) {
-            log.debug("Football API integration disabled — skipping fetch");
-            return null;
-        }
-        if (apiKey == null || apiKey.isBlank()) {
-            log.debug("football.api.key not configured — skipping API fetch");
-            return null;
-        }
+    public FootballApiScorersResponseDto fetchTopScorers() {
+        return get(SCORERS_URL, FootballApiScorersResponseDto.class);
+    }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Auth-Token", apiKey);
-        HttpEntity<Void> request = new HttpEntity<>(headers);
-
+    private <T> T get(String url, Class<T> type) {
+        if (!enabled) { log.debug("Football API disabled — skipping"); return null; }
+        if (apiKey.isBlank()) { log.debug("No API key — skipping"); return null; }
         try {
-            ResponseEntity<FootballApiResponseDto> response =
-                    restTemplate.exchange(API_URL, HttpMethod.GET, request, FootballApiResponseDto.class);
-            return response.getBody();
+            return restTemplate.exchange(url, HttpMethod.GET,
+                    new HttpEntity<>(authHeaders()), type).getBody();
         } catch (RestClientException e) {
-            log.warn("Failed to fetch matches from football-data.org: {}", e.getMessage());
+            log.warn("Football API call failed [{}]: {}", url, e.getMessage());
             return null;
         }
+    }
+
+    private HttpHeaders authHeaders() {
+        HttpHeaders h = new HttpHeaders();
+        h.set("X-Auth-Token", apiKey);
+        return h;
     }
 }
