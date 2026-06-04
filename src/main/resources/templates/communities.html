@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::main-content})}">
+<head><title>My Communities</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-8 animate-fade-up">
+      <h1 class="font-display text-4xl sm:text-5xl text-green-dark tracking-wider mb-1">MY COMMUNITIES</h1>
+      <p class="text-gray-500 text-sm font-medium">Select a community to enter</p>
+    </div>
+
+    <div th:if="${#lists.isEmpty(memberships)}" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center animate-fade-up stagger-1">
+      <div class="text-5xl mb-4">🏘</div>
+      <h2 class="font-display text-2xl text-green-dark tracking-wider mb-2">NO COMMUNITIES YET</h2>
+      <p class="text-gray-500 text-sm">You haven't joined any communities. Ask an admin to invite you!</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-up stagger-1" th:unless="${#lists.isEmpty(memberships)}">
+      <a th:each="membership : ${memberships}"
+         th:href="@{'/c/' + ${membership.community.slug} + '/home'}"
+         class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-green/30 transition-all duration-200 p-6 no-underline group">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-12 h-12 rounded-xl bg-green/10 flex items-center justify-center text-2xl flex-shrink-0 group-hover:bg-green/20 transition-colors">🏆</div>
+          <div>
+            <h3 class="font-bold text-gray-800 text-lg" th:text="${membership.community.name}">Community Name</h3>
+            <p class="text-xs text-gray-400 font-medium" th:text="${membership.role.name()}">MEMBER</p>
+          </div>
+        </div>
+        <p th:if="${membership.community.description}" class="text-sm text-gray-500 line-clamp-2" th:text="${membership.community.description}">Description</p>
+        <div class="mt-4 flex items-center justify-between">
+          <span class="text-xs font-semibold text-green">Enter →</span>
+          <span class="text-xs text-gray-400" th:text="${membership.totalPoints} + ' pts'">0 pts</span>
+        </div>
+      </a>
+    </div>
+
+  </div>
+
+</th:block>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="roundContent">
+
+  <!-- Inline match data for Alpine.js -->
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    var ROUND_MATCHES = /*[[${roundMatches}]]*/ [];
+    var ACTIVE_ROUND_LABEL = /*[[${activeRoundLabel}]]*/ '';
+    var COMMUNITY_SLUG = /*[[${slug}]]*/ '';
+    /*]]>*/
+  </script>
+
+  <div id="round-content"
+       th:with="hasMatches=${not #lists.isEmpty(roundMatches)}">
+
+    <!-- Empty state -->
+    <div th:if="${not hasMatches}" class="empty-round">
+      <div class="empty-round-icon">📅</div>
+      <div>No matches scheduled for this round yet.</div>
+    </div>
+
+    <!-- Locked round notice -->
+    <div th:if="${hasMatches and roundLocked}" class="alert alert-error" style="margin-bottom:20px;">
+      <span>🔒</span>
+      <span>All matches in this round have passed the prediction lock time.</span>
+    </div>
+
+    <!-- Alpine.js predictions app -->
+    <div th:if="${hasMatches}"
+         x-data="communityPredictionsApp(ROUND_MATCHES, ACTIVE_ROUND_LABEL, COMMUNITY_SLUG)">
+
+      <!-- View toggle + header -->
+      <div class="view-toggle">
+        <div style="font-size:14px;font-weight:800;color:var(--green-d);"
+             x-text="'Round: ' + activeLabel"></div>
+        <div class="view-toggle-btns">
+          <button class="view-btn" :class="{ active: viewMode === 'list' }" @click="viewMode = 'list'">☰ List</button>
+          <button class="view-btn" :class="{ active: viewMode === 'card' }" @click="viewMode = 'card'">⬜ Card</button>
+        </div>
+      </div>
+
+      <!-- Progress banner -->
+      <div class="progress-banner">
+        <div class="progress-banner-row">
+          <span class="progress-label">Predictions filled</span>
+          <span class="progress-fraction" x-text="filledCount + ' / ' + matches.length"></span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" :style="'width:' + (matches.length > 0 ? filledCount / matches.length * 100 : 0) + '%'"></div>
+        </div>
+      </div>
+
+      <!-- LIST VIEW -->
+      <div x-show="viewMode === 'list'" x-transition>
+        <template x-for="(dateGroup, dateKey) in groupedByDate" :key="dateKey">
+          <div class="date-group">
+            <div class="date-header" x-text="dateKey"></div>
+            <template x-for="match in dateGroup" :key="match.matchId">
+              <div class="match-row" :class="{ filled: isFilled(match), locked: match.locked }">
+                <div class="mr-team">
+                  <div class="mr-flag">
+                    <img :src="'/images/flags/' + match.homeTeamCode + '.svg'" :alt="match.homeTeamName"
+                         :onerror="'this.src=\\'/images/flags/' + match.homeTeamCode + '.png\\''">
+                  </div>
+                  <div>
+                    <div class="mr-name" x-text="match.homeTeamName"></div>
+                    <div class="mr-venue" x-text="match.venue"></div>
+                  </div>
+                </div>
+                <div class="mr-stepper" x-show="!match.locked">
+                  <div class="stepper-team-name" x-text="match.homeTeamName"></div>
+                  <div class="score-widget">
+                    <button type="button" class="score-btn" @click="adj(match,'home',-1)">−</button>
+                    <input class="score-val" type="number" min="0" max="20"
+                           :value="match.predHome >= 0 ? match.predHome : ''"
+                           @input="setScore(match,'home',$event.target.value)" autocomplete="off">
+                    <button type="button" class="score-btn" @click="adj(match,'home',1)">+</button>
+                  </div>
+                  <div class="score-colon">:</div>
+                  <div class="score-widget">
+                    <button type="button" class="score-btn" @click="adj(match,'away',-1)">−</button>
+                    <input class="score-val" type="number" min="0" max="20"
+                           :value="match.predAway >= 0 ? match.predAway : ''"
+                           @input="setScore(match,'away',$event.target.value)" autocomplete="off">
+                    <button type="button" class="score-btn" @click="adj(match,'away',1)">+</button>
+                  </div>
+                  <div class="stepper-team-name" x-text="match.awayTeamName"></div>
+                </div>
+                <div x-show="match.locked"
+                     style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--muted);"
+                     x-text="isFilled(match) ? match.predHome + ' : ' + match.predAway : '–'"></div>
+                <div class="mr-team" style="justify-content:flex-end;text-align:right;">
+                  <div><div class="mr-name" x-text="match.awayTeamName"></div></div>
+                  <div class="mr-flag mr-flag-b">
+                    <img :src="'/images/flags/' + match.awayTeamCode + '.svg'" :alt="match.awayTeamName"
+                         :onerror="'this.src=\\'/images/flags/' + match.awayTeamCode + '.png\\''">
+                  </div>
+                </div>
+                <div class="mr-status">
+                  <span class="status-pill pill-filled" x-show="isFilled(match)">✓ Saved</span>
+                  <span class="status-pill pill-locked" x-show="match.locked && !isFilled(match)">🔒 Locked</span>
+                  <span class="status-pill pill-urgent" x-show="!match.locked && !isFilled(match) && isUrgent(match)">
+                    <span class="pill-dot" style="background:var(--orange)"></span>⚡ Urgent
+                  </span>
+                  <span class="status-pill pill-open" x-show="!match.locked && !isFilled(match) && !isUrgent(match)">
+                    <span class="pill-dot" style="background:var(--green)"></span>Open
+                  </span>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+        <div class="submit-area">
+          <button type="button" class="submit-btn" :disabled="!allFilled" @click="submit">
+            <span>🔒</span>
+            <span x-text="allFilled ? 'Lock In All Predictions' : 'Fill ' + (matches.length - filledCount) + ' more match' + (matches.length - filledCount === 1 ? '' : 'es')"></span>
+          </button>
+          <div class="submit-note">All-or-nothing · lock 1 hour before kickoff</div>
+        </div>
+      </div>
+
+      <!-- CARD VIEW -->
+      <div x-show="viewMode === 'card'" x-transition>
+        <div class="progress-dots" style="margin-bottom:20px;">
+          <template x-for="(match, idx) in matches" :key="match.matchId">
+            <div class="progress-dot" :class="{filled:isFilled(match),current:idx===cardIdx}"
+                 @click="cardIdx = idx"></div>
+          </template>
+        </div>
+        <div class="carousel-card" x-show="matches.length > 0">
+          <div class="card-ribbon">
+            <div>
+              <div class="ribbon-stage" x-text="curMatch.stage + (curMatch.group ? ' · Group ' + curMatch.group : '')"></div>
+              <div class="ribbon-info" x-text="fmtKickoff(curMatch.kickoffIso) + ' · ' + (curMatch.venue || '')"></div>
+            </div>
+            <div class="lock-pill" x-show="!curMatch.locked">
+              <div class="lock-dot"></div>
+              <span>Closes in</span>
+              <span class="lock-time" x-text="countdown(curMatch.lockTimeIso)"></span>
+            </div>
+            <div class="lock-pill" x-show="curMatch.locked" style="background:rgba(102,124,112,.7);">🔒 Locked</div>
+          </div>
+          <div class="card-teams">
+            <div class="card-team">
+              <div class="card-flag"><img :src="'/images/flags/' + curMatch.homeTeamCode + '.svg'" :alt="curMatch.homeTeamName"></div>
+              <div class="card-team-name" x-text="curMatch.homeTeamName"></div>
+            </div>
+            <div class="card-vs">
+              <div class="card-vs-text">VS</div>
+              <div class="card-vs-date" x-text="fmtDate(curMatch.kickoffIso)"></div>
+            </div>
+            <div class="card-team">
+              <div class="card-flag card-flag-b"><img :src="'/images/flags/' + curMatch.awayTeamCode + '.svg'" :alt="curMatch.awayTeamName"></div>
+              <div class="card-team-name" x-text="curMatch.awayTeamName"></div>
+            </div>
+          </div>
+          <div class="card-score-section" x-show="!curMatch.locked">
+            <div class="card-score-label">Your Predicted Score</div>
+            <div class="card-score-row">
+              <div class="card-score-widget">
+                <button type="button" class="card-score-btn" @click="adj(curMatch,'home',-1)">−</button>
+                <input class="card-score-val" type="number" min="0" max="20"
+                       :value="curMatch.predHome >= 0 ? curMatch.predHome : ''"
+                       @input="setScore(curMatch,'home',$event.target.value)" autocomplete="off">
+                <button type="button" class="card-score-btn" @click="adj(curMatch,'home',1)">+</button>
+              </div>
+              <div class="card-score-colon">:</div>
+              <div class="card-score-widget">
+                <button type="button" class="card-score-btn" @click="adj(curMatch,'away',-1)">−</button>
+                <input class="card-score-val" type="number" min="0" max="20"
+                       :value="curMatch.predAway >= 0 ? curMatch.predAway : ''"
+                       @input="setScore(curMatch,'away',$event.target.value)" autocomplete="off">
+                <button type="button" class="card-score-btn" @click="adj(curMatch,'away',1)">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-score-section" x-show="curMatch.locked" style="text-align:center;">
+            <div class="card-score-label">Match Locked</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--muted);"
+                 x-text="isFilled(curMatch) ? curMatch.predHome + ' : ' + curMatch.predAway : 'No prediction'"></div>
+          </div>
+          <div class="card-nav">
+            <button type="button" class="card-nav-btn" :disabled="cardIdx === 0" @click="cardIdx--">← Prev</button>
+            <span style="font-size:12px;font-weight:700;color:var(--muted);" x-text="(cardIdx+1) + ' of ' + matches.length"></span>
+            <button type="button" class="card-save-next" x-show="cardIdx < matches.length - 1" @click="cardIdx++">Save &amp; Next →</button>
+            <button type="button" class="submit-btn" x-show="cardIdx === matches.length - 1"
+                    :disabled="!allFilled" @click="submit"
+                    style="max-width:200px;height:42px;font-size:13px;">🔒 Submit All</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden form for submission -->
+      <form id="pred-form" th:action="@{'/c/' + ${slug} + '/predictions/submit'}" method="post" style="display:none;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="hidden" name="roundLabel" th:value="${activeRoundLabel}"/>
+      </form>
+
+    </div>
+  </div>
+
+  <script>
+  function communityPredictionsApp(rawData, activeLabel, slug) {
+    return {
+      viewMode: 'list',
+      cardIdx:  0,
+      activeLabel,
+      slug,
+      matches: rawData.map(m => ({
+        ...m,
+        predHome: (m.predictedHome != null && m.predictedHome >= 0) ? m.predictedHome : -1,
+        predAway: (m.predictedAway != null && m.predictedAway >= 0) ? m.predictedAway : -1,
+      })),
+
+      get filledCount()  { return this.matches.filter(m => this.isFilled(m)).length; },
+      get allFilled()    { return this.matches.filter(m => !m.locked).every(m => this.isFilled(m)) && this.matches.length > 0; },
+      get curMatch()     { return this.matches[this.cardIdx] || this.matches[0]; },
+      get groupedByDate() {
+        const g = {};
+        for (const m of this.matches) {
+          const k = m.kickoffIso ? this.fmtDateKey(m.kickoffIso) : 'TBD';
+          if (!g[k]) g[k] = [];
+          g[k].push(m);
+        }
+        return g;
+      },
+
+      isFilled(m) { return m.predHome >= 0 && m.predAway >= 0; },
+      isUrgent(m) {
+        if (!m.lockTimeIso) return false;
+        const diff = new Date(m.lockTimeIso) - new Date();
+        return diff < 3 * 3600 * 1000 && diff > 0;
+      },
+
+      adj(m, side, d) {
+        if (m.locked) return;
+        const cur = side === 'home' ? m.predHome : m.predAway;
+        const next = Math.max(0, Math.min(20, (cur >= 0 ? cur : 0) + d));
+        if (side === 'home') m.predHome = next; else m.predAway = next;
+      },
+      setScore(m, side, val) {
+        const n = parseInt(val);
+        const v = isNaN(n) ? -1 : Math.max(0, Math.min(20, n));
+        if (side === 'home') m.predHome = v; else m.predAway = v;
+      },
+
+      submit() {
+        if (!this.allFilled) return;
+        const form = document.getElementById('pred-form');
+        form.querySelectorAll('.dyn').forEach(el => el.remove());
+        this.matches.filter(m => !m.locked).forEach((m, i) => {
+          const add = (name, val) => {
+            const inp = document.createElement('input');
+            inp.type = 'hidden'; inp.name = name; inp.value = val; inp.className = 'dyn';
+            form.appendChild(inp);
+          };
+          add('predictions[' + i + '].matchId',   m.matchId);
+          add('predictions[' + i + '].homeScore', m.predHome);
+          add('predictions[' + i + '].awayScore', m.predAway);
+        });
+        form.submit();
+      },
+
+      countdown(iso) {
+        if (!iso) return '--:--:--';
+        const diff = Math.max(0, new Date(iso) - new Date());
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+      },
+      fmtKickoff(iso) {
+        if (!iso) return '';
+        return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + ' · ' +
+               new Date(iso).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      },
+      fmtDate(iso) {
+        if (!iso) return '';
+        return new Date(iso).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+      },
+      fmtDateKey(iso) {
+        if (!iso) return 'TBD';
+        return new Date(iso).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+      },
+
+      init() { setInterval(() => { this.matches = [...this.matches]; }, 1000); }
+    };
+  }
+  </script>
+
+</th:block>
+
+</body>
+</html>

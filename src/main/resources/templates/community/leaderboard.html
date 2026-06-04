@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/community-base :: layout(~{::main-content})}">
+<head><title>Leaderboard</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-8 animate-fade-up">
+      <h1 class="font-display text-4xl sm:text-5xl text-green-dark tracking-wider mb-1">LEADERBOARD</h1>
+      <p class="text-gray-500 text-sm font-medium" th:text="${community.name}">Community</p>
+    </div>
+
+    <!-- KPI strip for current user -->
+    <div th:if="${currentUserEntry != null}" class="mb-8 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-wrap items-center gap-8 animate-fade-up stagger-1">
+      <div class="flex items-center gap-3">
+        <div class="text-2xl">🏆</div>
+        <div>
+          <div class="font-display text-3xl text-green-dark tracking-wider" th:text="'#' + ${currentUserEntry.rank}">#1</div>
+          <div class="text-xs font-semibold text-gray-400">Your Rank</div>
+        </div>
+      </div>
+      <div>
+        <div class="font-display text-3xl text-green tracking-wider" th:text="${currentUserEntry.totalPoints}">0</div>
+        <div class="text-xs font-semibold text-gray-400">Points</div>
+      </div>
+      <div>
+        <div class="font-display text-3xl text-gold tracking-wider" th:text="${currentUserEntry.exactCount}">0</div>
+        <div class="text-xs font-semibold text-gray-400">Exact Scores</div>
+      </div>
+    </div>
+
+    <!-- Leaderboard table -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-fade-up stagger-2">
+      <div th:if="${#lists.isEmpty(entries)}" class="p-12 text-center text-gray-400">
+        <div class="text-5xl mb-4">🏆</div>
+        <p class="font-semibold">No participants yet.</p>
+      </div>
+
+      <table th:unless="${#lists.isEmpty(entries)}" class="w-full text-sm">
+        <thead class="bg-green-dark text-white">
+          <tr>
+            <th class="px-4 py-3 text-left font-semibold">#</th>
+            <th class="px-4 py-3 text-left font-semibold">Player</th>
+            <th class="px-4 py-3 text-center font-semibold">Points</th>
+            <th class="px-4 py-3 text-center font-semibold hidden sm:table-cell">Exact</th>
+            <th class="px-4 py-3 text-center font-semibold hidden sm:table-cell">Winner</th>
+            <th class="px-4 py-3 text-center font-semibold hidden md:table-cell">Draw</th>
+            <th class="px-4 py-3 text-center font-semibold hidden md:table-cell" th:each="stage : ${stages}" th:text="${stage.name()}">STAGE</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <tr th:each="entry : ${entries}" class="hover:bg-green-light/30 transition-colors"
+              th:classappend="${currentUserEntry != null && entry.userId == currentUserEntry.userId} ? 'bg-green-light/50 font-bold' : ''">
+            <td class="px-4 py-3 font-display text-xl text-green-dark" th:text="${entry.rank}">1</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <img th:src="${entry.avatarUrl}" th:alt="${entry.displayName}"
+                     class="w-8 h-8 rounded-full object-cover border border-gray-200"
+                     onerror="this.src='https://ui-avatars.com/api/?name='+encodeURIComponent(this.alt)+'&background=006b2a&color=fff'"/>
+                <span class="font-semibold text-gray-800" th:text="${entry.displayName}">Name</span>
+                <img th:if="${entry.predictedWinnerFlagCode}" th:src="@{'/images/flags/' + ${entry.predictedWinnerFlagCode} + '.svg'}"
+                     class="w-5 h-5 rounded-full object-cover" title="Tournament winner pick"/>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-center font-bold text-green-dark" th:text="${entry.totalPoints}">0</td>
+            <td class="px-4 py-3 text-center hidden sm:table-cell" th:text="${entry.exactCount}">0</td>
+            <td class="px-4 py-3 text-center hidden sm:table-cell" th:text="${entry.correctWinnerCount}">0</td>
+            <td class="px-4 py-3 text-center hidden md:table-cell" th:text="${entry.drawCount}">0</td>
+            <td th:each="stage : ${stages}" class="px-4 py-3 text-center text-xs text-gray-500 hidden md:table-cell"
+                th:text="${phasePoints.containsKey(entry.userId) && phasePoints.get(entry.userId).containsKey(stage)} ? ${phasePoints.get(entry.userId).get(stage)} : '—'">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</th:block>
+</body>
+</html>

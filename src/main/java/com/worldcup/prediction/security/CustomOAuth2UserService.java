@@ -1,11 +1,16 @@
 package com.worldcup.prediction.security;
 
+import com.worldcup.prediction.domain.Community;
+import com.worldcup.prediction.domain.CommunityMembership;
 import com.worldcup.prediction.domain.Invitation;
 import com.worldcup.prediction.domain.OAuthIdentity;
 import com.worldcup.prediction.domain.User;
+import com.worldcup.prediction.domain.enums.CommunityRole;
+import com.worldcup.prediction.domain.enums.MembershipStatus;
 import com.worldcup.prediction.domain.enums.OAuthProvider;
 import com.worldcup.prediction.domain.enums.UserRole;
 import com.worldcup.prediction.domain.enums.UserStatus;
+import com.worldcup.prediction.repository.CommunityMembershipRepository;
 import com.worldcup.prediction.repository.InvitationRepository;
 import com.worldcup.prediction.repository.OAuthIdentityRepository;
 import com.worldcup.prediction.repository.UserRepository;
@@ -31,6 +36,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     private final UserRepository userRepository;
     private final OAuthIdentityRepository oauthIdentityRepository;
     private final InvitationRepository invitationRepository;
+    private final CommunityMembershipRepository membershipRepository;
 
     private OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
 
@@ -91,9 +97,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         // 3. Brand-new user — check invitation first
         UserStatus initialStatus = UserStatus.PENDING;
+        Community invitedCommunity = null;
         Optional<Invitation> invitation = invitationRepository.findByEmailIgnoreCase(email);
         if (invitation.isPresent() && !invitation.get().isAccepted()) {
             initialStatus = UserStatus.ACTIVE;
+            invitedCommunity = invitation.get().getCommunity();
             invitation.get().setAcceptedAt(LocalDateTime.now());
             invitationRepository.save(invitation.get());
             log.info("Invited user auto-approved: email={}", email);
@@ -108,6 +116,18 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 .role(UserRole.USER)
                 .build();
         User saved = userRepository.save(newUser);
+
+        // Auto-add to community if invitation had one
+        if (invitedCommunity != null) {
+            CommunityMembership membership = CommunityMembership.builder()
+                    .community(invitedCommunity)
+                    .user(saved)
+                    .role(CommunityRole.MEMBER)
+                    .status(MembershipStatus.ACTIVE)
+                    .build();
+            membershipRepository.save(membership);
+            log.info("Auto-added user {} to community {}", saved.getId(), invitedCommunity.getId());
+        }
 
         OAuthIdentity identity = OAuthIdentity.builder()
                 .user(saved)

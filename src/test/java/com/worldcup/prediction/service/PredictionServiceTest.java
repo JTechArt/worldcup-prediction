@@ -1,5 +1,6 @@
 package com.worldcup.prediction.service;
 
+import com.worldcup.prediction.domain.Community;
 import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.domain.Prediction;
 import com.worldcup.prediction.domain.User;
@@ -8,6 +9,7 @@ import com.worldcup.prediction.domain.enums.MatchStatus;
 import com.worldcup.prediction.domain.enums.UserRole;
 import com.worldcup.prediction.domain.enums.UserStatus;
 import com.worldcup.prediction.dto.PredictionDto;
+import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
@@ -36,24 +38,28 @@ class PredictionServiceTest {
     @Mock private PredictionRepository predictionRepository;
     @Mock private MatchRepository matchRepository;
     @Mock private UserRepository userRepository;
+    @Mock private CommunityRepository communityRepository;
 
     private PredictionService predictionService;
 
     private final LocalDateTime kickoff      = LocalDateTime.of(2026, 6, 11, 18, 0);
     private final LocalDateTime openTime     = kickoff.minusHours(24);
     private final LocalDateTime lockTime     = kickoff.minusHours(1);
-    private final LocalDateTime nowOpen      = kickoff.minusHours(10);  // window open
-    private final LocalDateTime nowLocked    = kickoff.plusHours(2);    // past lock
-    private final LocalDateTime nowBeforeOpen = kickoff.minusHours(25); // not yet open
+    private final LocalDateTime nowOpen      = kickoff.minusHours(10);
+    private final LocalDateTime nowLocked    = kickoff.plusHours(2);
+    private final LocalDateTime nowBeforeOpen = kickoff.minusHours(25);
 
     private User testUser;
+    private Community testCommunity;
+    private static final Long COMMUNITY_ID = 100L;
 
     @BeforeEach
     void setUp() {
-        predictionService = new PredictionService(predictionRepository, matchRepository, userRepository);
+        predictionService = new PredictionService(predictionRepository, matchRepository, userRepository, communityRepository);
         testUser = User.builder().id(42L).email("test@example.com")
                 .firstName("Test").lastName("User")
                 .status(UserStatus.ACTIVE).role(UserRole.USER).build();
+        testCommunity = Community.builder().id(COMMUNITY_ID).name("Test").slug("test").build();
     }
 
     @Nested
@@ -97,13 +103,14 @@ class PredictionServiceTest {
 
             when(userRepository.findById(42L)).thenReturn(Optional.of(testUser));
             when(matchRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(m1, m2));
-            when(predictionRepository.findByUserIdAndMatchId(eq(42L), any()))
+            when(predictionRepository.findByUserIdAndMatchIdAndCommunityId(eq(42L), any(), eq(COMMUNITY_ID)))
                     .thenReturn(Optional.empty());
+            when(communityRepository.findById(COMMUNITY_ID)).thenReturn(Optional.of(testCommunity));
             when(predictionRepository.save(any(Prediction.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
 
             List<Prediction> result = predictionService.submitPredictions(
-                    42L, List.of(new PredictionDto(1L, 2, 1), new PredictionDto(2L, 0, 0)), nowOpen);
+                    42L, List.of(new PredictionDto(1L, 2, 1), new PredictionDto(2L, 0, 0)), nowOpen, COMMUNITY_ID);
 
             assertThat(result).hasSize(2);
             verify(predictionRepository, times(2)).save(any(Prediction.class));
@@ -117,11 +124,12 @@ class PredictionServiceTest {
 
             when(userRepository.findById(42L)).thenReturn(Optional.of(testUser));
             when(matchRepository.findAllById(List.of(1L))).thenReturn(List.of(m1));
-            when(predictionRepository.findByUserIdAndMatchId(42L, 1L))
+            when(predictionRepository.findByUserIdAndMatchIdAndCommunityId(42L, 1L, COMMUNITY_ID))
                     .thenReturn(Optional.of(existing));
+            when(communityRepository.findById(COMMUNITY_ID)).thenReturn(Optional.of(testCommunity));
             when(predictionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            predictionService.submitPredictions(42L, List.of(new PredictionDto(1L, 3, 2)), nowOpen);
+            predictionService.submitPredictions(42L, List.of(new PredictionDto(1L, 3, 2)), nowOpen, COMMUNITY_ID);
 
             ArgumentCaptor<Prediction> captor = ArgumentCaptor.forClass(Prediction.class);
             verify(predictionRepository).save(captor.capture());
@@ -136,7 +144,7 @@ class PredictionServiceTest {
                     .thenReturn(List.of(buildMatch(1L, openTime, lockTime)));
 
             assertThatThrownBy(() -> predictionService.submitPredictions(
-                    42L, List.of(new PredictionDto(1L, 1, 0)), nowLocked))
+                    42L, List.of(new PredictionDto(1L, 1, 0)), nowLocked, COMMUNITY_ID))
                     .isInstanceOf(PredictionService.PredictionWindowClosedException.class)
                     .hasMessageContaining("prediction window");
         }
@@ -148,13 +156,13 @@ class PredictionServiceTest {
                     .thenReturn(List.of(buildMatch(1L, openTime, lockTime)));
 
             assertThatThrownBy(() -> predictionService.submitPredictions(
-                    42L, List.of(new PredictionDto(1L, 1, 0)), nowBeforeOpen))
+                    42L, List.of(new PredictionDto(1L, 1, 0)), nowBeforeOpen, COMMUNITY_ID))
                     .isInstanceOf(PredictionService.PredictionWindowClosedException.class);
         }
 
         @Test @DisplayName("throws IllegalArgumentException for empty list")
         void emptyList_throws() {
-            assertThatThrownBy(() -> predictionService.submitPredictions(42L, List.of(), nowOpen))
+            assertThatThrownBy(() -> predictionService.submitPredictions(42L, List.of(), nowOpen, COMMUNITY_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("empty");
         }
@@ -165,7 +173,7 @@ class PredictionServiceTest {
             when(matchRepository.findAllById(List.of(999L))).thenReturn(List.of());
 
             assertThatThrownBy(() -> predictionService.submitPredictions(
-                    42L, List.of(new PredictionDto(999L, 1, 0)), nowOpen))
+                    42L, List.of(new PredictionDto(999L, 1, 0)), nowOpen, COMMUNITY_ID))
                     .isInstanceOf(PredictionService.MatchNotFoundException.class);
         }
     }
@@ -179,17 +187,17 @@ class PredictionServiceTest {
             Match match = buildMatch(10L, openTime, lockTime);
             Prediction pred = Prediction.builder().user(testUser).match(match)
                     .predictedHome(2).predictedAway(1).build();
-            when(predictionRepository.findByMatchId(10L)).thenReturn(List.of(pred));
+            when(predictionRepository.findByMatchIdAndCommunityId(10L, COMMUNITY_ID)).thenReturn(List.of(pred));
 
-            assertThat(predictionService.getPredictionsForMatch(match, nowLocked, false)).hasSize(1);
+            assertThat(predictionService.getPredictionsForMatch(match, nowLocked, false, COMMUNITY_ID)).hasSize(1);
         }
 
         @Test @DisplayName("returns empty before window locks (non-admin)")
         void beforeLock_nonAdmin_empty() {
             Match match = buildMatch(10L, openTime, lockTime);
 
-            assertThat(predictionService.getPredictionsForMatch(match, nowOpen, false)).isEmpty();
-            verify(predictionRepository, never()).findByMatchId(any());
+            assertThat(predictionService.getPredictionsForMatch(match, nowOpen, false, COMMUNITY_ID)).isEmpty();
+            verify(predictionRepository, never()).findByMatchIdAndCommunityId(any(), any());
         }
 
         @Test @DisplayName("admin always sees predictions")
@@ -197,9 +205,9 @@ class PredictionServiceTest {
             Match match = buildMatch(10L, openTime, lockTime);
             Prediction pred = Prediction.builder().user(testUser).match(match)
                     .predictedHome(1).predictedAway(1).build();
-            when(predictionRepository.findByMatchId(10L)).thenReturn(List.of(pred));
+            when(predictionRepository.findByMatchIdAndCommunityId(10L, COMMUNITY_ID)).thenReturn(List.of(pred));
 
-            assertThat(predictionService.getPredictionsForMatch(match, nowOpen, true)).hasSize(1);
+            assertThat(predictionService.getPredictionsForMatch(match, nowOpen, true, COMMUNITY_ID)).hasSize(1);
         }
     }
 
@@ -207,26 +215,25 @@ class PredictionServiceTest {
     @DisplayName("getPredictionsForUser")
     class GetPredictionsForUser {
 
-        @Test @DisplayName("returns all predictions for user")
+        @Test @DisplayName("returns all predictions for user in community")
         void returnsOwn() {
             Match m1 = buildMatch(1L, openTime, lockTime);
             Match m2 = buildMatch(2L, openTime, lockTime);
-            when(predictionRepository.findByUserId(5L)).thenReturn(List.of(
+            when(predictionRepository.findByUserIdAndCommunityId(5L, COMMUNITY_ID)).thenReturn(List.of(
                     Prediction.builder().user(testUser).match(m1).predictedHome(2).predictedAway(0).build(),
                     Prediction.builder().user(testUser).match(m2).predictedHome(1).predictedAway(1).build()
             ));
 
-            assertThat(predictionService.getPredictionsForUser(5L)).hasSize(2);
+            assertThat(predictionService.getPredictionsForUser(5L, COMMUNITY_ID)).hasSize(2);
         }
 
         @Test @DisplayName("returns empty when no predictions")
         void noPredictions_empty() {
-            when(predictionRepository.findByUserId(99L)).thenReturn(List.of());
-            assertThat(predictionService.getPredictionsForUser(99L)).isEmpty();
+            when(predictionRepository.findByUserIdAndCommunityId(99L, COMMUNITY_ID)).thenReturn(List.of());
+            assertThat(predictionService.getPredictionsForUser(99L, COMMUNITY_ID)).isEmpty();
         }
     }
 
-    // helper — id must be set explicitly because JPA @GeneratedValue doesn't run in unit tests
     private Match buildMatch(Long id, LocalDateTime openTime, LocalDateTime closeTime) {
         Match m = Match.builder()
                 .matchNumber(id.intValue())

@@ -3,6 +3,7 @@ package com.worldcup.prediction.scheduler;
 import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.domain.enums.MatchStage;
 import com.worldcup.prediction.domain.enums.MatchStatus;
+import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
@@ -28,6 +29,7 @@ class NotificationSchedulerTest {
     @Mock PredictionRepository predictionRepository;
     @Mock NotificationService notificationService;
     @Mock LeaderboardService leaderboardService;
+    @Mock CommunityRepository communityRepository;
 
     @InjectMocks NotificationScheduler scheduler;
 
@@ -35,21 +37,21 @@ class NotificationSchedulerTest {
     void checkPredictionWindowOpen_noMatches_skips() {
         when(matchRepository.findMatchesWhereWindowShouldOpen(any())).thenReturn(List.of());
         scheduler.checkPredictionWindowOpen();
-        verify(notificationService, never()).sendPredictionWindowOpen(anyList(), any());
+        verify(notificationService, never()).sendPredictionWindowOpen(anyList(), any(), anyLong());
     }
 
     @Test
     void checkPredictionDeadline_noApproachingMatches_skips() {
         when(matchRepository.findByKickoffTimeBetween(any(), any())).thenReturn(List.of());
         scheduler.checkPredictionDeadline();
-        verify(notificationService, never()).sendPredictionReminders(anyList(), any());
+        verify(notificationService, never()).sendPredictionReminders(anyList(), any(), anyLong());
     }
 
     @Test
     void checkLeaderboardDigest_noMatchesToday_skips() {
         when(matchRepository.findByKickoffTimeBetween(any(), any())).thenReturn(List.of());
         scheduler.checkLeaderboardDigest();
-        verify(notificationService, never()).sendLeaderboardDigest(anyString(), anyList(), anyList(), anyList());
+        verify(notificationService, never()).sendLeaderboardDigest(anyString(), anyList(), anyList(), anyList(), anyLong());
     }
 
     @Test
@@ -60,6 +62,6 @@ class NotificationSchedulerTest {
                 .stage(MatchStage.GROUP).matchNumber(1).build();
         when(matchRepository.findByKickoffTimeBetween(any(), any())).thenReturn(List.of(incomplete));
         scheduler.checkLeaderboardDigest();
-        verify(notificationService, never()).sendLeaderboardDigest(anyString(), anyList(), anyList(), anyList());
+        verify(notificationService, never()).sendLeaderboardDigest(anyString(), anyList(), anyList(), anyList(), anyLong());
     }
 }

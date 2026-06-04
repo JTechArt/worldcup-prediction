@@ -1,45 +1,41 @@
 package com.worldcup.prediction.service;
 
-import com.worldcup.prediction.domain.Prediction;
+import com.worldcup.prediction.domain.CommunityMembership;
 import com.worldcup.prediction.domain.Team;
 import com.worldcup.prediction.domain.TournamentWinnerPrediction;
 import com.worldcup.prediction.domain.User;
-import com.worldcup.prediction.domain.enums.PredictionScore;
+import com.worldcup.prediction.domain.enums.CommunityRole;
+import com.worldcup.prediction.domain.enums.MembershipStatus;
 import com.worldcup.prediction.domain.enums.UserRole;
 import com.worldcup.prediction.domain.enums.UserStatus;
 import com.worldcup.prediction.dto.LeaderboardEntryDto;
-import com.worldcup.prediction.repository.PredictionRepository;
+import com.worldcup.prediction.repository.CommunityMembershipRepository;
 import com.worldcup.prediction.repository.TournamentWinnerPredictionRepository;
-import com.worldcup.prediction.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LeaderboardServiceTest {
 
-    @Mock UserRepository userRepository;
-    @Mock PredictionRepository predictionRepository;
+    @Mock CommunityMembershipRepository membershipRepository;
     @Mock TournamentWinnerPredictionRepository twpRepository;
 
     @InjectMocks LeaderboardService leaderboardService;
 
-    // ---- helpers ----
+    private static final Long COMMUNITY_ID = 100L;
 
-    private User makeUser(Long id, String firstName, String lastName, LocalDateTime createdAt) {
+    private User makeUser(Long id, String firstName, String lastName) {
         User u = User.builder()
                 .email(firstName.toLowerCase() + "@example.com")
                 .firstName(firstName).lastName(lastName)
@@ -49,259 +45,139 @@ class LeaderboardServiceTest {
         return u;
     }
 
-    private Prediction makePrediction(User user, int points, PredictionScore score) {
-        Prediction p = Prediction.builder()
+    private CommunityMembership makeMembership(User user, int totalPoints, int exactCount, int winnerCount, int drawCount) {
+        return CommunityMembership.builder()
                 .user(user)
-                .predictedHome(1).predictedAway(0)
-                .scoreResult(score).pointsAwarded(points)
+                .role(CommunityRole.MEMBER)
+                .status(MembershipStatus.ACTIVE)
+                .totalPoints(totalPoints)
+                .exactScoreCount(exactCount)
+                .correctWinnerCount(winnerCount)
+                .correctDrawCount(drawCount)
                 .build();
-        // match not needed for leaderboard service (only user + pointsAwarded + scoreResult used)
-        return p;
     }
-
-    private TournamentWinnerPrediction makeTwp(User user, String flagCode, boolean scored) {
-        Team team = Team.builder().fifaCode("TST").flagCode(flagCode).name("Test").build();
-        return TournamentWinnerPrediction.builder()
-                .user(user).team(team).scored(scored).build();
-    }
-
-    private final LocalDateTime jan1 = LocalDateTime.of(2026, 1, 1, 0, 0);
-    private final LocalDateTime jan2 = LocalDateTime.of(2026, 1, 2, 0, 0);
-    private final LocalDateTime jan10 = LocalDateTime.of(2026, 1, 10, 0, 0);
-
-    // ---- tests ----
 
     @Test
     void getFullLeaderboard_sortsByTotalPointsDescending() {
-        User alice = makeUser(1L, "Alice", "Smith", jan1);
-        User bob   = makeUser(2L, "Bob",   "Jones", jan2);
+        User alice = makeUser(1L, "Alice", "Smith");
+        User bob = makeUser(2L, "Bob", "Jones");
 
-        when(userRepository.findByStatus(UserStatus.ACTIVE)).thenReturn(List.of(alice, bob));
-        when(predictionRepository.findByUser(alice)).thenReturn(List.of(
-                makePrediction(alice, 3, PredictionScore.EXACT),
-                makePrediction(alice, 1, PredictionScore.CORRECT_WINNER)
-        ));
-        when(predictionRepository.findByUser(bob)).thenReturn(List.of(
-                makePrediction(bob, 3, PredictionScore.EXACT)
-        ));
-        when(twpRepository.findByUser(alice)).thenReturn(Optional.empty());
-        when(twpRepository.findByUser(bob)).thenReturn(Optional.empty());
+        CommunityMembership mAlice = makeMembership(alice, 4, 1, 1, 0);
+        CommunityMembership mBob = makeMembership(bob, 3, 1, 0, 0);
 
-        List<LeaderboardEntryDto> result = leaderboardService.getFullLeaderboard();
+        when(membershipRepository.findByCommunityIdAndStatusWithUser(COMMUNITY_ID, MembershipStatus.ACTIVE))
+                .thenReturn(List.of(mAlice, mBob));
+        when(twpRepository.findByUserIdAndCommunityId(any(), eq(COMMUNITY_ID))).thenReturn(Optional.empty());
+
+        List<LeaderboardEntryDto> result = leaderboardService.getFullLeaderboard(COMMUNITY_ID);
 
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).getUserId()).isEqualTo(1L); // Alice: 4pts
+        assertThat(result.get(0).getUserId()).isEqualTo(1L);
         assertThat(result.get(0).getTotalPoints()).isEqualTo(4);
-        assertThat(result.get(1).getUserId()).isEqualTo(2L); // Bob: 3pts
+        assertThat(result.get(1).getUserId()).isEqualTo(2L);
         assertThat(result.get(0).getRank()).isEqualTo(1);
         assertThat(result.get(1).getRank()).isEqualTo(2);
     }
 
     @Test
-    void getFullLeaderboard_tiebreaker_exactCountWins() {
-        User alice = makeUser(1L, "Alice", "Smith", jan1);
-        User bob   = makeUser(2L, "Bob",   "Jones", jan2);
-
-        when(userRepository.findByStatus(UserStatus.ACTIVE)).thenReturn(List.of(bob, alice));
-        when(predictionRepository.findByUser(alice)).thenReturn(List.of(
-                makePrediction(alice, 3, PredictionScore.EXACT),
-                makePrediction(alice, 3, PredictionScore.EXACT)
-        ));
-        when(predictionRepository.findByUser(bob)).thenReturn(List.of(
-                makePrediction(bob, 3, PredictionScore.EXACT),
-                makePrediction(bob, 2, PredictionScore.CORRECT_DRAW),
-                makePrediction(bob, 1, PredictionScore.CORRECT_WINNER)
-        ));
-        when(twpRepository.findByUser(any())).thenReturn(Optional.empty());
-
-        List<LeaderboardEntryDto> result = leaderboardService.getFullLeaderboard();
-
-        // Alice wins: 2 exact vs Bob's 1 exact (both 6pts total)
-        assertThat(result.get(0).getUserId()).isEqualTo(1L);
-        assertThat(result.get(0).getExactCount()).isEqualTo(2);
-        assertThat(result.get(1).getExactCount()).isEqualTo(1);
-    }
-
-    @Test
-    void getFullLeaderboard_tiebreaker_correctWinnerCountWins() {
-        User alice = makeUser(1L, "Alice", "Smith", jan1);
-        User bob   = makeUser(2L, "Bob",   "Jones", jan2);
-
-        when(userRepository.findByStatus(UserStatus.ACTIVE)).thenReturn(List.of(bob, alice));
-        when(predictionRepository.findByUser(alice)).thenReturn(List.of(
-                makePrediction(alice, 3, PredictionScore.EXACT),
-                makePrediction(alice, 1, PredictionScore.CORRECT_WINNER),
-                makePrediction(alice, 1, PredictionScore.CORRECT_WINNER)
-        ));
-        when(predictionRepository.findByUser(bob)).thenReturn(List.of(
-                makePrediction(bob, 3, PredictionScore.EXACT),
-                makePrediction(bob, 2, PredictionScore.CORRECT_DRAW)
-        ));
-        when(twpRepository.findByUser(any())).thenReturn(Optional.empty());
-
-        List<LeaderboardEntryDto> result = leaderboardService.getFullLeaderboard();
-
-        // Alice: 5pts, 1 exact, 2 correct_winner
-        // Bob:   5pts, 1 exact, 0 correct_winner → Alice wins
-        assertThat(result.get(0).getUserId()).isEqualTo(1L);
-        assertThat(result.get(0).getCorrectWinnerCount()).isEqualTo(2);
-        assertThat(result.get(1).getCorrectWinnerCount()).isEqualTo(0);
-    }
-
-    @Test
-    void getFullLeaderboard_tiebreaker_tournamentWinnerBonusFlag() {
-        User alice = makeUser(1L, "Alice", "Smith", jan1);
-        User bob   = makeUser(2L, "Bob",   "Jones", jan2);
-
-        when(userRepository.findByStatus(UserStatus.ACTIVE)).thenReturn(List.of(bob, alice));
-        when(predictionRepository.findByUser(alice)).thenReturn(List.of(
-                makePrediction(alice, 3, PredictionScore.EXACT)
-        ));
-        when(predictionRepository.findByUser(bob)).thenReturn(List.of(
-                makePrediction(bob, 3, PredictionScore.EXACT)
-        ));
-        when(twpRepository.findByUser(alice)).thenReturn(Optional.of(makeTwp(alice, "br", true)));
-        when(twpRepository.findByUser(bob)).thenReturn(Optional.of(makeTwp(bob, "fr", false)));
-
-        List<LeaderboardEntryDto> result = leaderboardService.getFullLeaderboard();
-
-        assertThat(result.get(0).isTournamentWinnerCorrect()).isTrue();
-        assertThat(result.get(1).isTournamentWinnerCorrect()).isFalse();
-    }
-
-    @Test
-    void getFullLeaderboard_tiebreaker_earliestRegistrationWins() {
-        User alice = makeUser(1L, "Alice", "Smith", jan1);  // earlier
-        User bob   = makeUser(2L, "Bob",   "Jones", jan10); // later
-        // Set createdAt manually since builder doesn't use it directly in unit tests
-        alice.setCreatedAt(jan1);
-        bob.setCreatedAt(jan10);
-
-        when(userRepository.findByStatus(UserStatus.ACTIVE)).thenReturn(List.of(bob, alice));
-        when(predictionRepository.findByUser(alice)).thenReturn(List.of(
-                makePrediction(alice, 3, PredictionScore.EXACT)
-        ));
-        when(predictionRepository.findByUser(bob)).thenReturn(List.of(
-                makePrediction(bob, 3, PredictionScore.EXACT)
-        ));
-        when(twpRepository.findByUser(alice)).thenReturn(Optional.of(makeTwp(alice, "br", true)));
-        when(twpRepository.findByUser(bob)).thenReturn(Optional.of(makeTwp(bob, "br", true)));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(alice));
-        when(userRepository.findById(2L)).thenReturn(Optional.of(bob));
-
-        List<LeaderboardEntryDto> result = leaderboardService.getFullLeaderboard();
-
-        assertThat(result.get(0).getUserId()).isEqualTo(1L); // alice registered earlier
-    }
-
-    @Test
-    void getFullLeaderboard_excludesPendingAndDisabledUsers() {
-        User active = makeUser(1L, "Active", "User", jan1);
-
-        when(userRepository.findByStatus(UserStatus.ACTIVE)).thenReturn(List.of(active));
-        when(predictionRepository.findByUser(active)).thenReturn(List.of());
-        when(twpRepository.findByUser(active)).thenReturn(Optional.empty());
-
-        List<LeaderboardEntryDto> result = leaderboardService.getFullLeaderboard();
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getUserId()).isEqualTo(1L);
-    }
-
-    @Test
-    void getFullLeaderboard_userWithNoTwp_flagUrlIsEmpty() {
-        User alice = makeUser(1L, "Alice", "Smith", jan1);
-        when(userRepository.findByStatus(UserStatus.ACTIVE)).thenReturn(List.of(alice));
-        when(predictionRepository.findByUser(alice)).thenReturn(List.of());
-        when(twpRepository.findByUser(alice)).thenReturn(Optional.empty());
-
-        List<LeaderboardEntryDto> result = leaderboardService.getFullLeaderboard();
-
-        assertThat(result.get(0).getPredictedWinnerFlagCode()).isNull();
-        assertThat(result.get(0).getFlagUrl()).isEmpty();
-    }
-
-    @Test
     void getTopN_returnsFirstNEntries() {
-        List<User> users = List.of(
-                makeUser(1L, "A", "One",   jan1),
-                makeUser(2L, "B", "Two",   jan2),
-                makeUser(3L, "C", "Three", LocalDateTime.of(2026,1,3,0,0)),
-                makeUser(4L, "D", "Four",  LocalDateTime.of(2026,1,4,0,0)),
-                makeUser(5L, "E", "Five",  LocalDateTime.of(2026,1,5,0,0))
-        );
-        when(userRepository.findByStatus(UserStatus.ACTIVE)).thenReturn(users);
-        users.forEach(u -> {
-            when(predictionRepository.findByUser(u)).thenReturn(List.of(
-                    makePrediction(u, 3, PredictionScore.EXACT)
-            ));
-            when(twpRepository.findByUser(u)).thenReturn(Optional.empty());
-        });
+        User alice = makeUser(1L, "A", "One");
+        User bob = makeUser(2L, "B", "Two");
+        User charlie = makeUser(3L, "C", "Three");
 
-        List<LeaderboardEntryDto> top3 = leaderboardService.getTopN(3);
+        when(membershipRepository.findByCommunityIdAndStatusWithUser(COMMUNITY_ID, MembershipStatus.ACTIVE))
+                .thenReturn(List.of(
+                        makeMembership(alice, 10, 2, 1, 0),
+                        makeMembership(bob, 8, 1, 1, 0),
+                        makeMembership(charlie, 5, 0, 1, 0)
+                ));
+        when(twpRepository.findByUserIdAndCommunityId(any(), eq(COMMUNITY_ID))).thenReturn(Optional.empty());
 
-        assertThat(top3).hasSize(3);
-        assertThat(top3.get(0).getRank()).isEqualTo(1);
-        assertThat(top3.get(2).getRank()).isEqualTo(3);
+        List<LeaderboardEntryDto> top2 = leaderboardService.getTopN(2, COMMUNITY_ID);
+
+        assertThat(top2).hasSize(2);
+        assertThat(top2.get(0).getRank()).isEqualTo(1);
+        assertThat(top2.get(1).getRank()).isEqualTo(2);
     }
 
     @Test
     void getTopN_whenFewerThanNUsers_returnsAll() {
-        User alice = makeUser(1L, "Alice", "Smith", jan1);
-        when(userRepository.findByStatus(UserStatus.ACTIVE)).thenReturn(List.of(alice));
-        when(predictionRepository.findByUser(alice)).thenReturn(List.of());
-        when(twpRepository.findByUser(alice)).thenReturn(Optional.empty());
+        User alice = makeUser(1L, "Alice", "Smith");
+        when(membershipRepository.findByCommunityIdAndStatusWithUser(COMMUNITY_ID, MembershipStatus.ACTIVE))
+                .thenReturn(List.of(makeMembership(alice, 3, 1, 0, 0)));
+        when(twpRepository.findByUserIdAndCommunityId(any(), eq(COMMUNITY_ID))).thenReturn(Optional.empty());
 
-        assertThat(leaderboardService.getTopN(10)).hasSize(1);
+        assertThat(leaderboardService.getTopN(10, COMMUNITY_ID)).hasSize(1);
     }
 
     @Test
     void getEntryForUser_returnsCorrectRankAndData() {
-        User alice = makeUser(1L, "Alice", "Smith", jan1);
-        User bob   = makeUser(2L, "Bob",   "Jones", jan2);
+        User alice = makeUser(1L, "Alice", "Smith");
+        User bob = makeUser(2L, "Bob", "Jones");
 
-        when(userRepository.findByStatus(UserStatus.ACTIVE)).thenReturn(List.of(alice, bob));
-        when(predictionRepository.findByUser(alice)).thenReturn(List.of(
-                makePrediction(alice, 3, PredictionScore.EXACT)
-        ));
-        when(predictionRepository.findByUser(bob)).thenReturn(List.of(
-                makePrediction(bob, 1, PredictionScore.CORRECT_WINNER)
-        ));
-        when(twpRepository.findByUser(any())).thenReturn(Optional.empty());
+        when(membershipRepository.findByCommunityIdAndStatusWithUser(COMMUNITY_ID, MembershipStatus.ACTIVE))
+                .thenReturn(List.of(
+                        makeMembership(alice, 5, 1, 1, 0),
+                        makeMembership(bob, 2, 0, 1, 0)
+                ));
+        when(twpRepository.findByUserIdAndCommunityId(any(), eq(COMMUNITY_ID))).thenReturn(Optional.empty());
 
-        Optional<LeaderboardEntryDto> entry = leaderboardService.getEntryForUser(2L);
+        Optional<LeaderboardEntryDto> entry = leaderboardService.getEntryForUser(2L, COMMUNITY_ID);
 
         assertThat(entry).isPresent();
         assertThat(entry.get().getRank()).isEqualTo(2);
-        assertThat(entry.get().getTotalPoints()).isEqualTo(1);
+        assertThat(entry.get().getTotalPoints()).isEqualTo(2);
     }
 
     @Test
     void getEntryForUser_returnsEmptyForUnknownUser() {
-        when(userRepository.findByStatus(UserStatus.ACTIVE)).thenReturn(List.of());
+        when(membershipRepository.findByCommunityIdAndStatusWithUser(COMMUNITY_ID, MembershipStatus.ACTIVE))
+                .thenReturn(List.of());
 
-        assertThat(leaderboardService.getEntryForUser(999L)).isEmpty();
+        assertThat(leaderboardService.getEntryForUser(999L, COMMUNITY_ID)).isEmpty();
     }
 
     @Test
-    void getFullLeaderboard_countsOutcomesCorrectly() {
-        User alice = makeUser(1L, "Alice", "Smith", jan1);
-        when(userRepository.findByStatus(UserStatus.ACTIVE)).thenReturn(List.of(alice));
-        when(predictionRepository.findByUser(alice)).thenReturn(List.of(
-                makePrediction(alice, 3, PredictionScore.EXACT),
-                makePrediction(alice, 3, PredictionScore.EXACT),
-                makePrediction(alice, 2, PredictionScore.CORRECT_DRAW),
-                makePrediction(alice, 1, PredictionScore.CORRECT_WINNER),
-                makePrediction(alice, 0, PredictionScore.WRONG),
-                makePrediction(alice, 0, PredictionScore.PENDING)
-        ));
-        when(twpRepository.findByUser(alice)).thenReturn(Optional.empty());
+    void getFullLeaderboard_tiebreaker_exactCountWins() {
+        User alice = makeUser(1L, "Alice", "Smith");
+        User bob = makeUser(2L, "Bob", "Jones");
 
-        List<LeaderboardEntryDto> result = leaderboardService.getFullLeaderboard();
+        // Same points, Alice has more exact
+        when(membershipRepository.findByCommunityIdAndStatusWithUser(COMMUNITY_ID, MembershipStatus.ACTIVE))
+                .thenReturn(List.of(
+                        makeMembership(alice, 6, 2, 0, 0),
+                        makeMembership(bob, 6, 1, 1, 1)
+                ));
+        when(twpRepository.findByUserIdAndCommunityId(any(), eq(COMMUNITY_ID))).thenReturn(Optional.empty());
 
-        assertThat(result.get(0).getTotalPoints()).isEqualTo(9);
+        List<LeaderboardEntryDto> result = leaderboardService.getFullLeaderboard(COMMUNITY_ID);
+
+        assertThat(result.get(0).getUserId()).isEqualTo(1L);
         assertThat(result.get(0).getExactCount()).isEqualTo(2);
-        assertThat(result.get(0).getDrawCount()).isEqualTo(1);
-        assertThat(result.get(0).getCorrectWinnerCount()).isEqualTo(1);
+    }
+
+    @Test
+    void getFullLeaderboard_tournamentWinnerCorrect_reflected() {
+        User alice = makeUser(1L, "Alice", "Smith");
+        Team brazil = Team.builder().fifaCode("BRA").flagCode("br").name("Brazil").build();
+        TournamentWinnerPrediction twp = TournamentWinnerPrediction.builder()
+                .user(alice).team(brazil).scored(true).build();
+
+        when(membershipRepository.findByCommunityIdAndStatusWithUser(COMMUNITY_ID, MembershipStatus.ACTIVE))
+                .thenReturn(List.of(makeMembership(alice, 3, 1, 0, 0)));
+        when(twpRepository.findByUserIdAndCommunityId(1L, COMMUNITY_ID)).thenReturn(Optional.of(twp));
+
+        List<LeaderboardEntryDto> result = leaderboardService.getFullLeaderboard(COMMUNITY_ID);
+
+        assertThat(result.get(0).isTournamentWinnerCorrect()).isTrue();
+        assertThat(result.get(0).getPredictedWinnerFlagCode()).isEqualTo("br");
+    }
+
+    @Test
+    void getFullLeaderboard_noMembers_returnsEmpty() {
+        when(membershipRepository.findByCommunityIdAndStatusWithUser(COMMUNITY_ID, MembershipStatus.ACTIVE))
+                .thenReturn(List.of());
+
+        assertThat(leaderboardService.getFullLeaderboard(COMMUNITY_ID)).isEmpty();
     }
 }

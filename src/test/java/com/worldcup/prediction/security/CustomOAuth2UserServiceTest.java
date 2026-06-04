@@ -6,6 +6,7 @@ import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.OAuthProvider;
 import com.worldcup.prediction.domain.enums.UserRole;
 import com.worldcup.prediction.domain.enums.UserStatus;
+import com.worldcup.prediction.repository.CommunityMembershipRepository;
 import com.worldcup.prediction.repository.InvitationRepository;
 import com.worldcup.prediction.repository.OAuthIdentityRepository;
 import com.worldcup.prediction.repository.UserRepository;
@@ -44,6 +45,9 @@ class CustomOAuth2UserServiceTest {
 
     @Mock
     private InvitationRepository invitationRepository;
+
+    @Mock
+    private CommunityMembershipRepository membershipRepository;
 
     @Mock
     private OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate;

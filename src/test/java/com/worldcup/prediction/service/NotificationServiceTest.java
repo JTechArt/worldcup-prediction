@@ -28,6 +28,7 @@ class NotificationServiceTest {
     NotificationService service;
     User testUser;
     Match testMatch;
+    static final Long COMMUNITY_ID = 100L;
 
     @BeforeEach
     void setUp() {
@@ -49,7 +50,7 @@ class NotificationServiceTest {
     @Test
     void sendPredictionWindowOpen_sendsAndLogs() {
         when(notificationLogRepository.existsByReferenceKey(anyString())).thenReturn(false);
-        boolean result = service.sendPredictionWindowOpen(List.of(testUser), testMatch);
+        boolean result = service.sendPredictionWindowOpen(List.of(testUser), testMatch, COMMUNITY_ID);
         assertTrue(result);
         verify(emailService).sendPredictionWindowOpen(anyList(), anyList());
         verify(notificationLogRepository).save(any());
@@ -57,16 +58,16 @@ class NotificationServiceTest {
 
     @Test
     void sendPredictionWindowOpen_skipsIfAlreadySent() {
-        when(notificationLogRepository.existsByReferenceKey("PREDICTION_WINDOW_OPEN:match:10")).thenReturn(true);
-        boolean result = service.sendPredictionWindowOpen(List.of(testUser), testMatch);
+        when(notificationLogRepository.existsByReferenceKey("PREDICTION_WINDOW_OPEN:community:100:match:10")).thenReturn(true);
+        boolean result = service.sendPredictionWindowOpen(List.of(testUser), testMatch, COMMUNITY_ID);
         assertFalse(result);
         verify(emailService, never()).sendPredictionWindowOpen(anyList(), anyList());
     }
 
     @Test
     void sendPredictionReminders_skipsAlreadySentUsers() {
-        when(notificationLogRepository.existsByReferenceKey("PREDICTION_REMINDER:user:1:match:10")).thenReturn(true);
-        int sent = service.sendPredictionReminders(List.of(testUser), testMatch);
+        when(notificationLogRepository.existsByReferenceKey("PREDICTION_REMINDER:community:100:user:1:match:10")).thenReturn(true);
+        int sent = service.sendPredictionReminders(List.of(testUser), testMatch, COMMUNITY_ID);
         assertEquals(0, sent);
         verify(emailService, never()).sendPredictionReminder(anyList(), any());
     }
@@ -74,23 +75,23 @@ class NotificationServiceTest {
     @Test
     void sendPredictionReminders_sendsForNewUsers() {
         when(notificationLogRepository.existsByReferenceKey(anyString())).thenReturn(false);
-        int sent = service.sendPredictionReminders(List.of(testUser), testMatch);
+        int sent = service.sendPredictionReminders(List.of(testUser), testMatch, COMMUNITY_ID);
         assertEquals(1, sent);
         verify(emailService).sendPredictionReminder(anyList(), eq(testMatch));
     }
 
     @Test
     void sendLeaderboardDigest_skipsIfAlreadySent() {
-        when(notificationLogRepository.existsByReferenceKey("LEADERBOARD_DIGEST:date:2026-06-11")).thenReturn(true);
+        when(notificationLogRepository.existsByReferenceKey("LEADERBOARD_DIGEST:community:100:date:2026-06-11")).thenReturn(true);
         boolean result = service.sendLeaderboardDigest("2026-06-11", List.of(testUser),
-                List.of(Map.of("rank", 1, "name", "Alice", "points", 25)), List.of());
+                List.of(Map.of("rank", 1, "name", "Alice", "points", 25)), List.of(), COMMUNITY_ID);
         assertFalse(result);
     }
 
     @Test
     void sendInvitation_sendsAndLogs() {
         when(notificationLogRepository.existsByReferenceKey(anyString())).thenReturn(false);
-        service.sendInvitation("bob@example.com", testUser);
+        service.sendInvitation("bob@example.com", testUser, COMMUNITY_ID);
         verify(emailService).sendInvitation("bob@example.com", testUser);
         verify(notificationLogRepository).save(any());
     }

@@ -2,6 +2,8 @@ package com.worldcup.prediction.controller.admin;
 
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.UserStatus;
+import com.worldcup.prediction.repository.CommunityMembershipRepository;
+import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.UserRepository;
 import com.worldcup.prediction.service.AuditLogService;
 import com.worldcup.prediction.service.EmailService;
@@ -30,9 +32,11 @@ class AdminUserControllerTest {
     @MockBean AuditLogService auditLogService;
     @MockBean EmailService    emailService;
     @MockBean UserRepository  userRepository; // required by AccountStatusFilter
+    @MockBean CommunityRepository communityRepository; // required by CommunityInterceptor
+    @MockBean CommunityMembershipRepository communityMembershipRepository; // required by CommunityInterceptor
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "SUPER_ADMIN")
     void listUsers_returnsUsersPage() throws Exception {
         when(userService.findAll()).thenReturn(List.of());
 
@@ -42,7 +46,7 @@ class AdminUserControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "SUPER_ADMIN")
     void approveUser_setsStatusActiveAndReturnsFragment() throws Exception {
         User approved = buildUser(1L, UserStatus.ACTIVE);
         when(userService.approveUser(1L)).thenReturn(approved);
@@ -56,7 +60,7 @@ class AdminUserControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "SUPER_ADMIN")
     void rejectUser_setsStatusDisabledAndReturnsFragment() throws Exception {
         User rejected = buildUser(2L, UserStatus.DISABLED);
         when(userService.rejectUser(2L)).thenReturn(rejected);
@@ -69,7 +73,7 @@ class AdminUserControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "SUPER_ADMIN")
     void disableUser_setsStatusDisabled() throws Exception {
         User disabled = buildUser(3L, UserStatus.DISABLED);
         when(userService.disableUser(3L)).thenReturn(disabled);

@@ -3,6 +3,8 @@ package com.worldcup.prediction.controller.admin;
 import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.domain.Team;
 import com.worldcup.prediction.domain.enums.MatchStage;
+import com.worldcup.prediction.repository.CommunityMembershipRepository;
+import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.UserRepository;
 import com.worldcup.prediction.service.*;
 import org.junit.jupiter.api.Test;
@@ -31,9 +33,11 @@ class AdminMatchControllerTest {
     @MockBean EmailService      emailService;
     @MockBean UserService       userService;
     @MockBean UserRepository    userRepository; // required by AccountStatusFilter
+    @MockBean CommunityRepository communityRepository; // required by CommunityInterceptor
+    @MockBean CommunityMembershipRepository communityMembershipRepository; // required by CommunityInterceptor
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "SUPER_ADMIN")
     void listMatches_returnsMatchesPage() throws Exception {
         when(matchAdminService.findAllOrderByKickoffAsc()).thenReturn(List.of());
 
@@ -43,7 +47,7 @@ class AdminMatchControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "SUPER_ADMIN")
     void enterResult_scoresAndRedirects() throws Exception {
         Match match = buildMatch(10L, "Brazil", "Argentina");
         when(matchAdminService.setResult(10L, 2, 1)).thenReturn(match);
@@ -60,7 +64,7 @@ class AdminMatchControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "SUPER_ADMIN")
     void openWindow_opensAndRedirects() throws Exception {
         Match match = buildMatch(5L, "France", "Germany");
         when(matchAdminService.setPredictionWindowOpen(5L, true)).thenReturn(match);
@@ -73,7 +77,7 @@ class AdminMatchControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "SUPER_ADMIN")
     void closeWindow_closesAndRedirects() throws Exception {
         Match match = buildMatch(5L, "France", "Germany");
         when(matchAdminService.setPredictionWindowOpen(5L, false)).thenReturn(match);

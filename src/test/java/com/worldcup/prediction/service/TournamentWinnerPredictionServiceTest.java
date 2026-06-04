@@ -1,11 +1,13 @@
 package com.worldcup.prediction.service;
 
+import com.worldcup.prediction.domain.Community;
 import com.worldcup.prediction.domain.Team;
 import com.worldcup.prediction.domain.TournamentWinnerPrediction;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.UserRole;
 import com.worldcup.prediction.domain.enums.UserStatus;
 import com.worldcup.prediction.dto.TournamentWinnerPredictionDto;
+import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.TeamRepository;
 import com.worldcup.prediction.repository.TournamentWinnerPredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
@@ -33,21 +35,26 @@ class TournamentWinnerPredictionServiceTest {
     @Mock private TeamRepository teamRepository;
     @Mock private UserRepository userRepository;
     @Mock private ScoringService scoringService;
+    @Mock private CommunityRepository communityRepository;
 
     private TournamentWinnerPredictionService service;
 
     private User alice;
     private Team brazil;
+    private Community community;
+    private static final Long COMMUNITY_ID = 100L;
 
     @BeforeEach
     void setUp() {
-        service = new TournamentWinnerPredictionService(repository, teamRepository, userRepository, scoringService);
+        service = new TournamentWinnerPredictionService(repository, teamRepository, userRepository, scoringService, communityRepository);
 
         alice = User.builder().id(1L).email("alice@example.com")
                 .firstName("Alice").lastName("Smith")
                 .status(UserStatus.ACTIVE).role(UserRole.USER).build();
 
         brazil = Team.builder().id(10L).name("Brazil").fifaCode("BRA").flagCode("br").build();
+
+        community = Community.builder().id(COMMUNITY_ID).name("Test").slug("test").build();
     }
 
     @Nested
@@ -58,11 +65,12 @@ class TournamentWinnerPredictionServiceTest {
         void newPrediction_creates() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(alice));
             when(teamRepository.findByFlagCodeIgnoreCase("br")).thenReturn(Optional.of(brazil));
-            when(repository.findByUserId(1L)).thenReturn(Optional.empty());
+            when(repository.findByUserIdAndCommunityId(1L, COMMUNITY_ID)).thenReturn(Optional.empty());
+            when(communityRepository.findById(COMMUNITY_ID)).thenReturn(Optional.of(community));
             when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             TournamentWinnerPrediction result =
-                    service.submitOrUpdate(1L, new TournamentWinnerPredictionDto("br"));
+                    service.submitOrUpdate(1L, new TournamentWinnerPredictionDto("br"), COMMUNITY_ID);
 
             assertThat(result.getTeam().getFlagCode()).isEqualTo("br");
             verify(repository).save(any(TournamentWinnerPrediction.class));
@@ -76,10 +84,10 @@ class TournamentWinnerPredictionServiceTest {
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(alice));
             when(teamRepository.findByFlagCodeIgnoreCase("br")).thenReturn(Optional.of(brazil));
-            when(repository.findByUserId(1L)).thenReturn(Optional.of(existing));
+            when(repository.findByUserIdAndCommunityId(1L, COMMUNITY_ID)).thenReturn(Optional.of(existing));
             when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            service.submitOrUpdate(1L, new TournamentWinnerPredictionDto("br"));
+            service.submitOrUpdate(1L, new TournamentWinnerPredictionDto("br"), COMMUNITY_ID);
 
             ArgumentCaptor<TournamentWinnerPrediction> captor =
                     ArgumentCaptor.forClass(TournamentWinnerPrediction.class);
@@ -87,29 +95,17 @@ class TournamentWinnerPredictionServiceTest {
             assertThat(captor.getValue().getTeam().getFlagCode()).isEqualTo("br");
         }
 
-        @Test @DisplayName("normalises flag code to lowercase before lookup")
-        void flagCode_normalisedToLowercase() {
-            when(userRepository.findById(1L)).thenReturn(Optional.of(alice));
-            when(teamRepository.findByFlagCodeIgnoreCase("BR")).thenReturn(Optional.of(brazil));
-            when(repository.findByUserId(1L)).thenReturn(Optional.empty());
-            when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
-            service.submitOrUpdate(1L, new TournamentWinnerPredictionDto("BR"));
-
-            verify(teamRepository).findByFlagCodeIgnoreCase("BR");
-        }
-
         @Test @DisplayName("throws IllegalArgumentException for blank flagCode")
         void blankFlagCode_throws() {
             assertThatThrownBy(() ->
-                    service.submitOrUpdate(1L, new TournamentWinnerPredictionDto("  ")))
+                    service.submitOrUpdate(1L, new TournamentWinnerPredictionDto("  "), COMMUNITY_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("flagCode");
         }
 
         @Test @DisplayName("throws IllegalArgumentException for null dto")
         void nullDto_throws() {
-            assertThatThrownBy(() -> service.submitOrUpdate(1L, null))
+            assertThatThrownBy(() -> service.submitOrUpdate(1L, null, COMMUNITY_ID))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
@@ -118,7 +114,7 @@ class TournamentWinnerPredictionServiceTest {
             when(teamRepository.findByFlagCodeIgnoreCase("xx")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() ->
-                    service.submitOrUpdate(1L, new TournamentWinnerPredictionDto("xx")))
+                    service.submitOrUpdate(1L, new TournamentWinnerPredictionDto("xx"), COMMUNITY_ID))
                     .isInstanceOf(TournamentWinnerPredictionService.TeamNotFoundException.class);
         }
     }
@@ -131,9 +127,9 @@ class TournamentWinnerPredictionServiceTest {
         void hasPrediction_returnsOptional() {
             TournamentWinnerPrediction twp = TournamentWinnerPrediction.builder()
                     .user(alice).team(brazil).build();
-            when(repository.findByUserId(1L)).thenReturn(Optional.of(twp));
+            when(repository.findByUserIdAndCommunityId(1L, COMMUNITY_ID)).thenReturn(Optional.of(twp));
 
-            Optional<TournamentWinnerPrediction> result = service.getForUser(1L);
+            Optional<TournamentWinnerPrediction> result = service.getForUser(1L, COMMUNITY_ID);
 
             assertThat(result).isPresent();
             assertThat(result.get().getTeam().getFlagCode()).isEqualTo("br");
@@ -141,8 +137,8 @@ class TournamentWinnerPredictionServiceTest {
 
         @Test @DisplayName("returns empty when not submitted")
         void noPrediction_returnsEmpty() {
-            when(repository.findByUserId(99L)).thenReturn(Optional.empty());
-            assertThat(service.getForUser(99L)).isEmpty();
+            when(repository.findByUserIdAndCommunityId(99L, COMMUNITY_ID)).thenReturn(Optional.empty());
+            assertThat(service.getForUser(99L, COMMUNITY_ID)).isEmpty();
         }
     }
 

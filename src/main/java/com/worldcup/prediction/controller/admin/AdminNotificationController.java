@@ -39,6 +39,7 @@ public class AdminNotificationController {
     private final MatchRepository matchRepository;
     private final PredictionRepository predictionRepository;
     private final LeaderboardService leaderboardService;
+    private final CommunityRepository communityRepository;
 
     @GetMapping
     public String notificationsPage(Model model) {
@@ -48,11 +49,14 @@ public class AdminNotificationController {
         List<Match> upcomingMatches = matchRepository.findByStatus(MatchStatus.SCHEDULED);
         model.addAttribute("upcomingMatches", upcomingMatches);
 
+        model.addAttribute("communities", communityRepository.findAllByOrderByNameAsc());
+
         return "admin/notifications";
     }
 
     @PostMapping("/invite")
     public String sendInvitation(@RequestParam String email,
+                                  @RequestParam(required = false) Long communityId,
                                   @AuthenticationPrincipal CustomOAuth2User principal,
                                   RedirectAttributes redirectAttributes) {
         String normalizedEmail = email.toLowerCase().trim();
@@ -66,12 +70,16 @@ public class AdminNotificationController {
         }
 
         User admin = userRepository.findById(principal.getUserId()).orElseThrow();
-        Invitation invitation = Invitation.builder()
+        Invitation.InvitationBuilder builder = Invitation.builder()
                 .email(normalizedEmail)
-                .invitedBy(admin)
-                .build();
-        invitationRepository.save(invitation);
-        notificationService.sendInvitation(normalizedEmail, admin);
+                .invitedBy(admin);
+        if (communityId != null) {
+            builder.community(communityRepository.findById(communityId).orElse(null));
+        }
+        invitationRepository.save(builder.build());
+
+        Long cid = communityId != null ? communityId : 0L;
+        notificationService.sendInvitation(normalizedEmail, admin, cid);
 
         redirectAttributes.addFlashAttribute("successMessage", "Invitation sent to " + normalizedEmail);
         return "redirect:/admin/notifications";
@@ -85,9 +93,14 @@ public class AdminNotificationController {
                 .filter(u -> !predictionRepository.existsByUserIdAndMatchId(u.getId(), matchId))
                 .collect(Collectors.toList());
 
-        int sent = notificationService.sendPredictionReminders(usersWithoutPredictions, match);
+        // Send for all communities
+        var communities = communityRepository.findAll();
+        int totalSent = 0;
+        for (var community : communities) {
+            totalSent += notificationService.sendPredictionReminders(usersWithoutPredictions, match, community.getId());
+        }
         redirectAttributes.addFlashAttribute("successMessage",
-                "Sent " + sent + " prediction reminders for " + matchLabel(match));
+                "Sent " + totalSent + " prediction reminders for " + matchLabel(match));
         return "redirect:/admin/notifications";
     }
 
@@ -95,45 +108,58 @@ public class AdminNotificationController {
     public String sendWindowOpen(@PathVariable Long matchId, RedirectAttributes redirectAttributes) {
         Match match = matchRepository.findByIdWithTeams(matchId).orElseThrow();
         List<User> activeUsers = userRepository.findByStatus(UserStatus.ACTIVE);
-        boolean sent = notificationService.sendPredictionWindowOpen(activeUsers, match);
-        String msg = sent ? "Window-open notification sent" : "Already sent (skipped)";
+        var communities = communityRepository.findAll();
+        boolean anySent = false;
+        for (var community : communities) {
+            boolean sent = notificationService.sendPredictionWindowOpen(activeUsers, match, community.getId());
+            if (sent) anySent = true;
+        }
+        String msg = anySent ? "Window-open notification sent" : "Already sent (skipped)";
         redirectAttributes.addFlashAttribute("successMessage", msg);
         return "redirect:/admin/notifications";
     }
 
     @PostMapping("/leaderboard-digest")
-    public String sendLeaderboardDigest(RedirectAttributes redirectAttributes) {
+    public String sendLeaderboardDigest(@RequestParam(required = false) Long communityId,
+                                        RedirectAttributes redirectAttributes) {
         LocalDate today = LocalDate.now();
-        List<LeaderboardEntryDto> top10 = leaderboardService.getTopN(10);
-        if (top10.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "No leaderboard entries");
-            return "redirect:/admin/notifications";
+
+        var communities = communityId != null
+                ? List.of(communityRepository.findById(communityId).orElseThrow())
+                : communityRepository.findAll();
+
+        boolean anySent = false;
+        for (var community : communities) {
+            List<LeaderboardEntryDto> top10 = leaderboardService.getTopN(10, community.getId());
+            if (top10.isEmpty()) continue;
+
+            List<User> topUsers = new ArrayList<>();
+            List<Map<String, Object>> topEntries = new ArrayList<>();
+            for (LeaderboardEntryDto entry : top10) {
+                userRepository.findById(entry.getUserId()).ifPresent(topUsers::add);
+                topEntries.add(Map.of(
+                        "rank", entry.getRank(),
+                        "name", entry.getDisplayName(),
+                        "points", entry.getTotalPoints()
+                ));
+            }
+
+            var dayStart = today.atStartOfDay();
+            var dayEnd = today.atTime(LocalTime.MAX);
+            List<Match> todayMatches = matchRepository.findByKickoffTimeBetween(dayStart, dayEnd);
+            List<Map<String, Object>> matchResults = todayMatches.stream()
+                    .filter(Match::isCompleted)
+                    .map(m -> Map.<String, Object>of(
+                            "label", matchLabel(m),
+                            "score", m.getHomeScore() + " - " + m.getAwayScore()
+                    ))
+                    .collect(Collectors.toList());
+
+            boolean sent = notificationService.sendLeaderboardDigest(today.toString(), topUsers, topEntries, matchResults, community.getId());
+            if (sent) anySent = true;
         }
 
-        List<User> topUsers = new ArrayList<>();
-        List<Map<String, Object>> topEntries = new ArrayList<>();
-        for (LeaderboardEntryDto entry : top10) {
-            userRepository.findById(entry.getUserId()).ifPresent(topUsers::add);
-            topEntries.add(Map.of(
-                    "rank", entry.getRank(),
-                    "name", entry.getDisplayName(),
-                    "points", entry.getTotalPoints()
-            ));
-        }
-
-        var dayStart = today.atStartOfDay();
-        var dayEnd = today.atTime(LocalTime.MAX);
-        List<Match> todayMatches = matchRepository.findByKickoffTimeBetween(dayStart, dayEnd);
-        List<Map<String, Object>> matchResults = todayMatches.stream()
-                .filter(Match::isCompleted)
-                .map(m -> Map.<String, Object>of(
-                        "label", matchLabel(m),
-                        "score", m.getHomeScore() + " - " + m.getAwayScore()
-                ))
-                .collect(Collectors.toList());
-
-        boolean sent = notificationService.sendLeaderboardDigest(today.toString(), topUsers, topEntries, matchResults);
-        String msg = sent ? "Leaderboard digest sent to top 10" : "Already sent today (skipped)";
+        String msg = anySent ? "Leaderboard digest sent" : "Already sent today (skipped) or no entries";
         redirectAttributes.addFlashAttribute("successMessage", msg);
         return "redirect:/admin/notifications";
     }

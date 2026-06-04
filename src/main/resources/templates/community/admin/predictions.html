@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/community-base :: layout(~{::main-content})}">
+<head><title>Predictions Admin</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-8">
+      <h1 class="font-display text-4xl text-green-dark tracking-wider mb-1">PREDICTIONS</h1>
+      <p class="text-gray-500 text-sm font-medium" th:text="${community.name} + ' · Admin'">Community Admin</p>
+    </div>
+
+    <div th:if="${successMessage}" class="mb-4 p-3 bg-green-100 border border-green-300 text-green-800 rounded-lg text-sm" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="mb-4 p-3 bg-red-100 border border-red-300 text-red-800 rounded-lg text-sm" th:text="${errorMessage}"></div>
+
+    <!-- Match selector -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+      <form th:action="@{'/c/' + ${slug} + '/admin/predictions'}" method="get" class="flex items-end gap-4">
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Select Match</label>
+          <select name="matchId" class="w-full rounded-lg border-gray-300 text-sm px-3 py-2 border">
+            <option value="">Choose a match…</option>
+            <option th:each="match : ${allMatches}" th:value="${match.id}"
+                    th:selected="${matchId != null && match.id == matchId}"
+                    th:text="${(match.homeTeam != null ? match.homeTeam.name : 'TBD') + ' vs ' + (match.awayTeam != null ? match.awayTeam.name : 'TBD')}">
+            </option>
+          </select>
+        </div>
+        <button type="submit" class="bg-green-dark hover:bg-green text-white rounded-lg px-4 py-2 text-sm font-semibold">View</button>
+      </form>
+    </div>
+
+    <!-- Predictions table -->
+    <div th:if="${predictions != null}" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h2 class="font-semibold text-gray-800"
+            th:text="${selectedMatch.homeTeam?.name ?: 'TBD'} + ' vs ' + ${selectedMatch.awayTeam?.name ?: 'TBD'}">Match</h2>
+      </div>
+      <div th:if="${#lists.isEmpty(predictions)}" class="p-8 text-center text-gray-400 text-sm">No predictions for this match.</div>
+      <table th:unless="${#lists.isEmpty(predictions)}" class="w-full text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left font-semibold text-gray-600">User</th>
+            <th class="px-4 py-3 text-center font-semibold text-gray-600">Predicted</th>
+            <th class="px-4 py-3 text-center font-semibold text-gray-600">Points</th>
+            <th class="px-4 py-3 text-center font-semibold text-gray-600">Result</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <tr th:each="p : ${predictions}">
+            <td class="px-4 py-3" th:text="${p.user.fullName}">Name</td>
+            <td class="px-4 py-3 text-center font-mono" th:text="${p.predictedHome} + ' – ' + ${p.predictedAway}">1–0</td>
+            <td class="px-4 py-3 text-center font-semibold" th:text="${p.pointsAwarded}">0</td>
+            <td class="px-4 py-3 text-center" th:text="${p.scoreResult}">PENDING</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</th:block>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/community-base :: layout(~{::main-content})}">
+<head><title>Community Home</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Welcome banner -->
+    <div class="mb-8 animate-fade-up">
+      <h1 class="font-display text-4xl sm:text-5xl text-green-dark tracking-wider mb-1"
+          th:text="${community.name}">Community</h1>
+      <p class="text-gray-500 text-sm font-medium" th:text="${community.description}">Description</p>
+    </div>
+
+    <!-- Quick Stats Row -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-10 animate-fade-up stagger-1">
+
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+        <div class="text-3xl mb-1">🏆</div>
+        <div class="font-display text-4xl text-green-dark tracking-wider"
+             th:text="${userRank > 0 ? '#' + userRank : '—'}">#1</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-1">Your Rank</div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+        <div class="text-3xl mb-1">📝</div>
+        <div class="font-display text-4xl text-gray-700 tracking-wider" th:text="${openMatchCount}">0</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-1">Open Matches</div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+        <div class="text-3xl mb-1">👥</div>
+        <div class="font-display text-4xl text-green tracking-wider" th:text="${#lists.size(topTen)}">0</div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-1">Top Players</div>
+      </div>
+
+    </div>
+
+    <!-- Two-column layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <!-- Mini Leaderboard (2/3 width) -->
+      <div class="lg:col-span-2 animate-fade-up stagger-2">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-display text-2xl text-green-dark tracking-wider">LEADERBOARD</h2>
+          <a th:href="@{'/c/' + ${slug} + '/leaderboard'}" class="text-sm font-semibold text-green hover:text-green-dark transition-colors">View all →</a>
+        </div>
+
+        <div th:replace="~{fragments/leaderboard-mini-widget :: mini-leaderboard(entries=${topTen})}">
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-gray-400">
+            <div class="text-4xl mb-3">🏆</div>
+            <p class="font-semibold">No participants yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Links (1/3 width) -->
+      <div class="space-y-4 animate-fade-up stagger-3">
+        <h2 class="font-display text-2xl text-green-dark tracking-wider mb-4">QUICK LINKS</h2>
+
+        <a th:href="@{'/c/' + ${slug} + '/predictions'}"
+           class="flex items-center gap-4 bg-white rounded-2xl border shadow-sm p-5 hover:shadow-md transition-all duration-200 no-underline group"
+           th:classappend="${openMatchCount > 0} ? 'border-orange/40 hover:border-orange/60' : 'border-gray-100'">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+               th:classappend="${openMatchCount > 0} ? 'bg-orange/10' : 'bg-gray-100'">⚡</div>
+          <div class="flex-1">
+            <div class="font-bold text-gray-800 text-sm">My Predictions</div>
+            <div class="text-xs text-gray-400 mt-0.5"
+                 th:text="${openMatchCount > 0} ? ${openMatchCount} + ' match(es) open' : 'No open windows'">—</div>
+          </div>
+          <span class="text-gray-300 group-hover:text-gray-500 transition-colors">→</span>
+        </a>
+
+        <a th:href="@{'/c/' + ${slug} + '/leaderboard'}"
+           class="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-green/30 transition-all duration-200 no-underline group">
+          <div class="w-10 h-10 rounded-xl bg-green/10 flex items-center justify-center text-xl flex-shrink-0">🏆</div>
+          <div class="flex-1">
+            <div class="font-bold text-gray-800 text-sm">Full Leaderboard</div>
+            <div class="text-xs text-gray-400 mt-0.5">All participants ranked</div>
+          </div>
+          <span class="text-gray-300 group-hover:text-gray-500 transition-colors">→</span>
+        </a>
+
+        <a th:href="@{/fixtures}"
+           class="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-green/30 transition-all duration-200 no-underline group">
+          <div class="w-10 h-10 rounded-xl bg-green/10 flex items-center justify-center text-xl flex-shrink-0">📅</div>
+          <div class="flex-1">
+            <div class="font-bold text-gray-800 text-sm">Fixtures</div>
+            <div class="text-xs text-gray-400 mt-0.5">All 104 matches</div>
+          </div>
+          <span class="text-gray-300 group-hover:text-gray-500 transition-colors">→</span>
+        </a>
+
+        <a th:href="@{/bracket}"
+           class="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-green/30 transition-all duration-200 no-underline group">
+          <div class="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center text-xl flex-shrink-0">🎯</div>
+          <div class="flex-1">
+            <div class="font-bold text-gray-800 text-sm">Knockout Bracket</div>
+            <div class="text-xs text-gray-400 mt-0.5">R32 → Final</div>
+          </div>
+          <span class="text-gray-300 group-hover:text-gray-500 transition-colors">→</span>
+        </a>
+
+      </div>
+    </div>
+
+  </div>
+
+</th:block>
+</body>
+</html>

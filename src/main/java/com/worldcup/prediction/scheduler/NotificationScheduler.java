@@ -1,10 +1,12 @@
 package com.worldcup.prediction.scheduler;
 
+import com.worldcup.prediction.domain.Community;
 import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.MatchStatus;
 import com.worldcup.prediction.domain.enums.UserStatus;
 import com.worldcup.prediction.dto.LeaderboardEntryDto;
+import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
@@ -37,6 +39,7 @@ public class NotificationScheduler {
     private final PredictionRepository predictionRepository;
     private final NotificationService notificationService;
     private final LeaderboardService leaderboardService;
+    private final CommunityRepository communityRepository;
 
     @Value("${app.notification.reminder-hours-before:3}")
     private int reminderHoursBefore;
@@ -53,10 +56,13 @@ public class NotificationScheduler {
                 return;
             }
             List<User> activeUsers = userRepository.findByStatus(UserStatus.ACTIVE);
+            List<Community> communities = communityRepository.findAll();
             for (Match match : matches) {
-                boolean sent = notificationService.sendPredictionWindowOpen(activeUsers, match);
-                if (sent) {
-                    log.info("Sent prediction-window-open notification for match {}", match.getId());
+                for (Community community : communities) {
+                    boolean sent = notificationService.sendPredictionWindowOpen(activeUsers, match, community.getId());
+                    if (sent) {
+                        log.info("Sent prediction-window-open notification for match {} in community {}", match.getId(), community.getId());
+                    }
                 }
             }
         } catch (Exception e) {
@@ -79,14 +85,17 @@ public class NotificationScheduler {
                 return;
             }
             List<User> activeUsers = userRepository.findByStatus(UserStatus.ACTIVE);
+            List<Community> communities = communityRepository.findAll();
             for (Match match : approachingMatches) {
                 List<User> usersWithoutPredictions = activeUsers.stream()
                         .filter(u -> !predictionRepository.existsByUserIdAndMatchId(u.getId(), match.getId()))
                         .collect(Collectors.toList());
                 if (usersWithoutPredictions.isEmpty()) continue;
-                int sent = notificationService.sendPredictionReminders(usersWithoutPredictions, match);
-                if (sent > 0) {
-                    log.info("Sent {} prediction reminders for match {}", sent, match.getId());
+                for (Community community : communities) {
+                    int sent = notificationService.sendPredictionReminders(usersWithoutPredictions, match, community.getId());
+                    if (sent > 0) {
+                        log.info("Sent {} prediction reminders for match {} in community {}", sent, match.getId(), community.getId());
+                    }
                 }
             }
         } catch (Exception e) {
@@ -112,31 +121,34 @@ public class NotificationScheduler {
                 return;
             }
             String dateKey = today.toString();
-            List<LeaderboardEntryDto> top10 = leaderboardService.getTopN(10);
-            if (top10.isEmpty()) return;
+            List<Community> communities = communityRepository.findAll();
+            for (Community community : communities) {
+                List<LeaderboardEntryDto> top10 = leaderboardService.getTopN(10, community.getId());
+                if (top10.isEmpty()) continue;
 
-            List<User> topUsers = new ArrayList<>();
-            List<Map<String, Object>> topEntries = new ArrayList<>();
-            for (LeaderboardEntryDto entry : top10) {
-                userRepository.findById(entry.getUserId()).ifPresent(topUsers::add);
-                topEntries.add(Map.of(
-                        "rank", entry.getRank(),
-                        "name", entry.getDisplayName(),
-                        "points", entry.getTotalPoints()
-                ));
-            }
+                List<User> topUsers = new ArrayList<>();
+                List<Map<String, Object>> topEntries = new ArrayList<>();
+                for (LeaderboardEntryDto entry : top10) {
+                    userRepository.findById(entry.getUserId()).ifPresent(topUsers::add);
+                    topEntries.add(Map.of(
+                            "rank", entry.getRank(),
+                            "name", entry.getDisplayName(),
+                            "points", entry.getTotalPoints()
+                    ));
+                }
 
-            List<Map<String, Object>> matchResults = todayMatches.stream()
-                    .filter(Match::isCompleted)
-                    .map(m -> Map.<String, Object>of(
-                            "label", matchLabel(m),
-                            "score", m.getHomeScore() + " - " + m.getAwayScore()
-                    ))
-                    .collect(Collectors.toList());
+                List<Map<String, Object>> matchResults = todayMatches.stream()
+                        .filter(Match::isCompleted)
+                        .map(m -> Map.<String, Object>of(
+                                "label", matchLabel(m),
+                                "score", m.getHomeScore() + " - " + m.getAwayScore()
+                        ))
+                        .collect(Collectors.toList());
 
-            boolean sent = notificationService.sendLeaderboardDigest(dateKey, topUsers, topEntries, matchResults);
-            if (sent) {
-                log.info("Sent leaderboard digest for {}", dateKey);
+                boolean sent = notificationService.sendLeaderboardDigest(dateKey, topUsers, topEntries, matchResults, community.getId());
+                if (sent) {
+                    log.info("Sent leaderboard digest for {} in community {}", dateKey, community.getId());
+                }
             }
         } catch (Exception e) {
             log.error("NotificationScheduler.checkLeaderboardDigest error", e);
