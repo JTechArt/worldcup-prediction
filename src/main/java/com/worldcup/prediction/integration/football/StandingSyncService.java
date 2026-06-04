@@ -45,7 +45,11 @@ public class StandingSyncService {
         for (FootballApiStandingGroupDto groupDto : response.standings()) {
             if (!"TOTAL".equals(groupDto.type()) || groupDto.group() == null) continue;
 
-            String groupName = groupDto.group().replace("GROUP_", "");
+            // API returns "GROUP_A", "Group A", or just "A" — normalise to single letter
+            String groupName = groupDto.group()
+                    .replace("GROUP_", "")
+                    .replace("Group ", "")
+                    .trim();
             Optional<Group> groupOpt = groupRepository.findByNameIgnoreCase(groupName);
             if (groupOpt.isEmpty()) {
                 log.warn("Group not found for name={}", groupName);

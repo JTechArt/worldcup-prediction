@@ -78,7 +78,10 @@ public class MatchSyncService {
         int skipped = 0;
 
         for (FootballApiMatchDto apiMatch : groupMatches) {
-            String groupName = apiMatch.group().replace("GROUP_", "");
+            String groupName = apiMatch.group()
+                    .replace("GROUP_", "")
+                    .replace("Group ", "")
+                    .trim();
             Optional<Group> groupOpt = groupRepository.findByNameIgnoreCase(groupName);
             if (groupOpt.isEmpty()) {
                 log.warn("Group '{}' not found — skipping match id={}", groupName, apiMatch.id());
@@ -124,14 +127,47 @@ public class MatchSyncService {
                 (skipped > 0 ? ", " + skipped + " skipped" : ""));
     }
 
+    /**
+     * Resolves a team from the API DTO, trying externalId → TLA → name in order.
+     * When found via TLA or name, also stamps the externalId so future lookups
+     * hit the fast externalId path.
+     */
     private Optional<Team> resolveTeam(FootballApiTeamDto dto) {
         if (dto == null) return Optional.empty();
+
+        // 1. Fast path: already linked by externalId
         if (dto.id() != null) {
             Optional<Team> t = teamRepository.findByExternalId(dto.id());
             if (t.isPresent()) return t;
         }
-        if (dto.tla() != null) return teamRepository.findByFifaCodeIgnoreCase(dto.tla());
+
+        // 2. TLA match
+        if (dto.tla() != null) {
+            Optional<Team> t = teamRepository.findByFifaCodeIgnoreCase(dto.tla());
+            if (t.isPresent()) {
+                linkExternalId(t.get(), dto.id());
+                return t;
+            }
+        }
+
+        // 3. Name match (handles "Ivory Coast" vs "Cote d'Ivoire" etc. where TLA differs)
+        if (dto.name() != null) {
+            Optional<Team> t = teamRepository.findByNameIgnoreCase(dto.name());
+            if (t.isPresent()) {
+                linkExternalId(t.get(), dto.id());
+                return t;
+            }
+        }
+
+        log.warn("Cannot resolve team: id={} tla={} name={}", dto.id(), dto.tla(), dto.name());
         return Optional.empty();
+    }
+
+    private void linkExternalId(Team team, Long externalId) {
+        if (externalId != null && team.getExternalId() == null) {
+            team.setExternalId(externalId);
+            teamRepository.save(team);
+        }
     }
 
     private LocalDateTime parseUtc(String utcDate) {

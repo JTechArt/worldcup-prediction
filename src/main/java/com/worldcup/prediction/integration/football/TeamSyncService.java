@@ -35,10 +35,11 @@ public class TeamSyncService {
         for (FootballApiTeamWithSquadDto apiTeam : response.teams()) {
             Team team = teamRepository.findByExternalId(apiTeam.id())
                     .or(() -> teamRepository.findByFifaCodeIgnoreCase(apiTeam.tla()))
+                    .or(() -> teamRepository.findByNameIgnoreCase(apiTeam.name()))
                     .orElse(null);
 
             if (team == null) {
-                log.warn("No team found for tla={} externalId={} — skipping", apiTeam.tla(), apiTeam.id());
+                log.warn("No team found for tla={} name={} externalId={} — skipping", apiTeam.tla(), apiTeam.name(), apiTeam.id());
                 continue;
             }
 
