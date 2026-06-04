@@ -1,10 +1,12 @@
 package com.worldcup.prediction.security;
 
+import com.worldcup.prediction.domain.Invitation;
 import com.worldcup.prediction.domain.OAuthIdentity;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.OAuthProvider;
 import com.worldcup.prediction.domain.enums.UserRole;
 import com.worldcup.prediction.domain.enums.UserStatus;
+import com.worldcup.prediction.repository.InvitationRepository;
 import com.worldcup.prediction.repository.OAuthIdentityRepository;
 import com.worldcup.prediction.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +41,9 @@ class CustomOAuth2UserServiceTest {
 
     @Mock
     private OAuthIdentityRepository oauthIdentityRepository;
+
+    @Mock
+    private InvitationRepository invitationRepository;
 
     @Mock
     private OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate;
@@ -160,5 +165,63 @@ class CustomOAuth2UserServiceTest {
         service.loadUser(googleRequest);
 
         verify(oauthIdentityRepository, never()).save(any());
+    }
+
+    @Test
+    void newUser_withInvitation_isAutoApproved() {
+        Invitation invitation = Invitation.builder()
+                .id(1L)
+                .email("newuser@example.com")
+                .build();
+
+        when(delegate.loadUser(googleRequest)).thenReturn(googleOAuth2User);
+        when(userRepository.findByProviderAndProviderId(OAuthProvider.GOOGLE, "google-sub-123"))
+                .thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase("newuser@example.com"))
+                .thenReturn(Optional.empty());
+        when(invitationRepository.findByEmailIgnoreCase("newuser@example.com"))
+                .thenReturn(Optional.of(invitation));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> {
+            User u = inv.getArgument(0);
+            u.setId(42L);
+            return u;
+        });
+
+        CustomOAuth2User result = service.loadUser(googleRequest);
+
+        assertThat(result.getStatus()).isEqualTo(UserStatus.ACTIVE);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getStatus()).isEqualTo(UserStatus.ACTIVE);
+
+        verify(invitationRepository).save(invitation);
+        assertThat(invitation.getAcceptedAt()).isNotNull();
+    }
+
+    @Test
+    void newUser_withoutInvitation_isPending() {
+        when(delegate.loadUser(googleRequest)).thenReturn(googleOAuth2User);
+        when(userRepository.findByProviderAndProviderId(OAuthProvider.GOOGLE, "google-sub-123"))
+                .thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase("newuser@example.com"))
+                .thenReturn(Optional.empty());
+        when(invitationRepository.findByEmailIgnoreCase("newuser@example.com"))
+                .thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> {
+            User u = inv.getArgument(0);
+            u.setId(43L);
+            return u;
+        });
+
+        CustomOAuth2User result = service.loadUser(googleRequest);
+
+        assertThat(result.getStatus()).isEqualTo(UserStatus.PENDING);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getStatus()).isEqualTo(UserStatus.PENDING);
+
+        verify(invitationRepository, never()).save(any(Invitation.class));
     }
 }

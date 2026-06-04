@@ -1,10 +1,12 @@
 package com.worldcup.prediction.security;
 
+import com.worldcup.prediction.domain.Invitation;
 import com.worldcup.prediction.domain.OAuthIdentity;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.OAuthProvider;
 import com.worldcup.prediction.domain.enums.UserRole;
 import com.worldcup.prediction.domain.enums.UserStatus;
+import com.worldcup.prediction.repository.InvitationRepository;
 import com.worldcup.prediction.repository.OAuthIdentityRepository;
 import com.worldcup.prediction.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -27,6 +30,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private final UserRepository userRepository;
     private final OAuthIdentityRepository oauthIdentityRepository;
+    private final InvitationRepository invitationRepository;
 
     private OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
 
@@ -85,13 +89,22 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             return new CustomOAuth2User(saved, attributes);
         }
 
-        // 3. Brand-new user — create PENDING
+        // 3. Brand-new user — check invitation first
+        UserStatus initialStatus = UserStatus.PENDING;
+        Optional<Invitation> invitation = invitationRepository.findByEmailIgnoreCase(email);
+        if (invitation.isPresent() && !invitation.get().isAccepted()) {
+            initialStatus = UserStatus.ACTIVE;
+            invitation.get().setAcceptedAt(LocalDateTime.now());
+            invitationRepository.save(invitation.get());
+            log.info("Invited user auto-approved: email={}", email);
+        }
+
         User newUser = User.builder()
                 .email(email)
                 .firstName(firstName)
                 .lastName(lastName)
                 .avatarUrl(avatarUrl)
-                .status(UserStatus.PENDING)
+                .status(initialStatus)
                 .role(UserRole.PARTICIPANT)
                 .build();
         User saved = userRepository.save(newUser);
@@ -105,7 +118,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 .build();
         oauthIdentityRepository.save(identity);
 
-        log.info("New user registered: id={} email={} status=PENDING", saved.getId(), saved.getEmail());
+        log.info("New user registered: id={} email={} status={}", saved.getId(), saved.getEmail(), initialStatus);
         return new CustomOAuth2User(saved, attributes);
     }
 
