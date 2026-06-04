@@ -69,13 +69,13 @@
         <div th:each="match : ${todayMatches}" class="px-6 py-3 flex items-center justify-between text-sm">
           <div class="flex items-center gap-2">
             <img th:if="${match.homeTeam != null}"
-                 th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
+                 th:src="@{'/images/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
                  class="w-5 h-5 rounded-full object-cover" alt=""/>
             <span class="font-medium text-gray-800" th:text="${match.homeTeam?.name ?: 'TBD'}">Home</span>
             <span class="text-gray-400 text-xs">vs</span>
             <span class="font-medium text-gray-800" th:text="${match.awayTeam?.name ?: 'TBD'}">Away</span>
             <img th:if="${match.awayTeam != null}"
-                 th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
+                 th:src="@{'/images/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
                  class="w-5 h-5 rounded-full object-cover" alt=""/>
           </div>
           <div class="flex items-center gap-2">

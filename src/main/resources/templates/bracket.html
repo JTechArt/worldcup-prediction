@@ -89,7 +89,7 @@
               <!-- Home team -->
               <div class="team-row">
                 <img th:if="${match.homeTeam != null}"
-                     th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
+                     th:src="@{'/images/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
                      th:alt="${match.homeTeam.name}"
                      class="flag-sm" />
                 <div th:unless="${match.homeTeam != null}" class="flag-sm bg-gray-100"></div>
@@ -107,7 +107,7 @@
               <!-- Away team -->
               <div class="team-row">
                 <img th:if="${match.awayTeam != null}"
-                     th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
+                     th:src="@{'/images/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
                      th:alt="${match.awayTeam.name}"
                      class="flag-sm" />
                 <div th:unless="${match.awayTeam != null}" class="flag-sm bg-gray-100"></div>

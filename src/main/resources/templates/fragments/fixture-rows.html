@@ -47,7 +47,7 @@
             <div class="flex items-center gap-2 flex-1 justify-end">
               <span class="text-sm font-semibold text-gray-800 text-right" th:text="${fixture.homeTeamName}">Brazil</span>
               <img th:if="${fixture.homeTeamCode != null}"
-                   th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${fixture.homeTeamCode} + '.svg'}"
+                   th:src="@{'/images/flags/' + ${fixture.homeTeamCode} + '.svg'}"
                    th:alt="${fixture.homeTeamName}"
                    class="flag-circle w-7 h-7" />
               <span th:unless="${fixture.homeTeamCode != null}"
@@ -69,7 +69,7 @@
             <!-- Away team -->
             <div class="flex items-center gap-2 flex-1 justify-start">
               <img th:if="${fixture.awayTeamCode != null}"
-                   th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${fixture.awayTeamCode} + '.svg'}"
+                   th:src="@{'/images/flags/' + ${fixture.awayTeamCode} + '.svg'}"
                    th:alt="${fixture.awayTeamName}"
                    class="flag-circle w-7 h-7" />
               <span th:unless="${fixture.awayTeamCode != null}"

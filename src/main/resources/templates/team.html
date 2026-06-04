@@ -10,7 +10,7 @@
 
   <!-- Team header -->
   <div class="flex items-center gap-6">
-    <img th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${team.flagCode} + '.svg'}"
+    <img th:src="@{'/images/flags/' + ${team.flagCode} + '.svg'}"
          class="w-20 h-20 rounded-full shadow-lg" th:alt="${team.name}"/>
     <div>
       <h1 class="font-display text-4xl text-gray-900" th:text="${team.name}">Team Name</h1>

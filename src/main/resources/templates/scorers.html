@@ -33,7 +33,7 @@
           <td class="px-4 py-3 text-gray-500">
             <div class="flex items-center gap-2">
               <img th:if="${p.team != null}"
-                   th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${p.team.flagCode} + '.svg'}"
+                   th:src="@{'/images/flags/' + ${p.team.flagCode} + '.svg'}"
                    class="w-5 h-5 rounded-full flex-shrink-0" th:alt="${p.team.name}"/>
               <span th:text="${p.team?.name}">Country</span>
             </div>

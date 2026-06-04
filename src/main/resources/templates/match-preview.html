@@ -17,7 +17,7 @@
       <!-- Home team -->
       <div class="flex flex-col items-center gap-2 w-36">
         <img th:if="${match.homeTeam != null}"
-             th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
+             th:src="@{'/images/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
              class="w-16 h-16 rounded-full shadow" th:alt="${match.homeTeam.name}"/>
         <span class="font-bold text-gray-800 text-sm text-center"
               th:text="${match.homeTeam != null ? match.homeTeam.name : match.homeTeamPlaceholder}">Home</span>
@@ -38,7 +38,7 @@
       <!-- Away team -->
       <div class="flex flex-col items-center gap-2 w-36">
         <img th:if="${match.awayTeam != null}"
-             th:src="@{'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
+             th:src="@{'/images/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
              class="w-16 h-16 rounded-full shadow" th:alt="${match.awayTeam.name}"/>
         <span class="font-bold text-gray-800 text-sm text-center"
               th:text="${match.awayTeam != null ? match.awayTeam.name : match.awayTeamPlaceholder}">Away</span>

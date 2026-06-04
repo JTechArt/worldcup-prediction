@@ -64,9 +64,9 @@
                 <!-- Home team -->
                 <div class="mr-team">
                   <div class="mr-flag">
-                    <img :src="'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + match.homeTeamCode + '.svg'"
+                    <img :src="'/images/flags/' + match.homeTeamCode + '.svg'"
                          :alt="match.homeTeamName"
-                         :onerror="'this.src=\\'https://flagcdn.com/w80/' + match.homeTeamCode + '.png\\''">
+                         :onerror="'this.src=\\'/images/flags/' + match.homeTeamCode + '.png\\''">
                   </div>
                   <div>
                     <div class="mr-name" x-text="match.homeTeamName"></div>
@@ -106,9 +106,9 @@
                     <div class="mr-name" x-text="match.awayTeamName"></div>
                   </div>
                   <div class="mr-flag mr-flag-b">
-                    <img :src="'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + match.awayTeamCode + '.svg'"
+                    <img :src="'/images/flags/' + match.awayTeamCode + '.svg'"
                          :alt="match.awayTeamName"
-                         :onerror="'this.src=\\'https://flagcdn.com/w80/' + match.awayTeamCode + '.png\\''">
+                         :onerror="'this.src=\\'/images/flags/' + match.awayTeamCode + '.png\\''">
                   </div>
                 </div>
 
@@ -169,7 +169,7 @@
           <div class="card-teams">
             <div class="card-team">
               <div class="card-flag">
-                <img :src="'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + curMatch.homeTeamCode + '.svg'" :alt="curMatch.homeTeamName">
+                <img :src="'/images/flags/' + curMatch.homeTeamCode + '.svg'" :alt="curMatch.homeTeamName">
               </div>
               <div class="card-team-name" x-text="curMatch.homeTeamName"></div>
             </div>
@@ -179,7 +179,7 @@
             </div>
             <div class="card-team">
               <div class="card-flag card-flag-b">
-                <img :src="'https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/' + curMatch.awayTeamCode + '.svg'" :alt="curMatch.awayTeamName">
+                <img :src="'/images/flags/' + curMatch.awayTeamCode + '.svg'" :alt="curMatch.awayTeamName">
               </div>
               <div class="card-team-name" x-text="curMatch.awayTeamName"></div>
             </div>

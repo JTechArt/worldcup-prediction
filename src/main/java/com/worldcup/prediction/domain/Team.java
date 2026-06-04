@@ -45,10 +45,6 @@ public class Team {
     private LocalDateTime createdAt;
 
     public String getFlagUrl() {
-        return "https://raw.githubusercontent.com/HatScripts/circle-flags/gh-pages/flags/" + flagCode + ".svg";
-    }
-
-    public String getFlagFallbackUrl() {
-        return "https://flagcdn.com/w80/" + flagCode + ".png";
+        return "/images/flags/" + flagCode + ".svg";
     }
 }
