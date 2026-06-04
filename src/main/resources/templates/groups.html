@@ -45,9 +45,9 @@
         <div class="divide-y divide-gray-50">
           <div th:each="team, tStat : ${groupEntry.value}"
                class="flex items-center gap-3 px-4 py-3 transition-colors duration-150"
-               th:classappend="${team.qualificationStatus == 'QUALIFIED'} ? 'bg-green/5 border-l-4 border-l-green/60' :
-                               (${team.qualificationStatus == 'THIRD' and qualifiedThirdGroups.contains(groupEntry.key)}) ? 'bg-gold/5 border-l-4 border-l-gold/50' :
-                               'border-l-4 border-l-transparent'">
+               th:classappend="${team.qualificationStatus == 'QUALIFIED' ? 'bg-green/5 border-l-4 border-l-green/60' :
+                               (team.qualificationStatus == 'THIRD' and qualifiedThirdGroups.contains(groupEntry.key)) ? 'bg-gold/5 border-l-4 border-l-gold/50' :
+                               'border-l-4 border-l-transparent'}">
 
             <!-- Position -->
             <span class="w-5 text-center text-xs font-bold flex-shrink-0"
