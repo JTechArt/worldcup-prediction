@@ -65,13 +65,14 @@ public class MatchSyncService {
             return SyncResult.skipped("No GROUP_STAGE matches in API response");
         }
 
-        // Clear in FK order: child rows first
+        // Clear in FK order: child rows first, then groups
         lineupRepository.deleteAllLineups();
         goalRepository.deleteAllGoals();
         predictionRepository.deleteAllPredictions();
         matchRepository.deleteAllMatches();
         groupRepository.deleteAllGroupTeams();
-        log.info("Cleared all existing match and group-team data");
+        groupRepository.deleteAll();
+        log.info("Cleared all existing match, group-team and group data");
 
         AtomicInteger matchNumber = new AtomicInteger(1);
         int created = 0;
@@ -82,12 +83,11 @@ public class MatchSyncService {
                     .replace("GROUP_", "")
                     .replace("Group ", "")
                     .trim();
-            Optional<Group> groupOpt = groupRepository.findByNameIgnoreCase(groupName);
-            if (groupOpt.isEmpty()) {
-                log.warn("Group '{}' not found — skipping match id={}", groupName, apiMatch.id());
-                skipped++;
-                continue;
-            }
+            Group group = groupRepository.findByNameIgnoreCase(groupName)
+                    .orElseGet(() -> {
+                        log.info("Creating group '{}'", groupName);
+                        return groupRepository.save(Group.builder().name(groupName).build());
+                    });
 
             Optional<Team> homeOpt = resolveTeam(apiMatch.homeTeam());
             Optional<Team> awayOpt = resolveTeam(apiMatch.awayTeam());
@@ -98,7 +98,6 @@ public class MatchSyncService {
                 continue;
             }
 
-            Group group = groupOpt.get();
             Team home = homeOpt.get();
             Team away = awayOpt.get();
 
