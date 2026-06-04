@@ -23,6 +23,10 @@ public class Invitation {
     @JoinColumn(name = "invited_by_id", nullable = false)
     private User invitedBy;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "community_id")
+    private Community community;
+
     @Column(name = "invited_at", nullable = false)
     @Builder.Default
     private LocalDateTime invitedAt = LocalDateTime.now();

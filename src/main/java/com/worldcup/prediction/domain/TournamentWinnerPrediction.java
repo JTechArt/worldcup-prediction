@@ -8,7 +8,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tournament_winner_predictions")
+@Table(name = "tournament_winner_predictions",
+       uniqueConstraints = @UniqueConstraint(
+               name = "twp_user_community_idx",
+               columnNames = {"user_id", "community_id"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,13 +26,17 @@ public class TournamentWinnerPrediction {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "team_id", nullable = false)
     private Team team;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "community_id", nullable = false)
+    private Community community;
 
     @Column(name = "points_awarded", nullable = false)
     @Builder.Default

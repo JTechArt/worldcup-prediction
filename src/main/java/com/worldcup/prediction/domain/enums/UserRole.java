@@ -1,6 +1,6 @@
 package com.worldcup.prediction.domain.enums;
 
 public enum UserRole {
-    PARTICIPANT,
-    ADMIN
+    SUPER_ADMIN,
+    USER
 }

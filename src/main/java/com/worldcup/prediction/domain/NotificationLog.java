@@ -32,6 +32,10 @@ public class NotificationLog {
     @JoinColumn(name = "match_id")
     private Match match;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "community_id")
+    private Community community;
+
     @Column(name = "sent_at", nullable = false)
     @Builder.Default
     private LocalDateTime sentAt = LocalDateTime.now();

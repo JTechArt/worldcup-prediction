@@ -18,7 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"oauthIdentities", "predictions", "tournamentWinnerPrediction"})
+@ToString(exclude = {"oauthIdentities", "predictions", "tournamentWinnerPredictions"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
 
@@ -42,13 +42,16 @@ public class User {
     @Column(name = "avatar_url", length = 1000)
     private String avatarUrl;
 
+    @Column(name = "password_hash")
+    private String passwordHash;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private UserStatus status = UserStatus.PENDING;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private UserRole role = UserRole.PARTICIPANT;
+    private UserRole role = UserRole.USER;
 
     @Column(name = "total_points", nullable = false)
     private int totalPoints = 0;
@@ -85,8 +88,9 @@ public class User {
     @Builder.Default
     private List<Prediction> predictions = new ArrayList<>();
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private TournamentWinnerPrediction tournamentWinnerPrediction;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<TournamentWinnerPrediction> tournamentWinnerPredictions = new ArrayList<>();
 
     public String getFullName() {
         return firstName + " " + lastName;
@@ -97,6 +101,10 @@ public class User {
     }
 
     public boolean isAdmin() {
-        return role == UserRole.ADMIN;
+        return role == UserRole.SUPER_ADMIN;
+    }
+
+    public boolean isSuperAdmin() {
+        return role == UserRole.SUPER_ADMIN;
     }
 }
