@@ -4,6 +4,7 @@ import com.worldcup.prediction.security.AccountStatusFilter;
 import com.worldcup.prediction.security.CustomOAuth2UserService;
 import com.worldcup.prediction.security.OAuth2AuthenticationFailureHandler;
 import com.worldcup.prediction.security.OAuth2AuthenticationSuccessHandler;
+import com.worldcup.prediction.security.SuperAdminAuthenticationProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,10 +26,12 @@ public class SecurityConfig {
     private final OAuth2AuthenticationSuccessHandler successHandler;
     private final OAuth2AuthenticationFailureHandler failureHandler;
     private final AccountStatusFilter accountStatusFilter;
+    private final SuperAdminAuthenticationProvider superAdminAuthenticationProvider;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .authenticationProvider(superAdminAuthenticationProvider)
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
@@ -36,15 +39,26 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
                 .requestMatchers("/", "/login", "/error").permitAll()
-                .requestMatchers("/dev/**").permitAll() // dev-only login bypass (sqlite profile)
+                .requestMatchers("/dev/**").permitAll()
                 .requestMatchers("/leaderboard/**").permitAll()
                 .requestMatchers("/fixtures/**").permitAll()
                 .requestMatchers("/groups/**").permitAll()
                 .requestMatchers("/bracket/**").permitAll()
+                .requestMatchers("/teams/**").permitAll()
+                .requestMatchers("/scorers/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers("/pending").authenticated()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/admin/**").hasRole("SUPER_ADMIN")
+                .requestMatchers("/c/*/admin/**").authenticated()
+                .requestMatchers("/c/**").authenticated()
+                .requestMatchers("/communities/**").authenticated()
                 .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginPage("/login")
+                .loginProcessingUrl("/login/form")
+                .defaultSuccessUrl("/admin", true)
+                .failureUrl("/login?error")
             )
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/login")

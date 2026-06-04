@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/notifications")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 @RequiredArgsConstructor
 public class AdminNotificationController {
 
