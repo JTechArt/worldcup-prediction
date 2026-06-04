@@ -104,4 +104,32 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
     @Modifying
     @Query("DELETE FROM Prediction p")
     void deleteAllPredictions();
+
+    Optional<Prediction> findByUserIdAndMatchIdAndCommunityId(Long userId, Long matchId, Long communityId);
+
+    @Query("SELECT p FROM Prediction p WHERE p.user.id = :userId AND p.match.id IN :matchIds AND p.community.id = :communityId")
+    List<Prediction> findByUserIdAndMatchIdInAndCommunityId(
+            @Param("userId") Long userId,
+            @Param("matchIds") java.util.Collection<Long> matchIds,
+            @Param("communityId") Long communityId);
+
+    @Query("SELECT COUNT(p) FROM Prediction p WHERE p.user.id = :userId AND p.match.id IN :matchIds AND p.community.id = :communityId")
+    long countByUserIdAndMatchIdInAndCommunityId(
+            @Param("userId") Long userId,
+            @Param("matchIds") java.util.Collection<Long> matchIds,
+            @Param("communityId") Long communityId);
+
+    List<Prediction> findByMatchIdAndCommunityId(Long matchId, Long communityId);
+
+    List<Prediction> findByUserIdAndCommunityId(Long userId, Long communityId);
+
+    boolean existsByUserIdAndMatchIdAndCommunityId(Long userId, Long matchId, Long communityId);
+
+    @Query("""
+            SELECT p.user.id, p.match.stage, SUM(p.pointsAwarded)
+            FROM Prediction p
+            WHERE p.community.id = :communityId AND p.match.stage IS NOT NULL
+            GROUP BY p.user.id, p.match.stage
+            """)
+    List<Object[]> sumPointsByUserAndStageAndCommunityId(@Param("communityId") Long communityId);
 }

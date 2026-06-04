@@ -3,6 +3,7 @@ package com.worldcup.prediction.repository;
 import com.worldcup.prediction.domain.TournamentWinnerPrediction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -28,4 +29,17 @@ public interface TournamentWinnerPredictionRepository extends JpaRepository<Tour
     List<TournamentWinnerPrediction> findAllWithDetails();
 
     long countByTeamId(Long teamId);
+
+    Optional<TournamentWinnerPrediction> findByUserIdAndCommunityId(Long userId, Long communityId);
+
+    List<TournamentWinnerPrediction> findByCommunityId(Long communityId);
+
+    @Query("""
+            SELECT twp FROM TournamentWinnerPrediction twp
+            JOIN FETCH twp.user JOIN FETCH twp.team
+            WHERE twp.community.id = :communityId
+            """)
+    List<TournamentWinnerPrediction> findAllWithDetailsByCommunityId(@Param("communityId") Long communityId);
+
+    List<TournamentWinnerPrediction> findByTeamIdAndCommunityId(Long teamId, Long communityId);
 }

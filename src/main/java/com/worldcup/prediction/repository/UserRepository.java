@@ -41,26 +41,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Page<User> findByStatus(UserStatus status, Pageable pageable);
 
-    @Query("""
-            SELECT u FROM User u
-            WHERE u.status = 'ACTIVE'
-            ORDER BY u.totalPoints DESC,
-                     u.exactScoreCount DESC,
-                     u.correctWinnerCount DESC,
-                     u.createdAt ASC
-            """)
-    List<User> findLeaderboard();
-
-    @Query("""
-            SELECT u FROM User u
-            WHERE u.status = 'ACTIVE'
-            ORDER BY u.totalPoints DESC,
-                     u.exactScoreCount DESC,
-                     u.correctWinnerCount DESC,
-                     u.createdAt ASC
-            LIMIT 10
-            """)
-    List<User> findTop10Leaderboard();
-
     long countByStatus(UserStatus status);
+
+    Optional<User> findByEmailAndRole(String email, UserRole role);
 }
