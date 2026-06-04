@@ -4,6 +4,7 @@ import com.worldcup.prediction.domain.Team;
 import com.worldcup.prediction.domain.TournamentWinnerPrediction;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.dto.TournamentWinnerPredictionDto;
+import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.TeamRepository;
 import com.worldcup.prediction.repository.TournamentWinnerPredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
@@ -28,18 +29,20 @@ public class TournamentWinnerPredictionService {
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
     private final ScoringService scoringService;
+    private final CommunityRepository communityRepository;
 
     /**
-     * Submit or update a user's tournament winner prediction.
+     * Submit or update a user's tournament winner prediction within a community.
      *
-     * @param userId the participant's ID
-     * @param dto    the prediction DTO (flagCode must not be blank)
+     * @param userId      the participant's ID
+     * @param dto         the prediction DTO (flagCode must not be blank)
+     * @param communityId the community context
      * @return the saved entity
      * @throws IllegalArgumentException if dto is null or flagCode is blank
      * @throws TeamNotFoundException    if the flagCode does not match any team
      */
     @Transactional
-    public TournamentWinnerPrediction submitOrUpdate(Long userId, TournamentWinnerPredictionDto dto) {
+    public TournamentWinnerPrediction submitOrUpdate(Long userId, TournamentWinnerPredictionDto dto, Long communityId) {
         if (dto == null) {
             throw new IllegalArgumentException("TournamentWinnerPredictionDto cannot be null");
         }
@@ -54,7 +57,7 @@ public class TournamentWinnerPredictionService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
-        Optional<TournamentWinnerPrediction> existing = repository.findByUserId(userId);
+        Optional<TournamentWinnerPrediction> existing = repository.findByUserIdAndCommunityId(userId, communityId);
         TournamentWinnerPrediction prediction;
         if (existing.isPresent()) {
             prediction = existing.get();
@@ -63,19 +66,25 @@ public class TournamentWinnerPredictionService {
             prediction = TournamentWinnerPrediction.builder()
                     .user(user)
                     .team(team)
+                    .community(communityRepository.findById(communityId).orElseThrow())
                     .build();
         }
         return repository.save(prediction);
     }
 
-    /** Retrieve a user's tournament winner prediction. Empty if not yet submitted. */
-    public Optional<TournamentWinnerPrediction> getForUser(Long userId) {
-        return repository.findByUserId(userId);
+    /** Retrieve a user's tournament winner prediction within a community. Empty if not yet submitted. */
+    public Optional<TournamentWinnerPrediction> getForUser(Long userId, Long communityId) {
+        return repository.findByUserIdAndCommunityId(userId, communityId);
     }
 
     /** All submitted tournament winner predictions (public + admin view). */
     public List<TournamentWinnerPrediction> getAll() {
         return repository.findAllWithDetails();
+    }
+
+    /** All submitted tournament winner predictions for a specific community. */
+    public List<TournamentWinnerPrediction> getAllByCommunity(Long communityId) {
+        return repository.findAllWithDetailsByCommunityId(communityId);
     }
 
     /**

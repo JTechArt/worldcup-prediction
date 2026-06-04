@@ -1,9 +1,11 @@
 package com.worldcup.prediction.service;
 
+import com.worldcup.prediction.domain.Community;
 import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.domain.Prediction;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.dto.PredictionDto;
+import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
@@ -34,6 +36,7 @@ public class PredictionService {
     private final PredictionRepository predictionRepository;
     private final MatchRepository matchRepository;
     private final UserRepository userRepository;
+    private final CommunityRepository communityRepository;
 
     // -------------------------------------------------------
     //  Window helpers
@@ -57,16 +60,17 @@ public class PredictionService {
     /**
      * Submit (or update) predictions for a user — all-or-nothing per invocation.
      *
-     * @param userId  the participant's ID
-     * @param dtos    list of predictions (must not be empty)
-     * @param now     current time (injectable for testability)
+     * @param userId      the participant's ID
+     * @param dtos        list of predictions (must not be empty)
+     * @param now         current time (injectable for testability)
+     * @param communityId the community context for these predictions
      * @return saved Prediction entities
      * @throws IllegalArgumentException        if dtos is empty
      * @throws MatchNotFoundException          if any matchId does not exist
      * @throws PredictionWindowClosedException if any match window is not currently open
      */
     @Transactional
-    public List<Prediction> submitPredictions(Long userId, List<PredictionDto> dtos, LocalDateTime now) {
+    public List<Prediction> submitPredictions(Long userId, List<PredictionDto> dtos, LocalDateTime now, Long communityId) {
         if (dtos == null || dtos.isEmpty()) {
             throw new IllegalArgumentException("Prediction list cannot be empty");
         }
@@ -92,11 +96,14 @@ public class PredictionService {
             }
         }
 
+        var community = communityRepository.findById(communityId)
+                .orElseThrow(() -> new IllegalArgumentException("Community not found: " + communityId));
+
         List<Prediction> saved = new ArrayList<>();
         for (PredictionDto dto : dtos) {
             Match match = matchMap.get(dto.getMatchId());
             Optional<Prediction> existing =
-                    predictionRepository.findByUserIdAndMatchId(userId, dto.getMatchId());
+                    predictionRepository.findByUserIdAndMatchIdAndCommunityId(userId, dto.getMatchId(), communityId);
 
             Prediction prediction;
             if (existing.isPresent()) {
@@ -107,6 +114,7 @@ public class PredictionService {
                 prediction = Prediction.builder()
                         .user(user)
                         .match(match)
+                        .community(community)
                         .predictedHome(dto.getHomeScore())
                         .predictedAway(dto.getAwayScore())
                         .build();
@@ -121,21 +129,21 @@ public class PredictionService {
     // -------------------------------------------------------
 
     /**
-     * Get all predictions for a match.
+     * Get all predictions for a match within a community.
      * Non-admin users get an empty list until the window closes; admins always see all.
      */
-    public List<Prediction> getPredictionsForMatch(Match match, LocalDateTime now, boolean isAdmin) {
+    public List<Prediction> getPredictionsForMatch(Match match, LocalDateTime now, boolean isAdmin, Long communityId) {
         LocalDateTime closesAt = match.getPredictionWindowClosesAt();
         boolean windowLocked = closesAt != null && !now.isBefore(closesAt);
         if (!isAdmin && !windowLocked) {
             return List.of();
         }
-        return predictionRepository.findByMatchId(match.getId());
+        return predictionRepository.findByMatchIdAndCommunityId(match.getId(), communityId);
     }
 
-    /** Get all predictions submitted by a user. Own predictions are always visible. */
-    public List<Prediction> getPredictionsForUser(Long userId) {
-        return predictionRepository.findByUserId(userId);
+    /** Get all predictions submitted by a user within a community. Own predictions are always visible. */
+    public List<Prediction> getPredictionsForUser(Long userId, Long communityId) {
+        return predictionRepository.findByUserIdAndCommunityId(userId, communityId);
     }
 
     // -------------------------------------------------------

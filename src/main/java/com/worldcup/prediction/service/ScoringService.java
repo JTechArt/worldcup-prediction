@@ -1,5 +1,6 @@
 package com.worldcup.prediction.service;
 
+import com.worldcup.prediction.domain.enums.PredictionScore;
 import org.springframework.stereotype.Service;
 
 /**
@@ -24,6 +25,14 @@ public class ScoringService {
         if (isCorrectDraw(actualHome, actualAway, predictedHome, predictedAway)) return 2;
         if (isCorrectOutcome(actualHome, actualAway, predictedHome, predictedAway)) return 1;
         return 0;
+    }
+
+    public PredictionScore determineScoreResult(int actualHome, int actualAway,
+                                                int predictedHome, int predictedAway) {
+        if (isExactScore(actualHome, actualAway, predictedHome, predictedAway)) return PredictionScore.EXACT;
+        if (isCorrectDraw(actualHome, actualAway, predictedHome, predictedAway)) return PredictionScore.CORRECT_DRAW;
+        if (isCorrectOutcome(actualHome, actualAway, predictedHome, predictedAway)) return PredictionScore.CORRECT_WINNER;
+        return PredictionScore.WRONG;
     }
 
     public int tournamentWinnerPoints(String predictedCode, String actualCode) {

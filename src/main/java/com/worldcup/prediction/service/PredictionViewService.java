@@ -5,6 +5,7 @@ import com.worldcup.prediction.domain.Prediction;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.MatchStatus;
 import com.worldcup.prediction.dto.*;
+import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
@@ -32,8 +33,9 @@ public class PredictionViewService {
     private final MatchRepository matchRepository;
     private final PredictionRepository predictionRepository;
     private final UserRepository userRepository;
+    private final CommunityRepository communityRepository;
 
-    public List<RoundSummaryDto> getRoundSummaries(Long userId) {
+    public List<RoundSummaryDto> getRoundSummaries(Long userId, Long communityId) {
         List<String> roundLabels = matchRepository.findDistinctRoundLabels();
         List<RoundSummaryDto> summaries = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
@@ -54,12 +56,12 @@ public class PredictionViewService {
 
             if (allComplete) {
                 dto.setStatus("PAST");
-                int pts = (int) predictionRepository.findByUserIdAndMatchIdIn(userId, matchIds).stream()
+                int pts = (int) predictionRepository.findByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId).stream()
                         .mapToInt(Prediction::getPointsAwarded).sum();
                 dto.setPointsEarned(pts);
             } else if (now.isAfter(firstKickoff.minusHours(24))) {
                 dto.setStatus("OPEN");
-                long predicted = predictionRepository.countByUserIdAndMatchIdIn(userId, matchIds);
+                long predicted = predictionRepository.countByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId);
                 dto.setPredictedCount((int) predicted);
             } else {
                 dto.setStatus("FUTURE");
@@ -70,12 +72,12 @@ public class PredictionViewService {
         return summaries;
     }
 
-    public List<MatchPredictionDto> getMatchesForRound(Long userId, String roundLabel) {
+    public List<MatchPredictionDto> getMatchesForRound(Long userId, String roundLabel, Long communityId) {
         List<Match> matches = matchRepository.findByRoundLabelWithTeams(roundLabel);
         List<Long> matchIds = matches.stream().map(Match::getId).toList();
 
         Map<Long, Prediction> predMap = predictionRepository
-                .findByUserIdAndMatchIdIn(userId, matchIds).stream()
+                .findByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId).stream()
                 .collect(Collectors.toMap(p -> p.getMatch().getId(), p -> p));
 
         LocalDateTime now = LocalDateTime.now();
@@ -94,7 +96,7 @@ public class PredictionViewService {
     }
 
     @Transactional
-    public int submitPredictionsForRound(Long userId, PredictionSubmitDto dto) {
+    public int submitPredictionsForRound(Long userId, PredictionSubmitDto dto, Long communityId) {
         List<Match> roundMatches = matchRepository.findByRoundLabelWithTeams(dto.getRoundLabel());
         LocalDateTime now = LocalDateTime.now();
 
@@ -123,7 +125,7 @@ public class PredictionViewService {
             Match match = matchMap.get(sp.getMatchId());
             if (match == null) throw new IllegalStateException("Match not found: " + sp.getMatchId());
 
-            Optional<Prediction> existing = predictionRepository.findByUserIdAndMatchId(userId, sp.getMatchId());
+            Optional<Prediction> existing = predictionRepository.findByUserIdAndMatchIdAndCommunityId(userId, sp.getMatchId(), communityId);
             Prediction prediction;
             if (existing.isPresent()) {
                 prediction = existing.get();
@@ -133,6 +135,7 @@ public class PredictionViewService {
                 prediction = new Prediction();
                 prediction.setUser(user);
                 prediction.setMatch(match);
+                prediction.setCommunity(communityRepository.findById(communityId).orElseThrow());
                 prediction.setPredictedHome(sp.getHomeScore());
                 prediction.setPredictedAway(sp.getAwayScore());
             }
@@ -142,7 +145,7 @@ public class PredictionViewService {
         return roundMatches.size();
     }
 
-    public List<PastRoundDto> getPastRoundsForUser(Long userId) {
+    public List<PastRoundDto> getPastRoundsForUser(Long userId, Long communityId) {
         List<String> roundLabels = matchRepository.findDistinctRoundLabels();
         List<PastRoundDto> result = new ArrayList<>();
 
@@ -153,7 +156,7 @@ public class PredictionViewService {
 
             List<Long> matchIds = matches.stream().map(Match::getId).toList();
             Map<Long, Prediction> predMap = predictionRepository
-                    .findByUserIdAndMatchIdIn(userId, matchIds).stream()
+                    .findByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId).stream()
                     .collect(Collectors.toMap(p -> p.getMatch().getId(), p -> p));
 
             List<PastMatchResultDto> matchResults = matches.stream().map(m -> {
