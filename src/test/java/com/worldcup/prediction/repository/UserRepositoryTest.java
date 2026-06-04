@@ -45,7 +45,7 @@ class UserRepositoryTest {
                 .firstName("Alice")
                 .lastName("Smith")
                 .status(UserStatus.ACTIVE)
-                .role(UserRole.PARTICIPANT)
+                .role(UserRole.USER)
                 .totalPoints(15)
                 .exactScoreCount(3)
                 .correctWinnerCount(4)
@@ -56,7 +56,7 @@ class UserRepositoryTest {
                 .firstName("Bob")
                 .lastName("Jones")
                 .status(UserStatus.PENDING)
-                .role(UserRole.PARTICIPANT)
+                .role(UserRole.USER)
                 .totalPoints(0)
                 .exactScoreCount(0)
                 .correctWinnerCount(0)
@@ -92,24 +92,9 @@ class UserRepositoryTest {
         assertThat(pendingUsers.get(0).getEmail()).isEqualTo("bob@example.com");
     }
 
-    @Test
-    void findLeaderboard_returnsActiveUsersOrderedByPoints() {
-        userRepository.save(User.builder()
-                .email("charlie@example.com")
-                .firstName("Charlie")
-                .lastName("Brown")
-                .status(UserStatus.ACTIVE)
-                .role(UserRole.PARTICIPANT)
-                .totalPoints(25)
-                .exactScoreCount(5)
-                .correctWinnerCount(6)
-                .build());
-
-        List<User> leaderboard = userRepository.findLeaderboard();
-        assertThat(leaderboard).hasSize(2); // alice and charlie (bob is PENDING)
-        assertThat(leaderboard.get(0).getEmail()).isEqualTo("charlie@example.com");
-        assertThat(leaderboard.get(1).getEmail()).isEqualTo("alice@example.com");
-    }
+    // TODO: findLeaderboard was removed from UserRepository during multi-community migration
+    // @Test
+    // void findLeaderboard_returnsActiveUsersOrderedByPoints() { ... }
 
     @Test
     void countByStatus_returnsCorrectCount() {
@@ -125,14 +110,14 @@ class UserRepositoryTest {
                 .firstName("Super")
                 .lastName("Admin")
                 .status(UserStatus.ACTIVE)
-                .role(UserRole.ADMIN)
+                .role(UserRole.SUPER_ADMIN)
                 .totalPoints(0)
                 .exactScoreCount(0)
                 .correctWinnerCount(0)
                 .build());
 
         User found = userRepository.findById(admin.getId()).orElseThrow();
-        assertThat(found.getRole()).isEqualTo(UserRole.ADMIN);
+        assertThat(found.getRole()).isEqualTo(UserRole.SUPER_ADMIN);
         assertThat(found.isAdmin()).isTrue();
         assertThat(found.isActive()).isTrue();
         assertThat(found.getCreatedAt()).isNotNull();

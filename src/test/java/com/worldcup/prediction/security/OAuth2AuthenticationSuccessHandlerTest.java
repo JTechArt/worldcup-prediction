@@ -31,7 +31,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
     private Authentication authFor(UserStatus status) {
         User user = User.builder()
                 .id(1L).email("test@example.com").firstName("Test").lastName("User")
-                .status(status).role(UserRole.PARTICIPANT).build();
+                .status(status).role(UserRole.USER).build();
         CustomOAuth2User principal = new CustomOAuth2User(user, Map.of("sub", "id-1"));
         return new TestingAuthenticationToken(principal, null, principal.getAuthorities());
     }

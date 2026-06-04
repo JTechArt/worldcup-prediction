@@ -43,7 +43,7 @@ class LeaderboardServiceTest {
         User u = User.builder()
                 .email(firstName.toLowerCase() + "@example.com")
                 .firstName(firstName).lastName(lastName)
-                .status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT)
+                .status(UserStatus.ACTIVE).role(UserRole.USER)
                 .build();
         u.setId(id);
         return u;

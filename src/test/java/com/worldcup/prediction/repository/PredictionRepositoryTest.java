@@ -57,11 +57,11 @@ class PredictionRepositoryTest {
 
         alice = userRepository.save(User.builder()
                 .email("alice@example.com").firstName("Alice").lastName("Smith")
-                .status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT).build());
+                .status(UserStatus.ACTIVE).role(UserRole.USER).build());
 
         bob = userRepository.save(User.builder()
                 .email("bob@example.com").firstName("Bob").lastName("Jones")
-                .status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT).build());
+                .status(UserStatus.ACTIVE).role(UserRole.USER).build());
 
         match1 = matchRepository.save(Match.builder()
                 .matchNumber(1).stage(MatchStage.GROUP).roundLabel("Group Stage Round 1")

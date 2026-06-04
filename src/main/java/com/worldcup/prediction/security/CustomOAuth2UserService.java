@@ -105,7 +105,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 .lastName(lastName)
                 .avatarUrl(avatarUrl)
                 .status(initialStatus)
-                .role(UserRole.PARTICIPANT)
+                .role(UserRole.USER)
                 .build();
         User saved = userRepository.save(newUser);
 

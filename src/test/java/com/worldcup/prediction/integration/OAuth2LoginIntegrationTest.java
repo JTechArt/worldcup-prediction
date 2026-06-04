@@ -61,7 +61,7 @@ class OAuth2LoginIntegrationTest {
     void authenticatedUser_withActiveStatus_canAccessHome() throws Exception {
         User activeUser = userRepository.save(User.builder()
                 .email("active@test.com").firstName("Active").lastName("User")
-                .status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT).build());
+                .status(UserStatus.ACTIVE).role(UserRole.USER).build());
 
         CustomOAuth2User principal = new CustomOAuth2User(activeUser, Map.of("sub", "id-active"));
 
@@ -73,7 +73,7 @@ class OAuth2LoginIntegrationTest {
     void authenticatedUser_withPendingStatus_canAccessPendingPage() throws Exception {
         User pendingUser = userRepository.save(User.builder()
                 .email("pending@test.com").firstName("Pending").lastName("User")
-                .status(UserStatus.PENDING).role(UserRole.PARTICIPANT).build());
+                .status(UserStatus.PENDING).role(UserRole.USER).build());
 
         CustomOAuth2User principal = new CustomOAuth2User(pendingUser, Map.of("sub", "id-pending"));
 
@@ -86,7 +86,7 @@ class OAuth2LoginIntegrationTest {
     void adminRoute_isForbidden_forParticipant() throws Exception {
         User participant = userRepository.save(User.builder()
                 .email("part@test.com").firstName("Part").lastName("Icipant")
-                .status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT).build());
+                .status(UserStatus.ACTIVE).role(UserRole.USER).build());
 
         CustomOAuth2User principal = new CustomOAuth2User(participant, Map.of("sub", "id-part"));
 
@@ -98,7 +98,7 @@ class OAuth2LoginIntegrationTest {
     void adminRoute_isNotForbidden_forAdmin() throws Exception {
         User admin = userRepository.save(User.builder()
                 .email("admin@test.com").firstName("Admin").lastName("User")
-                .status(UserStatus.ACTIVE).role(UserRole.ADMIN).build());
+                .status(UserStatus.ACTIVE).role(UserRole.SUPER_ADMIN).build());
 
         CustomOAuth2User principal = new CustomOAuth2User(admin, Map.of("sub", "id-admin"));
 

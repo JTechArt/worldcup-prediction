@@ -51,7 +51,7 @@ class AccountStatusFilterTest {
 
     private void setAuthenticated(String email) {
         User user = User.builder().id(1L).email(email)
-                .status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT).build();
+                .status(UserStatus.ACTIVE).role(UserRole.USER).build();
         CustomOAuth2User principal = new CustomOAuth2User(user, Map.of());
         TestingAuthenticationToken auth = new TestingAuthenticationToken(principal, null);
         auth.setAuthenticated(true);
@@ -62,7 +62,7 @@ class AccountStatusFilterTest {
     void allowsRequest_whenUserIsActive() throws Exception {
         setAuthenticated("active@example.com");
         User activeUser = User.builder().id(1L).email("active@example.com")
-                .status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT).build();
+                .status(UserStatus.ACTIVE).role(UserRole.USER).build();
         when(userRepository.findByEmail("active@example.com")).thenReturn(Optional.of(activeUser));
 
         filter.doFilterInternal(request, response, chain);
@@ -75,7 +75,7 @@ class AccountStatusFilterTest {
     void invalidatesSession_andRedirects_whenUserIsDisabled() throws Exception {
         setAuthenticated("disabled@example.com");
         User disabledUser = User.builder().id(1L).email("disabled@example.com")
-                .status(UserStatus.DISABLED).role(UserRole.PARTICIPANT).build();
+                .status(UserStatus.DISABLED).role(UserRole.USER).build();
         when(userRepository.findByEmail("disabled@example.com")).thenReturn(Optional.of(disabledUser));
 
         filter.doFilterInternal(request, response, chain);

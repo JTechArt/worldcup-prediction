@@ -55,13 +55,13 @@ public class DevLoginController {
                     .firstName("Dev")
                     .lastName("Admin")
                     .status(UserStatus.ACTIVE)
-                    .role(UserRole.ADMIN)
+                    .role(UserRole.SUPER_ADMIN)
                     .build());
         });
 
         if (admin.getStatus() != UserStatus.ACTIVE) {
             admin.setStatus(UserStatus.ACTIVE);
-            admin.setRole(UserRole.ADMIN);
+            admin.setRole(UserRole.SUPER_ADMIN);
             admin = userRepository.save(admin);
         }
 

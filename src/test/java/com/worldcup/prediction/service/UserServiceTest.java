@@ -38,7 +38,7 @@ class UserServiceTest {
                 .firstName("Test")
                 .lastName("User")
                 .status(UserStatus.PENDING)
-                .role(UserRole.PARTICIPANT)
+                .role(UserRole.USER)
                 .build();
     }
 

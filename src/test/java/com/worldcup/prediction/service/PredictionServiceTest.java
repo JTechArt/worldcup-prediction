@@ -53,7 +53,7 @@ class PredictionServiceTest {
         predictionService = new PredictionService(predictionRepository, matchRepository, userRepository);
         testUser = User.builder().id(42L).email("test@example.com")
                 .firstName("Test").lastName("User")
-                .status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT).build();
+                .status(UserStatus.ACTIVE).role(UserRole.USER).build();
     }
 
     @Nested

@@ -45,7 +45,7 @@ class TournamentWinnerPredictionServiceTest {
 
         alice = User.builder().id(1L).email("alice@example.com")
                 .firstName("Alice").lastName("Smith")
-                .status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT).build();
+                .status(UserStatus.ACTIVE).role(UserRole.USER).build();
 
         brazil = Team.builder().id(10L).name("Brazil").fifaCode("BRA").flagCode("br").build();
     }
@@ -153,7 +153,7 @@ class TournamentWinnerPredictionServiceTest {
         @Test @DisplayName("awards +10 points to all correct predictors")
         void awardsPointsToCorrectPredictors() {
             User bob = User.builder().id(2L).email("bob@example.com")
-                    .firstName("Bob").lastName("J").status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT).build();
+                    .firstName("Bob").lastName("J").status(UserStatus.ACTIVE).role(UserRole.USER).build();
 
             TournamentWinnerPrediction p1 = TournamentWinnerPrediction.builder().user(alice).team(brazil).build();
             TournamentWinnerPrediction p2 = TournamentWinnerPrediction.builder().user(bob).team(brazil).build();

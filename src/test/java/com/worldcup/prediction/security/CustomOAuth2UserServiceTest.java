@@ -104,7 +104,7 @@ class CustomOAuth2UserServiceTest {
 
         assertThat(result.getEmail()).isEqualTo("newuser@example.com");
         assertThat(result.getStatus()).isEqualTo(UserStatus.PENDING);
-        assertThat(result.getRole()).isEqualTo(UserRole.PARTICIPANT);
+        assertThat(result.getRole()).isEqualTo(UserRole.USER);
 
         ArgumentCaptor<OAuthIdentity> identityCaptor = ArgumentCaptor.forClass(OAuthIdentity.class);
         verify(oauthIdentityRepository).save(identityCaptor.capture());
@@ -116,7 +116,7 @@ class CustomOAuth2UserServiceTest {
     void loadUser_mergesByEmail_whenNewProviderForExistingAccount() {
         User existingUser = User.builder()
                 .id(10L).email("newuser@example.com").firstName("New").lastName("User")
-                .status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT).build();
+                .status(UserStatus.ACTIVE).role(UserRole.USER).build();
 
         when(delegate.loadUser(googleRequest)).thenReturn(googleOAuth2User);
         when(userRepository.findByProviderAndProviderId(OAuthProvider.GOOGLE, "google-sub-123"))
@@ -137,7 +137,7 @@ class CustomOAuth2UserServiceTest {
         User existingUser = User.builder()
                 .id(5L).email("newuser@example.com").firstName("New").lastName("User")
                 .avatarUrl("https://old-photo.com")
-                .status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT).build();
+                .status(UserStatus.ACTIVE).role(UserRole.USER).build();
 
         when(delegate.loadUser(googleRequest)).thenReturn(googleOAuth2User);
         when(userRepository.findByProviderAndProviderId(OAuthProvider.GOOGLE, "google-sub-123"))
@@ -155,7 +155,7 @@ class CustomOAuth2UserServiceTest {
     void loadUser_doesNotCreateNewIdentity_forReturningUser() {
         User existingUser = User.builder()
                 .id(5L).email("newuser@example.com").firstName("New").lastName("User")
-                .status(UserStatus.ACTIVE).role(UserRole.PARTICIPANT).build();
+                .status(UserStatus.ACTIVE).role(UserRole.USER).build();
 
         when(delegate.loadUser(googleRequest)).thenReturn(googleOAuth2User);
         when(userRepository.findByProviderAndProviderId(OAuthProvider.GOOGLE, "google-sub-123"))
