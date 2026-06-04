@@ -4,6 +4,7 @@ import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.domain.enums.MatchStage;
 import com.worldcup.prediction.domain.enums.MatchStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -136,5 +137,12 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             @Param("awayFifaCode") String awayFifaCode,
             @Param("start") java.time.LocalDateTime start,
             @Param("end")   java.time.LocalDateTime end);
+
+    @Modifying
+    @Query("DELETE FROM Match m")
+    void deleteAllMatches();
+
+    @Query("SELECT MAX(m.matchNumber) FROM Match m WHERE m.stage != :stage")
+    Optional<Integer> findMaxMatchNumberExcludingStage(@Param("stage") MatchStage stage);
 
 }

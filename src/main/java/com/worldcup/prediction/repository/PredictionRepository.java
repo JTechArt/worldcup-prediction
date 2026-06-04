@@ -4,6 +4,7 @@ import com.worldcup.prediction.domain.Prediction;
 import com.worldcup.prediction.domain.enums.MatchStage;
 import com.worldcup.prediction.domain.enums.PredictionScore;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -99,4 +100,8 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
     long countByMatchIdAndScoreResult(
             @Param("matchId") Long matchId,
             @Param("scoreResult") PredictionScore scoreResult);
+
+    @Modifying
+    @Query("DELETE FROM Prediction p")
+    void deleteAllPredictions();
 }

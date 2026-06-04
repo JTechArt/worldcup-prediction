@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class AdminSyncController {
 
+    private final BootstrapSyncService bootstrapSyncService;
     private final TeamSyncService teamSyncService;
     private final MatchSyncService matchSyncService;
     private final StandingSyncService standingSyncService;
@@ -31,9 +32,16 @@ public class AdminSyncController {
         return "redirect:/admin/sync";
     }
 
+    @PostMapping("/bootstrap")
+    public String runBootstrap(RedirectAttributes ra) {
+        String result = bootstrapSyncService.runFullBootstrap();
+        ra.addFlashAttribute("successMessage", "Bootstrap complete:\n" + result);
+        return "redirect:/admin/sync";
+    }
+
     @PostMapping("/matches")
     public String syncMatches(RedirectAttributes ra) {
-        SyncResult r = matchSyncService.syncMatchExternalIds();
+        SyncResult r = matchSyncService.syncGroupStageMatches();
         ra.addFlashAttribute("successMessage", "Matches: " + r.message());
         return "redirect:/admin/sync";
     }

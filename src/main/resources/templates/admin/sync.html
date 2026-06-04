@@ -8,28 +8,101 @@
 <th:block layout:fragment="page-title">Data Sync</th:block>
 <th:block layout:fragment="content">
 
-  <div class="max-w-2xl space-y-4">
-    <p class="text-sm text-gray-500">Manually trigger API sync jobs. Each button respects the rate limiter (10 calls/min). Skipped jobs return instantly.</p>
+  <div class="max-w-2xl space-y-6">
 
-    <div th:each="job : ${ {'teams','matches','standings','lineups','scorers'} }"
-         class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center justify-between">
-      <div>
-        <p class="font-semibold text-gray-800 capitalize" th:text="${job}">teams</p>
-        <p class="text-xs text-gray-400 mt-0.5"
-           th:text="${job == 'teams'} ? 'Upsert 48 teams + full squads' :
-                    (${job == 'matches'} ? 'Link match external IDs from API' :
-                    (${job == 'standings'} ? 'Upsert group standings from API' :
-                    (${job == 'lineups'} ? 'Fetch lineups + goals for completed matches' :
-                    'Update top scorer goal counts')))">description</p>
-      </div>
-      <form th:action="@{'/admin/sync/' + ${job}}" method="post">
+    <!-- Full Bootstrap -->
+    <div class="bg-gradient-to-r from-admin-dark to-admin-mid rounded-xl p-5 text-white">
+      <p class="font-bold text-lg mb-1">Full Bootstrap</p>
+      <p class="text-sm text-green-200 mb-4">
+        Clears ALL match data and reloads everything from the football API.
+        Run this once to replace seed data with correct API data (teams + squads, group stage matches, standings).
+        3 API calls total. After it completes, export the DB to update the seed file.
+      </p>
+      <form th:action="@{/admin/sync/bootstrap}" method="post" class="flex items-center gap-3">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         <button type="submit"
-                class="px-4 py-2 text-sm font-semibold bg-admin-dark text-white rounded-lg hover:bg-admin-mid transition-colors duration-150">
-          Run
+                onclick="return confirm('This will DELETE all matches, predictions, lineups and goals, then reload from API. Continue?')"
+                class="px-5 py-2.5 text-sm font-bold bg-white text-admin-dark rounded-lg hover:bg-green-50 transition-colors duration-150">
+          Run Full Bootstrap
         </button>
+        <span class="text-xs text-green-300">⚠ Destructive — clears all match data</span>
       </form>
     </div>
+
+    <!-- Individual Jobs -->
+    <div>
+      <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Individual Jobs</p>
+      <p class="text-xs text-gray-400 mb-4">Each job respects the rate limiter (10 calls/min). Skipped jobs return instantly when there's nothing to do.</p>
+
+      <div class="space-y-3">
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
+          <div>
+            <p class="font-semibold text-gray-800">Teams + Squads</p>
+            <p class="text-xs text-gray-400 mt-0.5">Update 48 teams with API external IDs + populate full squads (players table). 1 API call.</p>
+          </div>
+          <form th:action="@{/admin/sync/teams}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="px-4 py-2 text-sm font-semibold bg-admin-dark text-white rounded-lg hover:bg-admin-mid transition-colors">Run</button>
+          </form>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
+          <div>
+            <p class="font-semibold text-gray-800">Group Stage Matches</p>
+            <p class="text-xs text-gray-400 mt-0.5">Clear wrong seed data and recreate 72 group stage matches from API with correct groups + kickoff times. 1 API call.</p>
+          </div>
+          <form th:action="@{/admin/sync/matches}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit"
+                    onclick="return confirm('This will delete all matches and predictions, then reload from API. Continue?')"
+                    class="px-4 py-2 text-sm font-semibold bg-admin-dark text-white rounded-lg hover:bg-admin-mid transition-colors">Run</button>
+          </form>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
+          <div>
+            <p class="font-semibold text-gray-800">Standings</p>
+            <p class="text-xs text-gray-400 mt-0.5">Upsert group standings from API. Skipped if no matches completed since last sync. 1 API call.</p>
+          </div>
+          <form th:action="@{/admin/sync/standings}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="px-4 py-2 text-sm font-semibold bg-admin-dark text-white rounded-lg hover:bg-admin-mid transition-colors">Run</button>
+          </form>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
+          <div>
+            <p class="font-semibold text-gray-800">Lineups + Goals</p>
+            <p class="text-xs text-gray-400 mt-0.5">Fetch lineup and goal data for completed matches that haven't been enriched yet. 1 API call per match.</p>
+          </div>
+          <form th:action="@{/admin/sync/lineups}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="px-4 py-2 text-sm font-semibold bg-admin-dark text-white rounded-lg hover:bg-admin-mid transition-colors">Run</button>
+          </form>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
+          <div>
+            <p class="font-semibold text-gray-800">Top Scorers</p>
+            <p class="text-xs text-gray-400 mt-0.5">Update player tournament goal counts. Skipped if no matches completed in last 24h. 1 API call.</p>
+          </div>
+          <form th:action="@{/admin/sync/scorers}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="px-4 py-2 text-sm font-semibold bg-admin-dark text-white rounded-lg hover:bg-admin-mid transition-colors">Run</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export instructions -->
+    <div class="bg-gray-50 rounded-xl border border-gray-200 p-4">
+      <p class="text-sm font-semibold text-gray-600 mb-2">After Bootstrap — Export DB as Seed</p>
+      <p class="text-xs text-gray-500 mb-2">Run these commands to persist the bootstrapped data as the Flyway seed so future deploys don't need the API:</p>
+      <pre class="text-xs bg-white rounded-lg border border-gray-200 p-3 text-gray-700 overflow-x-auto">sqlite3 worldcup.db .dump > /tmp/backup.sql
+# Copy the INSERT statements for teams, groups, group_teams,
+# players, matches, group_standings into R__wc2026_data.sql</pre>
+    </div>
+
   </div>
 
 </th:block>
