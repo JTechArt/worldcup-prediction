@@ -11,8 +11,11 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Email service. When no SMTP host is configured (JavaMailSender not in context),
@@ -28,6 +31,10 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final String fromAddress;
     private final boolean enabled;
+    private final FreemarkerEmailRenderer renderer;
+
+    @Value("${app.base-url:http://localhost:8888}")
+    private String appUrl;
 
     /**
      * Spring injection.
@@ -37,8 +44,10 @@ public class EmailService {
     @org.springframework.beans.factory.annotation.Autowired
     public EmailService(@Value("${app.mail.enabled:false}") boolean mailEnabled,
                         Optional<JavaMailSender> mailSenderOpt,
-                        @Value("${app.mail.from:noreply@worldcup.example.com}") String fromAddress) {
+                        @Value("${app.mail.from:noreply@worldcup.example.com}") String fromAddress,
+                        Optional<FreemarkerEmailRenderer> rendererOpt) {
         this.fromAddress = fromAddress;
+        this.renderer = rendererOpt.orElse(null);
         if (!mailEnabled) {
             this.mailSender = null;
             this.enabled    = false;
@@ -55,37 +64,31 @@ public class EmailService {
     }
 
     /** Package-private constructor for unit tests (inject mock directly). */
-    EmailService(JavaMailSender mailSender, String fromAddress, boolean enabled) {
+    EmailService(JavaMailSender mailSender, String fromAddress, boolean enabled,
+                 FreemarkerEmailRenderer renderer, String appUrl) {
         this.mailSender  = mailSender;
         this.fromAddress = fromAddress;
         this.enabled     = enabled;
+        this.renderer    = renderer;
+        this.appUrl      = appUrl;
     }
 
     public void sendApprovalEmail(User user) {
         String subject = "Welcome to World Cup 2026 Predictions — You're approved!";
-        String body = """
-                <html><body style="font-family:Inter,sans-serif;background:#f0fdf5;padding:32px;">
-                  <h2 style="color:#006b2a;">You're in! 🎉</h2>
-                  <p>Hi %s,</p>
-                  <p>Your registration for the <strong>World Cup 2026 Prediction Game</strong> has been approved.</p>
-                  <p>Sign in with your Google or LinkedIn account to start making predictions.</p>
-                  <p style="margin-top:32px;font-size:12px;color:#666;">World Cup 2026 Prediction Game</p>
-                </body></html>
-                """.formatted(user.getFirstName());
+        String body = renderOrFallback("approval.ftlh", Map.of(
+                "title", "Welcome",
+                "firstName", user.getFirstName(),
+                "appUrl", appUrl
+        ), subject);
         send(user.getEmail(), subject, body);
     }
 
     public void sendRejectionEmail(User user) {
         String subject = "World Cup 2026 Predictions — Registration update";
-        String body = """
-                <html><body style="font-family:Inter,sans-serif;background:#f0fdf5;padding:32px;">
-                  <h2 style="color:#006b2a;">Registration Update</h2>
-                  <p>Hi %s,</p>
-                  <p>Unfortunately your registration was not approved at this time.</p>
-                  <p>If you believe this is an error, please contact your administrator.</p>
-                  <p style="margin-top:32px;font-size:12px;color:#666;">World Cup 2026 Prediction Game</p>
-                </body></html>
-                """.formatted(user.getFirstName());
+        String body = renderOrFallback("rejection.ftlh", Map.of(
+                "title", "Registration Update",
+                "firstName", user.getFirstName()
+        ), subject);
         send(user.getEmail(), subject, body);
     }
 
@@ -106,30 +109,97 @@ public class EmailService {
         String matchLabel = matchLabel(match);
         String subject = "⚽ Predictions close in 2 hours — " + matchLabel;
         String kickoffStr = match.getKickoffTime() != null
-                ? match.getKickoffTime().format(DATE_FMT) + " UTC" : "";
-        String body = """
-                <html><body style="font-family:Inter,sans-serif;background:#f0fdf5;padding:32px;">
-                  <h2 style="color:#FF5722;">⏰ Time is running out!</h2>
-                  <p>Predictions for <strong>%s</strong> (%s) close in <strong>2 hours</strong>.</p>
-                  <p>Log in now to submit your predictions before the window closes.</p>
-                  <p style="margin-top:32px;font-size:12px;color:#666;">World Cup 2026 Prediction Game</p>
-                </body></html>
-                """.formatted(matchLabel, kickoffStr);
-        users.forEach(user -> send(user.getEmail(), subject, body));
+                ? match.getKickoffTime().format(DATE_FMT) : "";
+        List<Map<String, String>> matches = List.of(
+                Map.of("label", matchLabel, "kickoff", kickoffStr)
+        );
+        users.forEach(user -> {
+            String body = renderOrFallback("prediction-reminder.ftlh", Map.of(
+                    "title", "Reminder",
+                    "firstName", user.getFirstName(),
+                    "matches", matches,
+                    "hoursLeft", "2",
+                    "appUrl", appUrl
+            ), subject);
+            send(user.getEmail(), subject, body);
+        });
     }
 
     public void sendResultsPublished(List<User> users, Match match) {
         String matchLabel = matchLabel(match);
+        String score = (match.getHomeScore() != null && match.getAwayScore() != null)
+                ? match.getHomeScore() + " - " + match.getAwayScore() : "N/A";
         String subject = "📊 Results published — " + matchLabel;
-        String body = """
-                <html><body style="font-family:Inter,sans-serif;background:#f0fdf5;padding:32px;">
-                  <h2 style="color:#006b2a;">Results are in!</h2>
-                  <p>The results for <strong>%s</strong> have been published and the leaderboard updated.</p>
-                  <p>Check the leaderboard to see where you stand.</p>
-                  <p style="margin-top:32px;font-size:12px;color:#666;">World Cup 2026 Prediction Game</p>
-                </body></html>
-                """.formatted(matchLabel);
-        users.forEach(user -> send(user.getEmail(), subject, body));
+        users.forEach(user -> {
+            String body = renderOrFallback("results-published.ftlh", Map.of(
+                    "title", "Results Published",
+                    "firstName", user.getFirstName(),
+                    "matchLabel", matchLabel,
+                    "score", score,
+                    "appUrl", appUrl
+            ), subject);
+            send(user.getEmail(), subject, body);
+        });
+    }
+
+    public void sendPredictionWindowOpen(List<User> users, List<Match> matchList) {
+        List<Map<String, String>> matches = matchList.stream()
+                .map(m -> {
+                    String kickoffStr = m.getKickoffTime() != null
+                            ? m.getKickoffTime().format(DATE_FMT) : "";
+                    return Map.of("label", matchLabel(m), "kickoff", kickoffStr);
+                })
+                .collect(Collectors.toList());
+        String matchLabels = matchList.stream()
+                .map(this::matchLabel)
+                .collect(Collectors.joining(", "));
+        String subject = "Predictions are open! " + matchLabels;
+        users.forEach(user -> {
+            String body = renderOrFallback("prediction-window-open.ftlh", Map.of(
+                    "title", "Predictions Open",
+                    "firstName", user.getFirstName(),
+                    "matches", matches,
+                    "appUrl", appUrl
+            ), subject);
+            send(user.getEmail(), subject, body);
+        });
+    }
+
+    public void sendLeaderboardDigest(User user, int rank, int points,
+                                      List<Map<String, Object>> topEntries,
+                                      List<Map<String, Object>> matchResults) {
+        String subject = "Leaderboard Update — You're #" + rank;
+        Map<String, Object> model = new HashMap<>();
+        model.put("title", "Leaderboard Update");
+        model.put("firstName", user.getFirstName());
+        model.put("rank", rank);
+        model.put("points", points);
+        model.put("topEntries", topEntries);
+        model.put("matchResults", matchResults);
+        model.put("appUrl", appUrl);
+        String body = renderOrFallback("leaderboard-digest.ftlh", model, subject);
+        send(user.getEmail(), subject, body);
+    }
+
+    public void sendInvitation(String email, User inviter) {
+        String subject = "You're invited to World Cup 2026 Predictions!";
+        String body = renderOrFallback("invitation.ftlh", Map.of(
+                "title", "You're Invited",
+                "inviterName", inviter.getFullName(),
+                "appUrl", appUrl
+        ), subject);
+        send(email, subject, body);
+    }
+
+    /**
+     * Render an email template via Freemarker, or fall back to a plain-text body
+     * when the renderer is not available (e.g., log-only mode in tests).
+     */
+    private String renderOrFallback(String templateName, Map<String, Object> model, String subject) {
+        if (renderer != null) {
+            return renderer.render(templateName, model);
+        }
+        return subject; // plain-text fallback
     }
 
     private void send(String to, String subject, String htmlBody) {
