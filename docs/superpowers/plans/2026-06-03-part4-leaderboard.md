@@ -943,7 +943,7 @@ git commit -m "feat: add display metadata to MatchPhase enum for leaderboard hea
 - Create: `src/main/resources/templates/leaderboard.html`
 
 This is the full prediction breakdown page. Layout:
-- Dark theme matching the brainstorm design (dark green background, green accents)
+- Light green theme matching the brainstorm design (leaderboard-v9: `#f0fdf5` background, white cards, frosted glass nav)
 - Navbar (shared fragment from Part 1's layout)
 - Hero section with KPI stats for the current user
 - 3-panel leaderboard grid: fixed player column | scrollable game columns (future, populated when match data is wired) | fixed total column
