@@ -20,9 +20,14 @@ class PlayerRepositoryTest {
     @Autowired PlayerRepository playerRepo;
     @Autowired TeamRepository teamRepo;
 
+    private Team savedTeam() {
+        return teamRepo.save(Team.builder()
+                .name("Test FC").fifaCode("TST").flagCode("us").build());
+    }
+
     @Test
     void findByExternalId_returnsPlayer() {
-        Team team = teamRepo.findAll().get(0);
+        Team team = savedTeam();
         Player p = Player.builder().externalId(9999L).team(team).name("Test Player").build();
         playerRepo.save(p);
 
@@ -31,7 +36,7 @@ class PlayerRepositoryTest {
 
     @Test
     void findByTournamentGoalsGreaterThan_onlyReturnsScorers() {
-        Team team = teamRepo.findAll().get(0);
+        Team team = savedTeam();
         playerRepo.save(Player.builder().externalId(1L).team(team).name("Scorer").tournamentGoals(3).build());
         playerRepo.save(Player.builder().externalId(2L).team(team).name("NoGoals").tournamentGoals(0).build());
 
