@@ -4,6 +4,7 @@ import com.worldcup.prediction.integration.football.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AdminSyncController {
 
     private final BootstrapSyncService bootstrapSyncService;
+    private final FootballApiClient footballApiClient;
     private final TeamSyncService teamSyncService;
     private final MatchSyncService matchSyncService;
     private final StandingSyncService standingSyncService;
@@ -21,7 +23,8 @@ public class AdminSyncController {
     private final ScorersService scorersService;
 
     @GetMapping
-    public String syncPage() {
+    public String syncPage(Model model) {
+        model.addAttribute("apiEnabled", footballApiClient.isEnabled());
         return "admin/sync";
     }
 

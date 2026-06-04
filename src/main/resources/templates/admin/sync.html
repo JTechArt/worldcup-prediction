@@ -9,7 +9,20 @@
 <th:block layout:fragment="content">
 
   <div class="max-w-2xl space-y-4">
-    <p class="text-xs text-gray-400 mb-2">Each job respects the rate limiter (10 calls/min). Jobs skip instantly when there is nothing to do.</p>
+
+    <!-- API status banner -->
+    <div th:if="${!apiEnabled}"
+         class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+      <strong>API disabled.</strong> Set <code class="bg-red-100 px-1 rounded">FOOTBALL_API_ENABLED=true</code>
+      and <code class="bg-red-100 px-1 rounded">FOOTBALL_API_KEY=your_key</code> then restart the app.
+      All sync jobs will be skipped until then.
+    </div>
+    <div th:if="${apiEnabled}"
+         class="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-700">
+      API connected. Season 2026 endpoints active.
+    </div>
+
+    <p class="text-xs text-gray-400">Each job respects the rate limiter (10 calls/min). Jobs skip instantly when there is nothing to do.</p>
 
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
       <div>

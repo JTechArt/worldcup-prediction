@@ -53,7 +53,7 @@ class FootballApiClientTest {
             }
             """;
 
-        mockServer.expect(requestTo("https://api.football-data.org/v4/competitions/WC/matches"))
+        mockServer.expect(requestTo("https://api.football-data.org/v4/competitions/WC/matches?season=2026"))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header("X-Auth-Token", "test-api-key"))
                 .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
@@ -71,7 +71,7 @@ class FootballApiClientTest {
 
     @Test
     void fetchMatches_onHttpError_returnsNull() {
-        mockServer.expect(requestTo("https://api.football-data.org/v4/competitions/WC/matches"))
+        mockServer.expect(requestTo("https://api.football-data.org/v4/competitions/WC/matches?season=2026"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
 
@@ -110,7 +110,7 @@ class FootballApiClientTest {
                           "dateOfBirth": "1986-03-27", "nationality": "Germany", "shirtNumber": 1 }]
             }]}
             """;
-        mockServer.expect(requestTo("https://api.football-data.org/v4/competitions/WC/teams"))
+        mockServer.expect(requestTo("https://api.football-data.org/v4/competitions/WC/teams?season=2026"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
 

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -13,11 +14,11 @@ import org.springframework.web.client.RestTemplate;
 public class FootballApiClient {
 
     private static final String BASE = "https://api.football-data.org/v4";
-    private static final String MATCHES_URL   = BASE + "/competitions/WC/matches";
-    private static final String TEAMS_URL     = BASE + "/competitions/WC/teams";
-    private static final String STANDINGS_URL = BASE + "/competitions/WC/standings";
+    private static final String MATCHES_URL   = BASE + "/competitions/WC/matches?season=2026";
+    private static final String TEAMS_URL     = BASE + "/competitions/WC/teams?season=2026";
+    private static final String STANDINGS_URL = BASE + "/competitions/WC/standings?season=2026";
     private static final String MATCH_URL     = BASE + "/matches/{id}";
-    private static final String SCORERS_URL   = BASE + "/competitions/WC/scorers?limit=20";
+    private static final String SCORERS_URL   = BASE + "/competitions/WC/scorers?limit=20&season=2026";
 
     private final RestTemplate restTemplate;
     private final String apiKey;
@@ -60,14 +61,26 @@ public class FootballApiClient {
         return get(SCORERS_URL, FootballApiScorersResponseDto.class);
     }
 
+    public boolean isEnabled() {
+        return enabled && !apiKey.isBlank();
+    }
+
     private <T> T get(String url, Class<T> type) {
-        if (!enabled) { log.debug("Football API disabled — skipping"); return null; }
-        if (apiKey.isBlank()) { log.debug("No API key — skipping"); return null; }
+        if (!enabled) {
+            log.warn("Football API call skipped — FOOTBALL_API_ENABLED=false. Set it to true and restart.");
+            return null;
+        }
+        if (apiKey.isBlank()) {
+            log.warn("Football API call skipped — FOOTBALL_API_KEY not configured.");
+            return null;
+        }
         try {
-            return restTemplate.exchange(url, HttpMethod.GET,
-                    new HttpEntity<>(authHeaders()), type).getBody();
+            ResponseEntity<T> response = restTemplate.exchange(url, HttpMethod.GET,
+                    new HttpEntity<>(authHeaders()), type);
+            log.debug("Football API [{}] → HTTP {}", url, response.getStatusCode());
+            return response.getBody();
         } catch (RestClientException e) {
-            log.warn("Football API call failed [{}]: {}", url, e.getMessage());
+            log.error("Football API call failed [{}]: {}", url, e.getMessage());
             return null;
         }
     }
