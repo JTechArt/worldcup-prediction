@@ -6,7 +6,7 @@ import com.worldcup.prediction.domain.enums.MatchStatus;
 import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +27,7 @@ public class MatchAdminService {
     private final ScoringService scoringService;
 
     public List<Match> findAllOrderByKickoffAsc() {
-        return matchRepository.findAll(Sort.by("kickoffTime"));
+        return matchRepository.findAllWithTeams();
     }
 
     public List<Match> findByKickoffDate(LocalDate date) {
@@ -41,7 +41,7 @@ public class MatchAdminService {
     }
 
     public Match findById(Long matchId) {
-        return matchRepository.findById(matchId)
+        return matchRepository.findByIdWithTeams(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("Match not found: " + matchId));
     }
 
