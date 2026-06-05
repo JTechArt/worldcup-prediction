@@ -85,10 +85,11 @@ public class EmailService {
 
     public void sendRejectionEmail(User user) {
         String subject = "World Cup 2026 Predictions — Registration update";
-        String body = renderOrFallback("rejection.ftlh", Map.of(
-                "title", "Registration Update",
-                "firstName", user.getFirstName()
-        ), subject);
+        Map<String, Object> model = new java.util.HashMap<>();
+        model.put("title", "Registration Update");
+        model.put("firstName", user.getFirstName());
+        model.put("appUrl", appUrl);
+        String body = renderOrFallback("rejection.ftlh", model, subject);
         send(user.getEmail(), subject, body);
     }
 
