@@ -44,6 +44,7 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: prod
     steps:
       - uses: actions/checkout@v4
 
@@ -68,6 +69,7 @@ jobs:
   deploy:
     needs: build-push
     runs-on: ubuntu-latest
+    environment: prod
     steps:
       - uses: actions/checkout@v4
 
@@ -90,6 +92,8 @@ jobs:
           LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
           LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
           FOOTBALL_API_KEY: ${{ secrets.FOOTBALL_API_KEY }}
+          MAIL_ENABLED: ${{ secrets.MAIL_ENABLED }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
           SPRING_MAIL_HOST: ${{ secrets.SPRING_MAIL_HOST }}
           SPRING_MAIL_PORT: ${{ secrets.SPRING_MAIL_PORT }}
           SPRING_MAIL_USERNAME: ${{ secrets.SPRING_MAIL_USERNAME }}
@@ -99,7 +103,7 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: root
           key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
-          envs: DO_REGISTRY_NAME,DIGITALOCEAN_ACCESS_TOKEN,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,LINKEDIN_CLIENT_ID,LINKEDIN_CLIENT_SECRET,FOOTBALL_API_KEY,SPRING_MAIL_HOST,SPRING_MAIL_PORT,SPRING_MAIL_USERNAME,SPRING_MAIL_PASSWORD,ADMIN_PASSWORD
+          envs: DO_REGISTRY_NAME,DIGITALOCEAN_ACCESS_TOKEN,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,LINKEDIN_CLIENT_ID,LINKEDIN_CLIENT_SECRET,FOOTBALL_API_KEY,MAIL_ENABLED,MAIL_FROM,SPRING_MAIL_HOST,SPRING_MAIL_PORT,SPRING_MAIL_USERNAME,SPRING_MAIL_PASSWORD,ADMIN_PASSWORD
           script: |
             set -e
             cd /opt/worldcup
@@ -115,6 +119,8 @@ jobs:
             LINKEDIN_CLIENT_ID=$LINKEDIN_CLIENT_ID
             LINKEDIN_CLIENT_SECRET=$LINKEDIN_CLIENT_SECRET
             FOOTBALL_API_KEY=$FOOTBALL_API_KEY
+            MAIL_ENABLED=$MAIL_ENABLED
+            MAIL_FROM=$MAIL_FROM
             SPRING_MAIL_HOST=$SPRING_MAIL_HOST
             SPRING_MAIL_PORT=$SPRING_MAIL_PORT
             SPRING_MAIL_USERNAME=$SPRING_MAIL_USERNAME
