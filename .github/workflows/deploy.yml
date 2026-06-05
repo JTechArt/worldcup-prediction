@@ -133,5 +133,9 @@ jobs:
             EOF
             chmod 600 .env
 
-            docker compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.yml up -d || {
+              echo "=== APP LOGS ==="
+              docker logs worldcup-app --tail 100
+              exit 1
+            }
             docker system prune -f --filter "until=24h"
