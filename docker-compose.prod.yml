@@ -1,0 +1,56 @@
+# Production: app + Caddy (auto-TLS via Let's Encrypt).
+# Requires Cloudflare set to "DNS only" (gray cloud) so ACME HTTP challenge works.
+# Managed by CI/CD — run manually with: docker compose -f docker-compose.prod.yml up -d
+version: '3.9'
+
+services:
+  app:
+    image: registry.digitalocean.com/${DO_REGISTRY_NAME}/worldcup-app:latest
+    container_name: worldcup-app
+    volumes:
+      - worldcup-data:/data
+    environment:
+      APP_PROFILE: sqlite
+      SQLITE_PATH: /data/worldcup.db
+      APP_BASE_URL: https://fifaworldcup2026prediction.win
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID}
+      LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET}
+      FOOTBALL_API_KEY: ${FOOTBALL_API_KEY}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8888/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: worldcup-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  worldcup-data:
+    driver: local
+  caddy-data:
+    driver: local
+  caddy-config:
+    driver: local

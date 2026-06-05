@@ -38,3 +38,8 @@ logs/
 # Docker volumes
 postgres-data/
 :memory:*
+
+# Tool / editor config (non-project)
+.cursor/
+.factory/
+.superpowers/

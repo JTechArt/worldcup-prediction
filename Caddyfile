@@ -1,0 +1,8 @@
+# Redirect www → apex
+www.fifaworldcup2026prediction.win {
+	redir https://fifaworldcup2026prediction.win{uri} permanent
+}
+
+fifaworldcup2026prediction.win {
+	reverse_proxy app:8888
+}

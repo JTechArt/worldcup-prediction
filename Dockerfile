@@ -38,10 +38,10 @@ COPY --from=builder /app/target/world-cup-prediction-0.0.1-SNAPSHOT.jar app.jar
 ENV APP_PROFILE=sqlite
 ENV SQLITE_PATH=/data/worldcup.db
 
-EXPOSE 8080
+EXPOSE 8888
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD wget -qO- http://localhost:8080/actuator/health || exit 1
+    CMD wget -qO- http://localhost:8888/actuator/health || exit 1
 
 ENTRYPOINT ["java", \
             "-XX:+UseContainerSupport", \

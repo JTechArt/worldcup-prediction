@@ -1,0 +1,127 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# One-time Droplet setup (run once via SSH before first deploy):
+#
+#   apt-get update && apt-get install -y docker.io docker-compose-plugin
+#   mkdir -p /opt/worldcup
+#
+# GitHub Secrets required:
+#   DIGITALOCEAN_ACCESS_TOKEN  — DO Personal Access Token (registry + API)
+#   DO_REGISTRY_NAME           — registry name in DO Container Registry
+#   DO_HOST                    — Droplet public IP
+#   DO_SSH_PRIVATE_KEY         — private key matching an authorized key on the Droplet
+#   GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
+#   LINKEDIN_CLIENT_ID / LINKEDIN_CLIENT_SECRET
+#   FOOTBALL_API_KEY
+#   SPRING_MAIL_HOST / SPRING_MAIL_PORT / SPRING_MAIL_USERNAME / SPRING_MAIL_PASSWORD
+#   ADMIN_PASSWORD             — replaces the default "changeme123" super-admin password
+# ─────────────────────────────────────────────────────────────────────────────
+name: CI / CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── 1. Test ──────────────────────────────────────────────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run tests
+        run: ./mvnw verify -q
+
+  # ── 2. Build & push image ────────────────────────────────────────────────────
+  build-push:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DO Container Registry
+        run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login registry.digitalocean.com -u token --password-stdin
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            registry.digitalocean.com/${{ secrets.DO_REGISTRY_NAME }}/worldcup-app:latest
+            registry.digitalocean.com/${{ secrets.DO_REGISTRY_NAME }}/worldcup-app:${{ github.sha }}
+
+  # ── 3. Deploy to Droplet ─────────────────────────────────────────────────────
+  deploy:
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy compose files to Droplet
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: root
+          key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
+          source: "docker-compose.prod.yml,Caddyfile"
+          target: /opt/worldcup
+
+      - name: Pull image and restart
+        uses: appleboy/ssh-action@v1
+        env:
+          DO_REGISTRY_NAME: ${{ secrets.DO_REGISTRY_NAME }}
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+          LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+          FOOTBALL_API_KEY: ${{ secrets.FOOTBALL_API_KEY }}
+          SPRING_MAIL_HOST: ${{ secrets.SPRING_MAIL_HOST }}
+          SPRING_MAIL_PORT: ${{ secrets.SPRING_MAIL_PORT }}
+          SPRING_MAIL_USERNAME: ${{ secrets.SPRING_MAIL_USERNAME }}
+          SPRING_MAIL_PASSWORD: ${{ secrets.SPRING_MAIL_PASSWORD }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: root
+          key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
+          envs: DO_REGISTRY_NAME,DIGITALOCEAN_ACCESS_TOKEN,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,LINKEDIN_CLIENT_ID,LINKEDIN_CLIENT_SECRET,FOOTBALL_API_KEY,SPRING_MAIL_HOST,SPRING_MAIL_PORT,SPRING_MAIL_USERNAME,SPRING_MAIL_PASSWORD,ADMIN_PASSWORD
+          script: |
+            set -e
+            cd /opt/worldcup
+
+            echo "$DIGITALOCEAN_ACCESS_TOKEN" | docker login registry.digitalocean.com -u token --password-stdin
+            docker pull registry.digitalocean.com/$DO_REGISTRY_NAME/worldcup-app:latest
+
+            # Write .env (root-only readable)
+            cat > .env << EOF
+            DO_REGISTRY_NAME=$DO_REGISTRY_NAME
+            GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+            GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+            LINKEDIN_CLIENT_ID=$LINKEDIN_CLIENT_ID
+            LINKEDIN_CLIENT_SECRET=$LINKEDIN_CLIENT_SECRET
+            FOOTBALL_API_KEY=$FOOTBALL_API_KEY
+            SPRING_MAIL_HOST=$SPRING_MAIL_HOST
+            SPRING_MAIL_PORT=$SPRING_MAIL_PORT
+            SPRING_MAIL_USERNAME=$SPRING_MAIL_USERNAME
+            SPRING_MAIL_PASSWORD=$SPRING_MAIL_PASSWORD
+            ADMIN_PASSWORD=$ADMIN_PASSWORD
+            EOF
+            chmod 600 .env
+
+            docker compose -f docker-compose.prod.yml up -d
+            docker system prune -f --filter "until=24h"
