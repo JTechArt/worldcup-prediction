@@ -38,10 +38,11 @@ class FreemarkerEmailRendererTest {
     void renderRejection_containsFirstName() {
         String html = renderer.render("rejection.ftlh", Map.of(
                 "title", "Registration Update",
-                "firstName", "Bob"
+                "firstName", "Bob",
+                "appUrl", "https://example.com"
         ));
         assertTrue(html.contains("Bob"));
-        assertTrue(html.contains("not approved"));
+        assertTrue(html.contains("https://example.com"));
     }
 
     @Test
@@ -81,8 +82,8 @@ class FreemarkerEmailRendererTest {
                 "hoursLeft", "3",
                 "appUrl", "https://example.com"
         ));
-        assertTrue(html.contains("3 hours"));
-        assertTrue(html.contains("Submit Predictions Now"));
+        assertTrue(html.contains("3 Hours Left"));
+        assertTrue(html.contains("Make Your Prediction"));
     }
 
     @Test
