@@ -37,11 +37,12 @@
     /* NAV */
     .nav {
       position: sticky; top: 0; z-index: 300; width: 100%; height: 60px;
-      padding: 0 36px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
       background: rgba(240,253,245,.93); backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border); box-shadow: 0 2px 14px rgba(0,160,70,.07);
       animation: navIn .5s ease both;
     }
+    @media (min-width:640px) { .nav { padding: 0 36px; } }
     @keyframes navIn { from { opacity:0; transform:translateY(-60px); } to { opacity:1; transform:translateY(0); } }
 
     .logo { display: flex; align-items: center; gap: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 3px; color: var(--green-d); text-decoration: none; }
@@ -49,12 +50,20 @@
     .logo-ball { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--green-m), var(--green-d)); display: flex; align-items: center; justify-content: center; font-size: 18px; animation: spin 12s linear infinite; box-shadow: 0 2px 12px rgba(0,200,83,.4); }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .nav-links { display: flex; gap: 2px; }
+    .nav-links { display: none; gap: 2px; }
+    @media (min-width:768px) { .nav-links { display: flex; } }
     .nav-a { padding: 7px 13px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none; transition: all .2s; }
     .nav-a:hover { background: rgba(0,200,83,.1); color: var(--green-d); }
     .nav-a.on { background: rgba(0,200,83,.13); color: var(--green-d); border: 1px solid var(--border); }
 
     .nav-r { display: flex; align-items: center; gap: 10px; }
+
+    .hamburger-btn { display: none; width: 40px; height: 40px; border: none; background: rgba(0,160,70,.1); border-radius: 8px; cursor: pointer; align-items: center; justify-content: center; font-size: 20px; color: var(--green-d); }
+    @media (max-width:767px) { .hamburger-btn { display: flex; } }
+    .mobile-nav { display: none; position: absolute; left: 0; right: 0; top: 60px; background: rgba(240,253,245,.97); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 8px 16px; z-index: 299; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .mobile-nav.open { display: block; }
+    .mobile-nav a { display: block; padding: 10px 14px; font-size: 14px; font-weight: 600; color: var(--text); text-decoration: none; border-radius: 8px; transition: background .15s; }
+    .mobile-nav a:hover { background: rgba(0,200,83,.1); }
     .predict-btn { background: linear-gradient(135deg,var(--orange),#ff6d47); color: white; border: none; border-radius: 10px; padding: 9px 18px; font-size: 13px; font-weight: 800; cursor: pointer; text-decoration: none; animation: oB 2.5s ease-in-out infinite; }
     @keyframes oB { 0%,100%{box-shadow:0 3px 12px rgba(255,87,34,.35)} 50%{box-shadow:0 3px 24px rgba(255,87,34,.65)} }
 
@@ -67,13 +76,15 @@
     .av-name { font-size: 13px; font-weight: 700; color: var(--green-d); }
 
     /* PAGE */
-    .page { position: relative; z-index: 1; width: 100%; padding: 28px 36px 80px; }
+    .page { position: relative; z-index: 1; width: 100%; padding: 20px 12px 80px; }
+    @media (min-width:640px) { .page { padding: 28px 36px 80px; } }
 
     /* HERO */
     .hero { margin-bottom: 22px; animation: fUp .6s ease .2s both; }
     @keyframes fUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
     .hero-eye   { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--green-m); margin-bottom: 4px; }
-    .hero-title { font-family: 'Bebas Neue', sans-serif; font-size: 52px; line-height: 1; letter-spacing: 4px; color: var(--text); }
+    .hero-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; line-height: 1; letter-spacing: 4px; color: var(--text); }
+    @media (min-width:640px) { .hero-title { font-size: 52px; } }
     .hero-title em { color: var(--green); font-style: normal; }
     .hero-sub   { color: var(--muted); font-size: 14px; margin-top: 4px; }
     .hero-sub b { color: var(--text); }
@@ -215,6 +226,30 @@
     .rank-3 .tv { color: var(--green); }
     .rank-other .tv { color: var(--text); }
 
+    /* MOBILE: compact three-panel layout */
+    @media (max-width:639px) {
+      .lb-left { width: 150px; min-width: 150px; }
+      .lb-right { width: 60px; min-width: 60px; }
+      .pc { padding: 0 6px; gap: 5px; }
+      .rk { width: 22px; height: 22px; font-size: 10px; border-radius: 5px; }
+      .av-wrap { width: 30px; height: 30px; }
+      .av { font-size: 10px; }
+      .av-ring { inset: -1px; }
+      .rank-1 .av,.rank-2 .av,.rank-3 .av { inset: 1px; }
+      .flag-badge { width: 13px; height: 13px; }
+      .pn { font-size: 11px; max-width: 60px; }
+      .pm { font-size: 9px; }
+      .rank-delta { width: 10px; font-size: 8px; }
+      .total-cell { padding: 0 4px; }
+      .tv { font-size: 13px; }
+      .tl { font-size: 7px; }
+      .kpi-row { gap: 6px; }
+      .kpi { padding: 8px 10px; }
+      .kpi-v { font-size: 18px; }
+      .controls { flex-direction: column; align-items: flex-start; }
+      .hero-sub { font-size: 13px; }
+    }
+
     /* DELTA */
     .rank-delta { font-size: 10px; font-weight: 800; width: 14px; flex-shrink: 0; }
     .rank-delta.up { color: var(--green); animation: arrowUp 1.3s ease infinite; }
@@ -241,7 +276,7 @@
 </div>
 
 <!-- Navbar -->
-<nav class="nav">
+<nav class="nav" x-data="{ mobileNav: false }">
   <a th:href="@{/}" class="logo">
     <div class="logo-ball">⚽</div>
     WC PREDICT&nbsp;<em>2026</em>
@@ -253,9 +288,11 @@
     <a th:href="@{/groups}"      class="nav-a">🌍 Groups</a>
     <a th:href="@{/bracket}"     class="nav-a">🎯 Bracket</a>
     <a th:href="@{/predictions}" class="nav-a" sec:authorize="isAuthenticated()">⚡ Predict</a>
+    <a th:href="@{/rules}"       class="nav-a">📖 Rules</a>
   </div>
 
   <div class="nav-r">
+    <button class="hamburger-btn" @click="mobileNav = !mobileNav">☰</button>
     <a th:href="@{/predictions}" class="predict-btn" sec:authorize="isAuthenticated()">⚡ PREDICT</a>
 
     <div class="relative" x-data="{ open: false }" sec:authorize="isAuthenticated()">
@@ -278,6 +315,16 @@
     </div>
 
     <a th:href="@{/}" class="sign-in-btn" sec:authorize="isAnonymous()">Sign In</a>
+  </div>
+
+  <div class="mobile-nav" :class="{ open: mobileNav }" @click.outside="mobileNav = false">
+    <a th:href="@{/leaderboard}">🏆 Leaderboard</a>
+    <a th:href="@{/fixtures}">📅 Fixtures</a>
+    <a th:href="@{/groups}">🌍 Groups</a>
+    <a th:href="@{/bracket}">🎯 Bracket</a>
+    <a th:href="@{/predictions}" sec:authorize="isAuthenticated()">⚡ Predict</a>
+    <a th:href="@{/rules}">📖 Rules</a>
+    <a th:href="@{/home}" sec:authorize="isAuthenticated()">🏠 Home</a>
   </div>
 </nav>
 
@@ -439,7 +486,7 @@
 
 </div><!-- /.page -->
 
-<footer style="position:relative;z-index:1;background:rgba(0,80,30,.07);border-top:1px solid var(--border);padding:20px 36px;text-align:center;">
+<footer style="position:relative;z-index:1;background:rgba(0,80,30,.07);border-top:1px solid var(--border);padding:20px 16px;text-align:center;">
   <div style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap;">
     <a th:href="@{/leaderboard}" style="color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;">Leaderboard</a>
     <a th:href="@{/fixtures}"    style="color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;">Fixtures</a>

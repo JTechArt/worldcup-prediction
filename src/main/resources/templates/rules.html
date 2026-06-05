@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::main-content})}">
+<head><title>Rules</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Page header -->
+    <div class="mb-10 animate-fade-up">
+      <h1 class="font-display text-4xl sm:text-5xl text-green-dark tracking-wider mb-2">RULES &amp; SCORING</h1>
+      <p class="text-gray-500 text-sm font-medium">How the prediction game works</p>
+    </div>
+
+    <div class="space-y-8">
+
+      <!-- How it Works -->
+      <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 animate-fade-up stagger-1">
+        <h2 class="font-display text-2xl text-green-dark tracking-wider mb-4">HOW IT WORKS</h2>
+        <div class="space-y-3 text-sm text-gray-700 leading-relaxed">
+          <p>Predict the final score of every FIFA World Cup 2026 match. The closer your prediction, the more points you earn.</p>
+          <ol class="list-decimal list-inside space-y-2 pl-1">
+            <li>An admin opens a <strong>prediction window</strong> for each round of matches.</li>
+            <li>Submit your predicted score for each match before the window closes (typically before kickoff).</li>
+            <li>Once the match is played, points are awarded automatically based on accuracy.</li>
+            <li>Climb the leaderboard and compete for bragging rights!</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- Scoring System -->
+      <section class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-fade-up stagger-2">
+        <div class="p-6 sm:p-8">
+          <h2 class="font-display text-2xl text-green-dark tracking-wider mb-4">SCORING SYSTEM</h2>
+          <p class="text-sm text-gray-500 mb-6">Points are awarded per match based on how close your prediction is to the actual result.</p>
+        </div>
+
+        <div class="border-t border-gray-100">
+          <!-- Exact Score -->
+          <div class="flex items-center gap-4 px-6 sm:px-8 py-5 border-b border-gray-50 hover:bg-gray-50 transition-colors">
+            <div class="w-14 h-14 rounded-2xl bg-green/10 flex items-center justify-center flex-shrink-0">
+              <span class="font-display text-2xl text-green-dark">+3</span>
+            </div>
+            <div class="flex-1">
+              <div class="font-bold text-gray-800">Exact Score</div>
+              <div class="text-xs text-gray-400 mt-0.5">You predicted the exact final score</div>
+            </div>
+            <div class="hidden sm:block text-xs text-gray-400 bg-green/5 px-3 py-1.5 rounded-lg font-medium">
+              Actual 2-1 &rarr; Predicted 2-1
+            </div>
+          </div>
+
+          <!-- Correct Draw -->
+          <div class="flex items-center gap-4 px-6 sm:px-8 py-5 border-b border-gray-50 hover:bg-gray-50 transition-colors">
+            <div class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <span class="font-display text-2xl text-blue-600">+2</span>
+            </div>
+            <div class="flex-1">
+              <div class="font-bold text-gray-800">Correct Draw</div>
+              <div class="text-xs text-gray-400 mt-0.5">Both the actual result and your prediction are draws (different score)</div>
+            </div>
+            <div class="hidden sm:block text-xs text-gray-400 bg-blue-50 px-3 py-1.5 rounded-lg font-medium">
+              Actual 1-1 &rarr; Predicted 0-0
+            </div>
+          </div>
+
+          <!-- Correct Winner -->
+          <div class="flex items-center gap-4 px-6 sm:px-8 py-5 border-b border-gray-50 hover:bg-gray-50 transition-colors">
+            <div class="w-14 h-14 rounded-2xl bg-yellow-50 flex items-center justify-center flex-shrink-0">
+              <span class="font-display text-2xl text-yellow-600">+1</span>
+            </div>
+            <div class="flex-1">
+              <div class="font-bold text-gray-800">Correct Winner</div>
+              <div class="text-xs text-gray-400 mt-0.5">You predicted the right team to win, but with a different score</div>
+            </div>
+            <div class="hidden sm:block text-xs text-gray-400 bg-yellow-50 px-3 py-1.5 rounded-lg font-medium">
+              Actual 3-1 &rarr; Predicted 2-0
+            </div>
+          </div>
+
+          <!-- Wrong -->
+          <div class="flex items-center gap-4 px-6 sm:px-8 py-5 border-b border-gray-50 hover:bg-gray-50 transition-colors">
+            <div class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center flex-shrink-0">
+              <span class="font-display text-2xl text-red-400">0</span>
+            </div>
+            <div class="flex-1">
+              <div class="font-bold text-gray-800">Wrong Prediction</div>
+              <div class="text-xs text-gray-400 mt-0.5">The outcome you predicted was incorrect</div>
+            </div>
+            <div class="hidden sm:block text-xs text-gray-400 bg-red-50 px-3 py-1.5 rounded-lg font-medium">
+              Actual 2-1 &rarr; Predicted 0-2
+            </div>
+          </div>
+
+          <!-- Tournament Winner -->
+          <div class="flex items-center gap-4 px-6 sm:px-8 py-5 hover:bg-gray-50 transition-colors">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+                 style="background:linear-gradient(135deg,rgba(255,214,0,0.15),rgba(255,160,0,0.1))">
+              <span class="font-display text-2xl" style="color:#b8860b">+10</span>
+            </div>
+            <div class="flex-1">
+              <div class="font-bold text-gray-800">Tournament Winner</div>
+              <div class="text-xs text-gray-400 mt-0.5">Bonus points if you correctly predict the overall World Cup champion</div>
+            </div>
+            <div class="hidden sm:block text-xs text-gray-400 px-3 py-1.5 rounded-lg font-medium"
+                 style="background:rgba(255,214,0,0.1)">
+              One-time bonus
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Prediction Windows -->
+      <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 animate-fade-up stagger-3">
+        <h2 class="font-display text-2xl text-green-dark tracking-wider mb-4">PREDICTION WINDOWS</h2>
+        <div class="space-y-3 text-sm text-gray-700 leading-relaxed">
+          <p>Predictions are submitted <strong>per round</strong> (e.g. Matchday 1, Matchday 2, etc.). An admin opens each round's prediction window before it begins.</p>
+          <ul class="list-disc list-inside space-y-2 pl-1">
+            <li>You must predict <strong>all matches in a round</strong> before submitting.</li>
+            <li>The window closes automatically before kickoff -- predictions lock once the window is closed.</li>
+            <li>You can update your predictions as many times as you like while the window is open.</li>
+            <li>Predictions are hidden from other users until the window closes.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Knockout Rounds -->
+      <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 animate-fade-up stagger-4">
+        <h2 class="font-display text-2xl text-green-dark tracking-wider mb-4">KNOCKOUT ROUNDS</h2>
+        <div class="space-y-3 text-sm text-gray-700 leading-relaxed">
+          <p>For knockout matches (Round of 32 onwards), you predict the score after <strong>90 minutes of regular time</strong>.</p>
+          <ul class="list-disc list-inside space-y-2 pl-1">
+            <li>Extra time and penalty shootout results are <strong>not</strong> factored into scoring.</li>
+            <li>If the match ends 1-1 after 90 minutes and goes to extra time, a prediction of 1-1 is treated as an exact score.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Communities -->
+      <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 animate-fade-up stagger-5">
+        <h2 class="font-display text-2xl text-green-dark tracking-wider mb-4">COMMUNITIES</h2>
+        <div class="space-y-3 text-sm text-gray-700 leading-relaxed">
+          <p>The game is organized into <strong>communities</strong> -- private groups where you compete with friends, colleagues, or family.</p>
+          <ul class="list-disc list-inside space-y-2 pl-1">
+            <li>You can be a member of multiple communities at the same time.</li>
+            <li>Each community has its own leaderboard.</li>
+            <li>An admin invites you to join a community. You cannot self-register.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Tiebreakers -->
+      <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 animate-fade-up stagger-6">
+        <h2 class="font-display text-2xl text-green-dark tracking-wider mb-4">TIEBREAKERS</h2>
+        <div class="space-y-3 text-sm text-gray-700 leading-relaxed">
+          <p>If two or more players have the same total points, the following tiebreakers apply in order:</p>
+          <ol class="list-decimal list-inside space-y-2 pl-1">
+            <li><strong>Most exact scores</strong> -- the player with more exact score predictions ranks higher.</li>
+            <li><strong>Most correct winners</strong> -- among remaining ties, the player with more correct winner predictions ranks higher.</li>
+          </ol>
+        </div>
+      </section>
+
+    </div>
+
+  </div>
+
+</th:block>
+</body>
+</html>

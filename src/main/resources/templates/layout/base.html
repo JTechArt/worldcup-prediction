@@ -91,7 +91,8 @@
 <body class="min-h-screen bg-bg flex flex-col">
 
   <!-- NAVBAR -->
-  <nav class="navbar fixed top-0 left-0 right-0 z-50 bg-green-dark/95 border-b border-green/20 shadow-lg">
+  <nav class="navbar fixed top-0 left-0 right-0 z-50 bg-green-dark/95 border-b border-green/20 shadow-lg"
+       x-data="{ mobileMenu: false }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
 
@@ -109,6 +110,7 @@
           <a th:href="@{/fixtures}"    class="px-4 py-2 rounded-lg text-sm font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200">📅 Fixtures</a>
           <a th:href="@{/groups}"      class="px-4 py-2 rounded-lg text-sm font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200">🗂 Groups</a>
           <a th:href="@{/bracket}"     class="px-4 py-2 rounded-lg text-sm font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200">🎯 Bracket</a>
+          <a th:href="@{/rules}"       class="px-4 py-2 rounded-lg text-sm font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200">📖 Rules</a>
         </div>
 
         <div class="flex items-center gap-3">
@@ -152,8 +154,31 @@
               Sign in
             </a>
           </div>
+
+          <!-- Mobile hamburger -->
+          <button @click="mobileMenu = !mobileMenu" class="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-white hover:bg-white/10 transition-colors">
+            <svg x-show="!mobileMenu" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <svg x-show="mobileMenu" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
         </div>
 
+      </div>
+
+      <!-- Mobile menu dropdown -->
+      <div x-show="mobileMenu" x-transition:enter="transition ease-out duration-200"
+           x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+           x-transition:leave="transition ease-in duration-150"
+           x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2"
+           class="md:hidden border-t border-white/10 py-3 space-y-1" style="display:none">
+        <a th:href="@{/leaderboard}" class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors">🏆 Leaderboard</a>
+        <a th:href="@{/fixtures}"    class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors">📅 Fixtures</a>
+        <a th:href="@{/groups}"      class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors">🗂 Groups</a>
+        <a th:href="@{/bracket}"     class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors">🎯 Bracket</a>
+        <a th:href="@{/rules}"       class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors">📖 Rules</a>
+        <div sec:authorize="isAuthenticated()">
+          <a th:href="@{/home}"        class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors sm:hidden">🏠 Home</a>
+          <a th:href="@{/predictions}" class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors sm:hidden">⚡ Predict</a>
+        </div>
       </div>
     </div>
   </nav>
@@ -176,6 +201,7 @@
           <a th:href="@{/fixtures}"    class="hover:text-white transition-colors">Fixtures</a>
           <a th:href="@{/groups}"      class="hover:text-white transition-colors">Groups</a>
           <a th:href="@{/bracket}"     class="hover:text-white transition-colors">Bracket</a>
+          <a th:href="@{/rules}"       class="hover:text-white transition-colors">Rules</a>
         </div>
         <div class="text-xs text-white/40">FIFA World Cup 2026 · Internal Prediction Game</div>
       </div>

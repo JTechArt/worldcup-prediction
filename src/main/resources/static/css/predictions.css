@@ -212,14 +212,48 @@
 
 /* ─── Responsive ─────────────────────────────────────── */
 @media (max-width:640px) {
-  .mr-stepper { gap:4px; }
+  .match-row { flex-wrap:wrap; padding:12px 14px; gap:10px; }
+  .mr-team { flex:1 1 40%; min-width:0; }
+  .mr-name { font-size:12px; }
+  .mr-flag { width:26px; height:26px; }
+  .mr-venue { font-size:9px; }
+  .mr-stepper { width:100%; justify-content:center; gap:6px; order:10; }
   .stepper-team-name { display:none; }
+  .score-widget { border-radius:10px; }
+  .score-btn { width:32px; height:42px; font-size:16px; }
+  .score-val { width:42px; height:42px; font-size:26px; }
+  .score-colon { font-size:22px; }
+  .mr-status { position:absolute; top:12px; right:14px; }
+  .match-row { position:relative; }
+
   .card-teams { padding:20px 16px 16px; gap:8px; }
   .card-flag  { width:64px; height:64px; }
   .card-team-name { font-size:18px; }
-  .round-tab  { padding:6px 12px; font-size:11px; }
-  .winner-banner { flex-direction:column; gap:12px; }
+  .card-score-row { gap:10px; }
+  .card-score-btn { width:38px; height:50px; }
+  .card-score-val { width:52px; height:50px; font-size:34px; }
+  .card-score-colon { font-size:30px; }
+  .card-nav { padding:12px 16px 20px; }
+
+  .round-tabs { gap:4px; }
+  .round-tab  { padding:6px 10px; font-size:10px; }
+
+  .winner-banner { flex-direction:column; gap:12px; padding:16px 18px; }
+  .winner-banner-icon { font-size:28px; }
+  .winner-banner-title { font-size:16px; }
   .winner-banner-form { flex-direction:column; width:100%; }
   .winner-select { width:100%; }
   .winner-btn { width:100%; }
+
+  .past-match-row { flex-wrap:wrap; padding:10px 14px; gap:6px; }
+  .pm-teams { flex:1 1 100%; }
+  .pm-scores { flex:1; }
+  .pm-name { font-size:11px; }
+  .pm-actual { font-size:16px; }
+  .pm-predicted { font-size:16px; }
+
+  .progress-banner { padding:12px 14px; }
+  .submit-btn { height:48px; font-size:14px; }
+
+  .date-header { font-size:10px; }
 }

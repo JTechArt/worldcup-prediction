@@ -34,57 +34,57 @@
              class="bg-white rounded-2xl border border-gray-100 shadow-sm
                     hover:shadow-md hover:border-green/30 transition-all duration-200 overflow-hidden">
 
-          <div class="flex items-center px-4 py-3 gap-3">
+          <div class="flex items-center px-3 sm:px-4 py-3 gap-2 sm:gap-3">
 
             <!-- Time + venue -->
-            <div class="w-28 flex-shrink-0 text-right pr-3 border-r border-gray-100">
+            <div class="w-16 sm:w-28 flex-shrink-0 text-right pr-2 sm:pr-3 border-r border-gray-100">
               <div class="text-xs font-bold text-gray-700"
-                   th:text="${#temporals.format(fixture.kickoff, 'HH:mm')} + ' UTC'">20:00 UTC</div>
-              <div class="text-xs text-gray-400 mt-0.5 leading-tight" th:text="${fixture.city}">Dallas</div>
+                   th:text="${#temporals.format(fixture.kickoff, 'HH:mm')}">20:00</div>
+              <div class="text-xs text-gray-400 mt-0.5 leading-tight hidden sm:block" th:text="${fixture.city}">Dallas</div>
             </div>
 
             <!-- Home team -->
-            <div class="flex items-center gap-2 flex-1 justify-end">
-              <span class="text-sm font-semibold text-gray-800 text-right" th:text="${fixture.homeTeamName}">Brazil</span>
+            <div class="flex items-center gap-1.5 sm:gap-2 flex-1 justify-end min-w-0">
+              <span class="text-xs sm:text-sm font-semibold text-gray-800 text-right truncate" th:text="${fixture.homeTeamName}">Brazil</span>
               <img th:if="${fixture.homeTeamCode != null}"
                    th:src="@{'/images/flags/' + ${fixture.homeTeamCode} + '.svg'}"
                    th:alt="${fixture.homeTeamName}"
-                   class="flag-circle w-7 h-7" />
+                   class="flag-circle w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
               <span th:unless="${fixture.homeTeamCode != null}"
-                    class="w-7 h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-400">?</span>
+                    class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-400 flex-shrink-0">?</span>
             </div>
 
             <!-- Score or VS -->
-            <div class="w-20 flex-shrink-0 text-center">
-              <div th:if="${fixture.completed}" class="font-display text-xl tracking-widest text-green-dark">
+            <div class="w-14 sm:w-20 flex-shrink-0 text-center">
+              <div th:if="${fixture.completed}" class="font-display text-lg sm:text-xl tracking-widest text-green-dark">
                 <span th:text="${fixture.homeScore}">2</span>
                 <span class="text-gray-300 mx-0.5">–</span>
                 <span th:text="${fixture.awayScore}">1</span>
               </div>
               <div th:unless="${fixture.completed}">
-                <span class="font-display text-base tracking-widest text-gray-300">VS</span>
+                <span class="font-display text-sm sm:text-base tracking-widest text-gray-300">VS</span>
               </div>
             </div>
 
             <!-- Away team -->
-            <div class="flex items-center gap-2 flex-1 justify-start">
+            <div class="flex items-center gap-1.5 sm:gap-2 flex-1 justify-start min-w-0">
               <img th:if="${fixture.awayTeamCode != null}"
                    th:src="@{'/images/flags/' + ${fixture.awayTeamCode} + '.svg'}"
                    th:alt="${fixture.awayTeamName}"
-                   class="flag-circle w-7 h-7" />
+                   class="flag-circle w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
               <span th:unless="${fixture.awayTeamCode != null}"
-                    class="w-7 h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-400">?</span>
-              <span class="text-sm font-semibold text-gray-800" th:text="${fixture.awayTeamName}">Germany</span>
+                    class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-400 flex-shrink-0">?</span>
+              <span class="text-xs sm:text-sm font-semibold text-gray-800 truncate" th:text="${fixture.awayTeamName}">Germany</span>
             </div>
 
             <!-- Status pill -->
-            <div class="w-20 flex-shrink-0 flex justify-end">
+            <div class="w-12 sm:w-20 flex-shrink-0 flex justify-end">
               <span th:if="${fixture.completed}"
-                    class="text-xs font-bold px-2.5 py-1 rounded-full bg-green/10 text-green-dark">FT</span>
+                    class="text-xs font-bold px-2 sm:px-2.5 py-1 rounded-full bg-green/10 text-green-dark">FT</span>
               <span th:if="${!fixture.completed and fixture.today}"
-                    class="text-xs font-bold px-2.5 py-1 rounded-full bg-orange/10 text-orange animate-pulse">TODAY</span>
+                    class="text-xs font-bold px-2 sm:px-2.5 py-1 rounded-full bg-orange/10 text-orange animate-pulse">LIVE</span>
               <span th:if="${!fixture.completed and !fixture.today}"
-                    class="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-400">TBD</span>
+                    class="text-xs font-medium px-2 sm:px-2.5 py-1 rounded-full bg-gray-100 text-gray-400">TBD</span>
             </div>
 
           </div>

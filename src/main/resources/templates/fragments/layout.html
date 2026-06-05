@@ -73,36 +73,60 @@
     </style>
 </head>
 
-<nav th:fragment="navbar" class="bg-wc-dark-green text-white px-6 py-3 flex items-center justify-between shadow-lg animate-slide-down">
-    <a href="/" class="font-display text-2xl tracking-wider text-wc-gold hover:text-yellow-300 transition-colors">
-        ⚽ WC2026
-    </a>
-    <div class="flex items-center gap-6 text-sm font-medium">
-        <a href="/leaderboard" class="hover:text-wc-green transition-colors">Leaderboard</a>
-        <a href="/fixtures"    class="hover:text-wc-green transition-colors">Fixtures</a>
-        <a href="/groups"      class="hover:text-wc-green transition-colors">Groups</a>
-        <a href="/bracket"     class="hover:text-wc-green transition-colors">Bracket</a>
+<nav th:fragment="navbar" class="bg-wc-dark-green text-white px-4 sm:px-6 py-3 shadow-lg animate-slide-down"
+     x-data="{ mobileMenu: false }">
+    <div class="flex items-center justify-between">
+        <a href="/" class="font-display text-2xl tracking-wider text-wc-gold hover:text-yellow-300 transition-colors">
+            ⚽ WC2026
+        </a>
+        <div class="hidden md:flex items-center gap-6 text-sm font-medium">
+            <a href="/leaderboard" class="hover:text-wc-green transition-colors">Leaderboard</a>
+            <a href="/fixtures"    class="hover:text-wc-green transition-colors">Fixtures</a>
+            <a href="/groups"      class="hover:text-wc-green transition-colors">Groups</a>
+            <a href="/bracket"     class="hover:text-wc-green transition-colors">Bracket</a>
+            <a href="/rules"       class="hover:text-wc-green transition-colors">Rules</a>
 
+            <span sec:authorize="isAuthenticated()">
+                <a href="/predictions" class="hover:text-wc-green transition-colors">My Predictions</a>
+            </span>
+            <span sec:authorize="hasRole('ADMIN')">
+                <a href="/admin" class="text-wc-gold hover:text-yellow-300 transition-colors">Admin</a>
+            </span>
+            <span sec:authorize="isAuthenticated()">
+                <form th:action="@{/logout}" method="post" class="inline">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit"
+                            class="bg-wc-orange hover:bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-semibold transition-colors">
+                        Sign Out
+                    </button>
+                </form>
+            </span>
+            <span sec:authorize="isAnonymous()">
+                <a href="/login"
+                   class="bg-wc-green hover:bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold transition-colors">
+                    Sign In
+                </a>
+            </span>
+        </div>
+        <button @click="mobileMenu = !mobileMenu" class="md:hidden text-white text-2xl focus:outline-none">☰</button>
+    </div>
+    <div x-show="mobileMenu" x-transition class="md:hidden mt-3 space-y-2 text-sm font-medium border-t border-white/20 pt-3" style="display:none">
+        <a href="/leaderboard" class="block py-2 hover:text-wc-green transition-colors">Leaderboard</a>
+        <a href="/fixtures"    class="block py-2 hover:text-wc-green transition-colors">Fixtures</a>
+        <a href="/groups"      class="block py-2 hover:text-wc-green transition-colors">Groups</a>
+        <a href="/bracket"     class="block py-2 hover:text-wc-green transition-colors">Bracket</a>
+        <a href="/rules"       class="block py-2 hover:text-wc-green transition-colors">Rules</a>
         <span sec:authorize="isAuthenticated()">
-            <a href="/predictions" class="hover:text-wc-green transition-colors">My Predictions</a>
-        </span>
-        <span sec:authorize="hasRole('ADMIN')">
-            <a href="/admin" class="text-wc-gold hover:text-yellow-300 transition-colors">Admin</a>
+            <a href="/predictions" class="block py-2 hover:text-wc-green transition-colors">My Predictions</a>
         </span>
         <span sec:authorize="isAuthenticated()">
             <form th:action="@{/logout}" method="post" class="inline">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                <button type="submit"
-                        class="bg-wc-orange hover:bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-semibold transition-colors">
-                    Sign Out
-                </button>
+                <button type="submit" class="bg-wc-orange hover:bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-semibold transition-colors">Sign Out</button>
             </form>
         </span>
         <span sec:authorize="isAnonymous()">
-            <a href="/login"
-               class="bg-wc-green hover:bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold transition-colors">
-                Sign In
-            </a>
+            <a href="/login" class="block py-2 bg-wc-green hover:bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold text-center transition-colors">Sign In</a>
         </span>
     </div>
 </nav>

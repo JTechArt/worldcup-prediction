@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .requestMatchers("/bracket/**").permitAll()
                 .requestMatchers("/teams/**").permitAll()
                 .requestMatchers("/scorers/**").permitAll()
+                .requestMatchers("/rules").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers("/pending").authenticated()
                 .requestMatchers("/admin/**").hasRole("SUPER_ADMIN")
