@@ -135,7 +135,7 @@ jobs:
 
             docker compose -f docker-compose.prod.yml up -d || {
               echo "=== APP LOGS ==="
-              docker logs worldcup-app --tail 100
+              docker logs worldcup-app 2>&1
               exit 1
             }
             docker system prune -f --filter "until=24h"
