@@ -66,7 +66,7 @@
       <div class="lg:col-span-2 animate-fade-up stagger-3">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-display text-2xl text-green-dark tracking-wider">LEADERBOARD</h2>
-          <a th:href="@{/leaderboard}" class="text-sm font-semibold text-green hover:text-green-dark transition-colors">View all →</a>
+          <a th:href="@{/communities}" class="text-sm font-semibold text-green hover:text-green-dark transition-colors">View all →</a>
         </div>
 
         <!-- Mini-leaderboard fragment from Part 4 -->
@@ -125,12 +125,12 @@
           <span class="text-gray-300 group-hover:text-gray-500 transition-colors">→</span>
         </a>
 
-        <a th:href="@{/leaderboard}"
+        <a th:href="@{/communities}"
            class="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-green/30 transition-all duration-200 no-underline group">
           <div class="w-10 h-10 rounded-xl bg-green/10 flex items-center justify-center text-xl flex-shrink-0">🏆</div>
           <div class="flex-1">
             <div class="font-bold text-gray-800 text-sm">Full Leaderboard</div>
-            <div class="text-xs text-gray-400 mt-0.5">All participants ranked</div>
+            <div class="text-xs text-gray-400 mt-0.5">Select a community to view rankings</div>
           </div>
           <span class="text-gray-300 group-hover:text-gray-500 transition-colors">→</span>
         </a>

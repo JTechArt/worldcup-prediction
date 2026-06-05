@@ -283,7 +283,6 @@
   </a>
 
   <div class="nav-links">
-    <a th:href="@{/leaderboard}" class="nav-a on">🏆 Leaderboard</a>
     <a th:href="@{/fixtures}"    class="nav-a">📅 Fixtures</a>
     <a th:href="@{/groups}"      class="nav-a">🌍 Groups</a>
     <a th:href="@{/bracket}"     class="nav-a">🎯 Bracket</a>
@@ -318,7 +317,6 @@
   </div>
 
   <div class="mobile-nav" :class="{ open: mobileNav }" @click.outside="mobileNav = false">
-    <a th:href="@{/leaderboard}">🏆 Leaderboard</a>
     <a th:href="@{/fixtures}">📅 Fixtures</a>
     <a th:href="@{/groups}">🌍 Groups</a>
     <a th:href="@{/bracket}">🎯 Bracket</a>
@@ -488,7 +486,6 @@
 
 <footer style="position:relative;z-index:1;background:rgba(0,80,30,.07);border-top:1px solid var(--border);padding:20px 16px;text-align:center;">
   <div style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap;">
-    <a th:href="@{/leaderboard}" style="color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;">Leaderboard</a>
     <a th:href="@{/fixtures}"    style="color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;">Fixtures</a>
     <a th:href="@{/groups}"      style="color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;">Groups</a>
     <a th:href="@{/bracket}"     style="color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;">Bracket</a>

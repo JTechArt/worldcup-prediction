@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
                 .requestMatchers("/", "/login", "/error").permitAll()
                 .requestMatchers("/dev/**").permitAll()
-                .requestMatchers("/leaderboard/**").permitAll()
+                // leaderboard is now community-scoped at /c/{slug}/leaderboard
                 .requestMatchers("/fixtures/**").permitAll()
                 .requestMatchers("/groups/**").permitAll()
                 .requestMatchers("/bracket/**").permitAll()

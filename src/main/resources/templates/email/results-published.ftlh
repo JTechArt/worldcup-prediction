@@ -14,7 +14,7 @@
       The leaderboard has been updated. Check where you stand!
     </p>
     <div style="text-align:center;margin:28px 0;">
-      <a href="${appUrl}/leaderboard" style="display:inline-block;background:#00c853;color:#fff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:700;padding:12px 32px;border-radius:8px;text-decoration:none;">
+      <a href="${appUrl}/communities" style="display:inline-block;background:#00c853;color:#fff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:700;padding:12px 32px;border-radius:8px;text-decoration:none;">
         View Leaderboard
       </a>
     </div>

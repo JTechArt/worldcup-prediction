@@ -52,14 +52,10 @@ class OAuth2LoginIntegrationTest {
     }
 
     @Test
-    void leaderboardRoute_isPubliclyAccessible() throws Exception {
-        // The leaderboard controller was removed (community-scoped now).
-        // The /leaderboard URL may still resolve to the static template or return 404.
+    void leaderboardRoute_requiresAuthentication() throws Exception {
+        // Leaderboard is now community-scoped; anonymous users are redirected to login.
         mockMvc.perform(get("/leaderboard"))
-                .andExpect(result -> {
-                    int status = result.getResponse().getStatus();
-                    assertThat(status).isIn(200, 404);
-                });
+                .andExpect(status().is3xxRedirection());
     }
 
     @Test

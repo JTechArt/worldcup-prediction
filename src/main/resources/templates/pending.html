@@ -55,9 +55,9 @@
             </div>
 
             <div class="stagger-4 animate-fade-up flex flex-col sm:flex-row gap-3 justify-center">
-                <a href="/leaderboard"
+                <a href="/fixtures"
                    class="inline-flex items-center justify-center gap-2 bg-wc-green hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200">
-                    View Leaderboard
+                    View Fixtures
                 </a>
                 <form th:action="@{/logout}" method="post" class="inline">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
