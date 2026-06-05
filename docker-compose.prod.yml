@@ -46,8 +46,7 @@ services:
       - caddy-config:/config
     restart: unless-stopped
     depends_on:
-      app:
-        condition: service_healthy
+      - app
 
 volumes:
   worldcup-data:

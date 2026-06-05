@@ -107,15 +107,18 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: root
           key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
+          command_timeout: 5m
           envs: DO_REGISTRY_NAME,DIGITALOCEAN_ACCESS_TOKEN,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,LINKEDIN_CLIENT_ID,LINKEDIN_CLIENT_SECRET,FOOTBALL_API_KEY,MAIL_ENABLED,MAIL_FROM,SPRING_MAIL_HOST,SPRING_MAIL_PORT,SPRING_MAIL_USERNAME,SPRING_MAIL_PASSWORD,ADMIN_PASSWORD
           script: |
             set -e
             cd /opt/worldcup
-
+            echo ">>> [1/5] Logging into DO registry..."
             echo "$DIGITALOCEAN_ACCESS_TOKEN" | docker login registry.digitalocean.com -u token --password-stdin
+
+            echo ">>> [2/5] Pulling latest image..."
             docker pull registry.digitalocean.com/$DO_REGISTRY_NAME/worldcup-app:latest
 
-            # Write .env (root-only readable)
+            echo ">>> [3/5] Writing .env..."
             cat > .env << EOF
             DO_REGISTRY_NAME=$DO_REGISTRY_NAME
             GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
@@ -133,9 +136,16 @@ jobs:
             EOF
             chmod 600 .env
 
-            docker compose -f docker-compose.prod.yml up -d || {
-              echo "=== APP LOGS ==="
-              docker logs worldcup-app 2>&1
-              exit 1
-            }
+            echo ">>> [4/5] Starting containers..."
+            docker compose -f docker-compose.prod.yml up -d
+            echo ">>> Containers started. Waiting 30s for app to initialise..."
+            sleep 30
+
+            echo ">>> [5/5] Container status:"
+            docker compose -f docker-compose.prod.yml ps
+            echo ">>> App logs (last 50 lines):"
+            docker logs worldcup-app --tail 50 2>&1
+            echo ">>> Caddy logs (last 20 lines):"
+            docker logs worldcup-caddy --tail 20 2>&1
+
             docker system prune -f --filter "until=24h"
