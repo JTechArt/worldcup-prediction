@@ -1,25 +1,44 @@
-<html>
-<body style="margin:0;padding:0;background:#f0fdf5;">
-<div style="max-width:560px;margin:32px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-  <#include "_header.ftlh">
-  <div style="padding:32px;">
-    <h2 style="font-family:'Helvetica Neue',Arial,sans-serif;color:#006b2a;margin:0 0 16px;">You're invited!</h2>
-    <p style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;">
-      ${inviterName} has invited you to join the <strong>World Cup 2026 Prediction Game</strong>.
-    </p>
-    <p style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;">
-      Predict match scores, compete on the leaderboard, and have fun throughout the tournament!
-    </p>
-    <div style="text-align:center;margin:28px 0;">
-      <a href="${appUrl}" style="display:inline-block;background:#FFD600;color:#1a1a1a;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:700;padding:12px 32px;border-radius:8px;text-decoration:none;">
-        Join the Game
-      </a>
-    </div>
-    <p style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#999;line-height:1.6;">
-      Sign in with your Google or LinkedIn account to get started. Your account will be activated automatically.
-    </p>
-  </div>
-  <#include "_footer.ftlh">
-</div>
+<#assign title="You're invited to the World Cup 2026 Prediction Game!">
+<#include "_header.ftlh">
+<body bgcolor="#0d1117" style="margin:0;padding:0;background-color:#0d1117;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#0d1117">
+  <tr>
+    <td align="center" style="padding:20px 0;">
+      <table width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="max-width:600px;width:100%;">
+        <tr>
+          <td style="padding:0;line-height:0;">
+            <img src="${appUrl}/images/email/hero-invitation.jpg" width="600" alt="Road to Glory 2026" style="display:block;width:100%;max-width:600px;border:0;">
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="#ffffff" style="background-color:#ffffff;padding:40px 32px;">
+            <h1 style="font-family:Helvetica Neue,Arial,sans-serif;font-size:26px;font-weight:800;color:#0d1b2a;margin:0 0 16px;line-height:1.2;">Join the Game. Make Your Predictions.</h1>
+            <p style="font-family:Helvetica Neue,Arial,sans-serif;font-size:16px;color:#4a5568;line-height:1.6;margin:0 0 16px;">
+              <strong>${inviterName}</strong> has invited you to compete in the <strong>World Cup 2026 Prediction Game</strong>.
+            </p>
+            <p style="font-family:Helvetica Neue,Arial,sans-serif;font-size:16px;color:#4a5568;line-height:1.6;margin:0 0 24px;">
+              Predict match scores before kickoff, earn points for correct calls, and climb the leaderboard to be crowned champion.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="padding:8px 0;">
+                  <a href="${appUrl}" style="display:inline-block;background-color:#D4AF37;color:#0d1b2a;font-family:Helvetica Neue,Arial,sans-serif;font-size:16px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:6px;">Join Now</a>
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding:8px 0 0;">
+                  <p style="font-family:Helvetica Neue,Arial,sans-serif;font-size:13px;color:#9ca3af;margin:0;">
+                    Or visit: <a href="${appUrl}" style="color:#D4AF37;text-decoration:none;">${appUrl}</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <#include "_footer.ftlh">
+      </table>
+    </td>
+  </tr>
+</table>
 </body>
 </html>
