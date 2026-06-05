@@ -38,7 +38,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
-                .requestMatchers("/", "/login", "/error").permitAll()
+                .requestMatchers("/", "/login", "/admin/login", "/admin/login/form", "/error").permitAll()
                 .requestMatchers("/dev/**").permitAll()
                 // leaderboard is now community-scoped at /c/{slug}/leaderboard
                 .requestMatchers("/fixtures/**").permitAll()
@@ -56,10 +56,10 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/login/form")
+                .loginPage("/admin/login")
+                .loginProcessingUrl("/admin/login/form")
                 .defaultSuccessUrl("/admin", true)
-                .failureUrl("/login?error")
+                .failureUrl("/admin/login?error")
             )
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/login")
