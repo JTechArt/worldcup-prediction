@@ -31,7 +31,7 @@ public class AccountStatusFilter extends OncePerRequestFilter {
 
     private static final String[] SKIP_PATHS = {
             "/css/", "/js/", "/images/", "/webjars/", "/favicon.ico",
-            "/login", "/oauth2/", "/error"
+            "/login", "/admin/login", "/oauth2/", "/error"
     };
 
     @Override
