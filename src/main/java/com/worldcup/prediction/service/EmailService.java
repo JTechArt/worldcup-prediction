@@ -192,6 +192,53 @@ public class EmailService {
         send(email, subject, body);
     }
 
+    // ── Test-only helpers (bypass entity requirements, no deduplication) ──────────
+
+    public void sendTestInvitation(String to, String inviterName) {
+        String subject = "You're invited to World Cup 2026 Predictions!";
+        String body = renderOrFallback("invitation.ftlh", Map.of(
+                "title", "You're Invited",
+                "inviterName", inviterName,
+                "appUrl", appUrl
+        ), subject);
+        send(to, subject, body);
+    }
+
+    public void sendTestWindowOpen(String to, String firstName, String matchLabel, String kickoff) {
+        String subject = "Predictions are open! " + matchLabel;
+        String body = renderOrFallback("prediction-window-open.ftlh", Map.of(
+                "title", "Predictions Open",
+                "firstName", firstName,
+                "matches", List.of(Map.of("label", matchLabel, "kickoff", kickoff)),
+                "appUrl", appUrl
+        ), subject);
+        send(to, subject, body);
+    }
+
+    public void sendTestReminder(String to, String firstName, String matchLabel, String kickoff, String hoursLeft) {
+        String subject = "⚽ Predictions close in " + hoursLeft + "h — " + matchLabel;
+        String body = renderOrFallback("prediction-reminder.ftlh", Map.of(
+                "title", "Reminder",
+                "firstName", firstName,
+                "matches", List.of(Map.of("label", matchLabel, "kickoff", kickoff)),
+                "hoursLeft", hoursLeft,
+                "appUrl", appUrl
+        ), subject);
+        send(to, subject, body);
+    }
+
+    public void sendTestResults(String to, String firstName, String matchLabel, String score) {
+        String subject = "📊 Results published — " + matchLabel;
+        String body = renderOrFallback("results-published.ftlh", Map.of(
+                "title", "Results Published",
+                "firstName", firstName,
+                "matchLabel", matchLabel,
+                "score", score,
+                "appUrl", appUrl
+        ), subject);
+        send(to, subject, body);
+    }
+
     /**
      * Render an email template via Freemarker, or fall back to a plain-text body
      * when the renderer is not available (e.g., log-only mode in tests).
