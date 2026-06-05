@@ -116,6 +116,10 @@ public class AdminEmailTestController {
                                   @RequestParam int rank,
                                   @RequestParam int points,
                                   RedirectAttributes ra) {
+        if (rank < 1 || rank > 10) {
+            ra.addFlashAttribute("errorMessage", "Rank must be between 1 and 10");
+            return "redirect:/admin/email-test";
+        }
         try {
             List<Map<String, Object>> topEntries = buildSyntheticLeaderboard(firstName, rank, points);
             List<Map<String, Object>> matchResults = List.of(
