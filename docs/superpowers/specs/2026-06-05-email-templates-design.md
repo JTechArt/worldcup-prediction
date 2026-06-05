@@ -91,7 +91,7 @@ All images live in `src/main/resources/static/images/email/` and are served at `
 - **Hero:** `hero-invitation.jpg`
 - **Headline:** Join the Game. Make Your Predictions.
 - **Body:** `${inviterName}` has invited you to compete in the World Cup 2026 Prediction Game. Predict match scores, earn points, and climb the leaderboard.
-- **CTA:** "Join Now" → `${appUrl}/register?invite=...`
+- **CTA:** "Join Now" → `${appUrl}` (invitation emails link to the main site; no invite token in current EmailService)
 - **Data block:** None
 
 ### 2. `approval.ftlh`
@@ -154,7 +154,7 @@ All images live in `src/main/resources/static/images/email/` and are served at `
 
 ### `_header.ftlh` (updated)
 
-Removed — the hero image replaces the old shared header. Each template sets its own hero. The `title` variable previously passed to `_header.ftlh` becomes the `<title>` tag only.
+Simplified to contain only the HTML boilerplate (`<!DOCTYPE>`, `<html>`, `<head>`, `<meta>` tags, `<title>${title}</title>`). It no longer renders any visual content — the hero image in each template takes that role. All templates still include it via `<#include "_header.ftlh">` for the document head.
 
 ### `_footer.ftlh` (updated)
 
