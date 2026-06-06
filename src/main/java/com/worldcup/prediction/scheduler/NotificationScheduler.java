@@ -2,6 +2,7 @@ package com.worldcup.prediction.scheduler;
 
 import com.worldcup.prediction.domain.Community;
 import com.worldcup.prediction.domain.Match;
+import com.worldcup.prediction.domain.RoundWindow;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.MatchStatus;
 import com.worldcup.prediction.domain.enums.UserStatus;
@@ -12,6 +13,7 @@ import com.worldcup.prediction.repository.PredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
 import com.worldcup.prediction.service.LeaderboardService;
 import com.worldcup.prediction.service.NotificationService;
+import com.worldcup.prediction.service.RoundWindowService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +42,7 @@ public class NotificationScheduler {
     private final NotificationService notificationService;
     private final LeaderboardService leaderboardService;
     private final CommunityRepository communityRepository;
+    private final RoundWindowService roundWindowService;
 
     @Value("${app.notification.reminder-hours-before:3}")
     private int reminderHoursBefore;
@@ -50,18 +53,29 @@ public class NotificationScheduler {
     public void checkPredictionWindowOpen() {
         try {
             LocalDateTime now = LocalDateTime.now();
-            List<Match> matches = matchRepository.findMatchesWhereWindowShouldOpen(now);
-            if (matches.isEmpty()) {
-                log.debug("NotificationScheduler: no new prediction windows — skipping");
+            List<RoundWindow> allRounds = roundWindowService.findAll();
+            List<RoundWindow> openRounds = allRounds.stream()
+                    .filter(rw -> roundWindowService.isRoundOpen(rw.getRoundLabel(), now))
+                    .filter(rw -> rw.getAutoOpensAt() != null
+                            && !now.isBefore(rw.getAutoOpensAt())
+                            && now.isBefore(rw.getAutoOpensAt().plusMinutes(10)))
+                    .toList();
+
+            if (openRounds.isEmpty()) {
+                log.debug("NotificationScheduler: no newly-open rounds — skipping");
                 return;
             }
+
             List<User> activeUsers = userRepository.findByStatus(UserStatus.ACTIVE);
             List<Community> communities = communityRepository.findAll();
-            for (Match match : matches) {
+            for (RoundWindow rw : openRounds) {
+                List<Match> matches = matchRepository.findByRoundLabelWithTeams(rw.getRoundLabel());
+                if (matches.isEmpty()) continue;
+                Match firstMatch = matches.get(0);
                 for (Community community : communities) {
-                    boolean sent = notificationService.sendPredictionWindowOpen(activeUsers, match, community.getId());
+                    boolean sent = notificationService.sendPredictionWindowOpen(activeUsers, firstMatch, community.getId());
                     if (sent) {
-                        log.info("Sent prediction-window-open notification for match {} in community {}", match.getId(), community.getId());
+                        log.info("Sent prediction-window-open notification for round {} in community {}", rw.getRoundLabel(), community.getId());
                     }
                 }
             }
@@ -77,8 +91,10 @@ public class NotificationScheduler {
             LocalDateTime deadlineFrom = now.plusHours(1);
             LocalDateTime deadlineTo = now.plusHours(reminderHoursBefore);
             List<Match> approachingMatches = matchRepository.findByKickoffTimeBetween(deadlineFrom, deadlineTo);
+            LocalDateTime deadlineNow = LocalDateTime.now();
             approachingMatches = approachingMatches.stream()
-                    .filter(m -> m.getStatus() == MatchStatus.SCHEDULED && m.isPredictionWindowOpen())
+                    .filter(m -> m.getStatus() == MatchStatus.SCHEDULED
+                            && roundWindowService.isRoundOpen(m.getRoundLabel(), deadlineNow))
                     .collect(Collectors.toList());
             if (approachingMatches.isEmpty()) {
                 log.debug("NotificationScheduler: no approaching deadlines — skipping");
