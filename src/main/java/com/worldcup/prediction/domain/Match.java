@@ -88,16 +88,6 @@ public class Match {
     @Builder.Default
     private boolean lineupFetched = false;
 
-    @Column(name = "prediction_window_open", nullable = false)
-    @Builder.Default
-    private boolean predictionWindowOpen = false;
-
-    @Column(name = "prediction_window_opens_at")
-    private LocalDateTime predictionWindowOpensAt;
-
-    @Column(name = "prediction_window_closes_at")
-    private LocalDateTime predictionWindowClosesAt;
-
     @Column(name = "result_entered_at")
     private LocalDateTime resultEnteredAt;
 
