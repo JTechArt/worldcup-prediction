@@ -86,8 +86,12 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
     @Query("""
             SELECT COUNT(p) FROM Prediction p
             JOIN p.match m
+            JOIN RoundWindow rw ON rw.roundLabel = m.roundLabel
             WHERE p.user.id = :userId
-              AND m.predictionWindowOpen = true
+              AND (rw.overrideStatus = 'FORCE_OPEN'
+                   OR (rw.overrideStatus IS NULL
+                       AND rw.autoOpensAt <= CURRENT_TIMESTAMP
+                       AND rw.autoClosesAt > CURRENT_TIMESTAMP))
               AND p.scoreResult = 'PENDING'
             """)
     long countPendingForOpenWindows(@Param("userId") Long userId);
