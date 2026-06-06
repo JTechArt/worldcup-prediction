@@ -75,7 +75,6 @@ public class MatchServiceImpl implements MatchService {
         dto.setCity(m.getCity());
 
         if (m.getHomeTeam() != null) {
-            dto.setHomeTeamId(m.getHomeTeam().getId());
             dto.setHomeTeamName(m.getHomeTeam().getName());
             dto.setHomeTeamCode(m.getHomeTeam().getFlagCode());
         } else {
@@ -83,7 +82,6 @@ public class MatchServiceImpl implements MatchService {
         }
 
         if (m.getAwayTeam() != null) {
-            dto.setAwayTeamId(m.getAwayTeam().getId());
             dto.setAwayTeamName(m.getAwayTeam().getName());
             dto.setAwayTeamCode(m.getAwayTeam().getFlagCode());
         } else {
