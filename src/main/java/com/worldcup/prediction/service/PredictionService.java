@@ -25,9 +25,9 @@ import java.util.stream.Collectors;
  * Manages match score predictions: submission, visibility, and window enforcement.
  *
  * Window rules:
- *   Open window: [match.predictionWindowOpensAt, match.predictionWindowClosesAt)
- *   All-or-nothing: all matches in the submitted batch must have open windows.
- *   Visibility: non-admin users see predictions only after predictionWindowClosesAt.
+ *   Round-level: window is determined by RoundWindowService (auto from kickoff times + admin override).
+ *   All-or-nothing: all matches in the submitted batch must be in an open round.
+ *   Visibility: non-admin users see predictions only after the round window closes.
  */
 @Service
 @RequiredArgsConstructor
@@ -37,20 +37,14 @@ public class PredictionService {
     private final MatchRepository matchRepository;
     private final UserRepository userRepository;
     private final CommunityRepository communityRepository;
+    private final RoundWindowService roundWindowService;
 
     // -------------------------------------------------------
     //  Window helpers
     // -------------------------------------------------------
 
-    /**
-     * True if predictions may be submitted for this match at the given time.
-     * Window is [predictionWindowOpensAt, predictionWindowClosesAt) — inclusive open, exclusive close.
-     */
     public boolean isWindowOpen(Match match, LocalDateTime now) {
-        LocalDateTime opensAt = match.getPredictionWindowOpensAt();
-        LocalDateTime closesAt = match.getPredictionWindowClosesAt();
-        if (opensAt == null || closesAt == null) return false;
-        return !now.isBefore(opensAt) && now.isBefore(closesAt);
+        return roundWindowService.isRoundOpen(match.getRoundLabel(), now);
     }
 
     // -------------------------------------------------------
@@ -133,9 +127,8 @@ public class PredictionService {
      * Non-admin users get an empty list until the window closes; admins always see all.
      */
     public List<Prediction> getPredictionsForMatch(Match match, LocalDateTime now, boolean isAdmin, Long communityId) {
-        LocalDateTime closesAt = match.getPredictionWindowClosesAt();
-        boolean windowLocked = closesAt != null && !now.isBefore(closesAt);
-        if (!isAdmin && !windowLocked) {
+        boolean roundClosed = !roundWindowService.isRoundOpen(match.getRoundLabel(), now);
+        if (!isAdmin && !roundClosed) {
             return List.of();
         }
         return predictionRepository.findByMatchIdAndCommunityId(match.getId(), communityId);
