@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout}">
+<head><title>Test Data</title></head>
+<body>
+
+<th:block layout:fragment="page-title">Test Data</th:block>
+
+<th:block layout:fragment="content">
+
+  <div class="space-y-6 max-w-2xl">
+
+    <!-- Info card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-2">Generate Test Users</h2>
+      <p class="text-sm text-gray-600 mb-4">
+        Creates 100 test users (<span class="font-mono text-xs">user1@fifaworldcup2026prediction.win</span>
+        &hellip; <span class="font-mono text-xs">user100@fifaworldcup2026prediction.win</span>)
+        with password <span class="font-mono text-xs font-semibold">user</span> as
+        <span class="font-semibold">ACTIVE</span> users, distributed evenly across your communities.
+      </p>
+
+      <!-- Communities list -->
+      <div class="mb-5">
+        <p class="text-sm font-medium text-gray-700 mb-2">Communities users will be assigned to:</p>
+        <div th:if="${#lists.isEmpty(allCommunities)}" class="text-sm text-gray-400 italic">
+          No communities yet — users will be created without community assignments.
+        </div>
+        <ul th:unless="${#lists.isEmpty(allCommunities)}" class="space-y-1">
+          <li th:each="c : ${allCommunities}" class="flex items-center gap-2 text-sm text-gray-700">
+            <span class="inline-block w-2 h-2 rounded-full bg-admin-light flex-shrink-0"></span>
+            <span th:text="${c.name}">Community</span>
+            <span class="font-mono text-xs text-gray-400" th:text="'/' + ${c.slug}"></span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Warning -->
+      <div class="rounded-lg bg-yellow-50 border border-yellow-200 px-4 py-3 text-sm text-yellow-800 mb-5">
+        This will skip users that already exist. Safe to run multiple times.
+      </div>
+
+      <!-- Generate button -->
+      <form th:action="@{/admin/seed-data/generate}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit"
+                class="bg-admin-dark hover:bg-admin-mid text-white rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors duration-150"
+                onclick="return confirm('Generate 100 test users? Existing users will be skipped.')">
+          Generate Test Data
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+</th:block>
+</body>
+</html>

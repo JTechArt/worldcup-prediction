@@ -55,7 +55,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             return "/admin";
         }
         List<CommunityMembership> memberships = membershipRepository
-                .findByUserIdAndStatus(customUser.getUserId(), MembershipStatus.ACTIVE);
+                .findByUserIdAndStatusWithCommunity(customUser.getUserId(), MembershipStatus.ACTIVE);
         if (memberships.size() == 1) {
             return "/c/" + memberships.get(0).getCommunity().getSlug() + "/home";
         }

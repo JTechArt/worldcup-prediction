@@ -18,37 +18,34 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class SuperAdminAuthenticationProvider implements AuthenticationProvider {
+public class UserAuthenticationProvider implements AuthenticationProvider {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        String loginInput = authentication.getName();
+        String email = authentication.getName();
         String password = (String) authentication.getCredentials();
 
-        // Find a SUPER_ADMIN by email or username — return null (not throw) if not found
-        // so ProviderManager can try the next provider without an exception storm.
-        User user = userRepository.findByEmailIgnoreCase(loginInput)
-                .filter(u -> u.getRole() == UserRole.SUPER_ADMIN)
-                .or(() -> userRepository.findByRole(UserRole.SUPER_ADMIN).stream()
-                        .filter(u -> loginInput.equalsIgnoreCase(u.getFirstName()))
-                        .findFirst())
+        // Return null (not throw) if user not found or is SUPER_ADMIN so
+        // ProviderManager skips cleanly instead of accumulating exception frames.
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .filter(u -> u.getRole() != UserRole.SUPER_ADMIN)
                 .orElse(null);
 
         if (user == null) {
-            return null; // not a super-admin credential — let UserAuthenticationProvider handle it
+            return null;
         }
 
         if (user.getPasswordHash() == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        CustomOAuth2User principal = new CustomOAuth2User(user, Map.of("sub", "super-admin"));
+        CustomOAuth2User principal = new CustomOAuth2User(user, Map.of("sub", user.getEmail()));
         return new UsernamePasswordAuthenticationToken(
                 principal, null,
-                List.of(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN")));
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
     }
 
     @Override

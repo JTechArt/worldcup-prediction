@@ -116,7 +116,7 @@ public class CommunityService {
 
     @Transactional(readOnly = true)
     public List<CommunityMembership> getMembershipsForCommunity(Long communityId) {
-        return membershipRepository.findByCommunityId(communityId);
+        return membershipRepository.findByCommunityIdWithUser(communityId);
     }
 
     @Transactional(readOnly = true)
@@ -138,13 +138,16 @@ public class CommunityService {
 
     @Transactional
     public CommunityMembership requestJoin(Long communityId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        if (user.getRole() == com.worldcup.prediction.domain.enums.UserRole.SUPER_ADMIN) {
+            throw new IllegalArgumentException("Super admin cannot join communities");
+        }
         Optional<CommunityMembership> existing = membershipRepository.findByCommunityIdAndUserId(communityId, userId);
         if (existing.isPresent()) {
             return existing.get();
         }
         Community community = findById(communityId);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
         CommunityMembership membership = CommunityMembership.builder()
                 .community(community).user(user)
                 .role(CommunityRole.MEMBER)
@@ -152,5 +155,31 @@ public class CommunityService {
                 .build();
         log.info("User {} requested to join community {}", userId, communityId);
         return membershipRepository.save(membership);
+    }
+
+    @Transactional
+    public void removeMember(Long communityId, Long userId) {
+        membershipRepository.findByCommunityIdAndUserId(communityId, userId).ifPresent(m -> {
+            membershipRepository.deleteById(m.getId());
+            log.info("Removed user {} from community {}", userId, communityId);
+        });
+    }
+
+    @Transactional
+    public CommunityMembership addOrActivateMember(Long communityId, Long userId, CommunityRole role) {
+        userRepository.findById(userId).ifPresent(u -> {
+            if (u.getRole() == com.worldcup.prediction.domain.enums.UserRole.SUPER_ADMIN) {
+                throw new IllegalArgumentException("Super admin cannot be added to communities");
+            }
+        });
+        Optional<CommunityMembership> existing = membershipRepository.findByCommunityIdAndUserId(communityId, userId);
+        if (existing.isPresent()) {
+            CommunityMembership m = existing.get();
+            m.setStatus(MembershipStatus.ACTIVE);
+            m.setRole(role);
+            log.info("Updated membership: user={} community={} role={}", userId, communityId, role);
+            return membershipRepository.save(m);
+        }
+        return addMember(communityId, userId, role, MembershipStatus.ACTIVE);
     }
 }

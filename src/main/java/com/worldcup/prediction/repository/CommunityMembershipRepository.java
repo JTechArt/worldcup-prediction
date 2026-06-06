@@ -19,6 +19,14 @@ public interface CommunityMembershipRepository extends JpaRepository<CommunityMe
     List<CommunityMembership> findByUserIdAndStatus(Long userId, MembershipStatus status);
     List<CommunityMembership> findByCommunityIdAndStatus(Long communityId, MembershipStatus status);
     List<CommunityMembership> findByCommunityId(Long communityId);
+
+    @Query("""
+            SELECT cm FROM CommunityMembership cm
+            JOIN FETCH cm.user
+            WHERE cm.community.id = :communityId
+            ORDER BY cm.status ASC, cm.joinedAt ASC
+            """)
+    List<CommunityMembership> findByCommunityIdWithUser(@Param("communityId") Long communityId);
     long countByCommunityIdAndStatus(Long communityId, MembershipStatus status);
 
     @Query("""

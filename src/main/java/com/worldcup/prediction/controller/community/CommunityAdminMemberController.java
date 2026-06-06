@@ -67,4 +67,15 @@ public class CommunityAdminMemberController {
         redirectAttributes.addFlashAttribute("successMessage", "Role updated.");
         return "redirect:/c/" + slug + "/admin/members";
     }
+
+    @PostMapping("/{userId}/remove")
+    public String remove(@PathVariable String slug,
+                         @PathVariable Long userId,
+                         HttpServletRequest request,
+                         RedirectAttributes redirectAttributes) {
+        Community community = (Community) request.getAttribute("community");
+        communityService.removeMember(community.getId(), userId);
+        redirectAttributes.addFlashAttribute("successMessage", "Member removed.");
+        return "redirect:/c/" + slug + "/admin/members";
+    }
 }

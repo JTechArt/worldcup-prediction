@@ -6,9 +6,12 @@ import com.worldcup.prediction.security.CustomOidcUserService;
 import com.worldcup.prediction.security.OAuth2AuthenticationFailureHandler;
 import com.worldcup.prediction.security.OAuth2AuthenticationSuccessHandler;
 import com.worldcup.prediction.security.SuperAdminAuthenticationProvider;
+import com.worldcup.prediction.security.UserAuthenticationProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -29,18 +32,25 @@ public class SecurityConfig {
     private final OAuth2AuthenticationFailureHandler failureHandler;
     private final AccountStatusFilter accountStatusFilter;
     private final SuperAdminAuthenticationProvider superAdminAuthenticationProvider;
+    private final UserAuthenticationProvider userAuthenticationProvider;
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authenticationProvider(superAdminAuthenticationProvider)
+            .authenticationProvider(userAuthenticationProvider)
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
-                .requestMatchers("/", "/login", "/admin/login", "/admin/login/form", "/error").permitAll()
+                .requestMatchers("/", "/login", "/login/email", "/register", "/admin/login", "/admin/login/form", "/error").permitAll()
                 .requestMatchers("/dev/**").permitAll()
                 // leaderboard is now community-scoped at /c/{slug}/leaderboard
                 .requestMatchers("/fixtures/**").permitAll()
@@ -56,6 +66,16 @@ public class SecurityConfig {
                 .requestMatchers("/c/**").authenticated()
                 .requestMatchers("/communities/**").authenticated()
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    String path = request.getServletPath();
+                    if (path.startsWith("/admin")) {
+                        response.sendRedirect(request.getContextPath() + "/admin/login");
+                    } else {
+                        response.sendRedirect(request.getContextPath() + "/login");
+                    }
+                })
             )
             .formLogin(form -> form
                 .loginPage("/admin/login")

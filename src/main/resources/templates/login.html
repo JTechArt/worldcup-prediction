@@ -57,18 +57,42 @@
 
             <div class="flex items-center gap-3 mb-6">
                 <div class="flex-1 h-px bg-gray-200"></div>
-                <span class="text-gray-400 text-xs">or continue as guest</span>
+                <span class="text-gray-400 text-xs">or sign in with email</span>
                 <div class="flex-1 h-px bg-gray-200"></div>
             </div>
 
-            <a href="/rules"
-               class="flex items-center justify-center gap-2 w-full border border-wc-green text-wc-dark-green hover:bg-green-50 font-medium py-2.5 px-4 rounded-xl transition-all duration-200 text-sm">
-                View Rules & Scoring →
-            </a>
+            <!-- Email error message -->
+            <div th:if="${emailError}"
+                 class="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 text-center"
+                 role="alert">
+                <span th:text="${emailError}">Error</span>
+            </div>
+
+            <!-- Email/password form -->
+            <form th:action="@{/login/email}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="mb-3">
+                    <input type="email" name="email" placeholder="Email address" required
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wc-green focus:border-transparent transition-all duration-200"/>
+                </div>
+                <div class="mb-4">
+                    <input type="password" name="password" placeholder="Password" required
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wc-green focus:border-transparent transition-all duration-200"/>
+                </div>
+                <button type="submit"
+                        class="w-full bg-wc-dark-green hover:bg-wc-green text-white font-medium py-2.5 px-4 rounded-xl transition-all duration-200 text-sm mb-4">
+                    Sign In with Email
+                </button>
+            </form>
+
+            <p class="text-center text-sm text-gray-500">
+                New user?
+                <a href="/register" class="text-wc-dark-green font-medium hover:underline">Register here →</a>
+            </p>
         </div>
 
         <p class="text-center text-green-300 text-xs mt-6 stagger-3 animate-fade-up">
-            Only invited participants can register. An admin approves new accounts.
+            Sign up to join a community and make your predictions.
         </p>
     </div>
 

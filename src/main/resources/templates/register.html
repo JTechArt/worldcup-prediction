@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Register')}"></head>
+<body class="min-h-screen bg-wc-dark-green flex items-center justify-center overflow-hidden relative">
+
+    <!-- Background decoration -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        <div class="absolute text-6xl opacity-10 animate-bounce" style="top:10%;left:8%;animation-duration:3s;">⚽</div>
+        <div class="absolute text-4xl opacity-10 animate-bounce" style="top:25%;right:12%;animation-duration:4s;animation-delay:0.5s;">⚽</div>
+        <div class="absolute text-5xl opacity-10 animate-bounce" style="bottom:20%;left:15%;animation-duration:3.5s;animation-delay:1s;">⚽</div>
+        <div class="absolute w-64 h-64 rounded-full opacity-5 bg-wc-green" style="top:-4rem;right:-4rem;"></div>
+        <div class="absolute w-80 h-80 rounded-full opacity-5 bg-wc-green" style="bottom:-5rem;left:-5rem;"></div>
+    </div>
+
+    <div class="relative z-10 w-full max-w-md px-6 py-10">
+
+        <!-- Logo -->
+        <div class="text-center mb-8 stagger-1 animate-fade-up">
+            <div class="text-6xl mb-4">⚽</div>
+            <h1 class="font-display text-5xl text-wc-gold tracking-widest mb-2">WC 2026</h1>
+            <p class="text-green-200 text-sm font-medium tracking-wider uppercase">Prediction Game</p>
+        </div>
+
+        <!-- Card -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8 stagger-2 animate-fade-up">
+
+            <h2 class="text-center text-gray-800 font-semibold text-xl mb-2">Create Account</h2>
+            <p class="text-center text-gray-500 text-sm mb-6">Join the prediction game</p>
+
+            <!-- Error message -->
+            <div th:if="${error}"
+                 class="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 text-center"
+                 role="alert">
+                <span th:text="${error}">Error</span>
+            </div>
+
+            <!-- Registration form -->
+            <form th:action="@{/register}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="flex gap-3 mb-3">
+                    <div class="flex-1">
+                        <input type="text" name="firstName" placeholder="First name" required
+                               th:value="${firstName}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wc-green focus:border-transparent transition-all duration-200"/>
+                    </div>
+                    <div class="flex-1">
+                        <input type="text" name="lastName" placeholder="Last name" required
+                               th:value="${lastName}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wc-green focus:border-transparent transition-all duration-200"/>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <input type="email" name="email" placeholder="Email address" required
+                           th:value="${email}"
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wc-green focus:border-transparent transition-all duration-200"/>
+                </div>
+
+                <div class="mb-3">
+                    <input type="password" name="password" placeholder="Password (min 8 characters)" required
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wc-green focus:border-transparent transition-all duration-200"/>
+                </div>
+
+                <div class="mb-6">
+                    <input type="password" name="confirmPassword" placeholder="Confirm password" required
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wc-green focus:border-transparent transition-all duration-200"/>
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-wc-dark-green hover:bg-wc-green text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 text-sm mb-4">
+                    Create Account
+                </button>
+            </form>
+
+            <p class="text-center text-sm text-gray-500">
+                Already have an account?
+                <a href="/login" class="text-wc-dark-green font-medium hover:underline">Sign in →</a>
+            </p>
+        </div>
+
+        <p class="text-center text-green-300 text-xs mt-6 stagger-3 animate-fade-up">
+            New accounts are reviewed by an admin before activation.
+        </p>
+    </div>
+
+</body>
+</html>

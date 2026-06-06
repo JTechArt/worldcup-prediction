@@ -39,6 +39,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByRole(UserRole role);
 
+    List<User> findByRoleNotOrderByFirstNameAscLastNameAsc(UserRole role);
+
     Page<User> findByStatus(UserStatus status, Pageable pageable);
 
     long countByStatus(UserStatus status);

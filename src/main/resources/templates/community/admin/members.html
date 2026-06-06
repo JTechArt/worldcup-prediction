@@ -72,6 +72,11 @@
                   <input type="hidden" name="role" value="MEMBER"/>
                   <button type="submit" class="px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200">Remove Admin</button>
                 </form>
+                <form th:action="@{'/c/' + ${slug} + '/admin/members/' + ${m.user.id} + '/remove'}" method="post" class="inline"
+                      onsubmit="return confirm('Remove this member from the community?')">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                  <button type="submit" class="px-2 py-1 rounded text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100">Remove</button>
+                </form>
               </div>
             </td>
           </tr>
