@@ -41,10 +41,6 @@ public class MatchAdminService {
                 date.plusDays(1).atStartOfDay());
     }
 
-    public List<Match> findByPredictionWindowOpen(boolean open) {
-        return matchRepository.findByPredictionWindowOpen(open);
-    }
-
     public Match findById(Long matchId) {
         return matchRepository.findByIdWithTeams(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("Match not found: " + matchId));
@@ -56,14 +52,6 @@ public class MatchAdminService {
         match.setHomeScore(homeScore);
         match.setAwayScore(awayScore);
         match.setStatus(MatchStatus.COMPLETED);
-        match.setPredictionWindowOpen(false);
-        return matchRepository.save(match);
-    }
-
-    @Transactional
-    public Match setPredictionWindowOpen(Long matchId, boolean open) {
-        Match match = findById(matchId);
-        match.setPredictionWindowOpen(open);
         return matchRepository.save(match);
     }
 
