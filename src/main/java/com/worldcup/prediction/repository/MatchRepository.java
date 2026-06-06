@@ -24,6 +24,15 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 
     List<Match> findByStatus(MatchStatus status);
 
+    @Query("""
+            SELECT m FROM Match m
+            LEFT JOIN FETCH m.homeTeam
+            LEFT JOIN FETCH m.awayTeam
+            WHERE m.status = :status
+            ORDER BY m.kickoffTime ASC
+            """)
+    List<Match> findByStatusWithTeams(@Param("status") MatchStatus status);
+
     List<Match> findByStageOrderByKickoffTimeAsc(MatchStage stage);
 
     List<Match> findByGroupIdOrderByKickoffTimeAsc(Long groupId);

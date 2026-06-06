@@ -11,6 +11,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -30,7 +32,9 @@ public class SuperAdminBootstrap implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (userRepository.findByRole(UserRole.SUPER_ADMIN).isEmpty()) {
+        List<User> admins = userRepository.findByRole(UserRole.SUPER_ADMIN);
+
+        if (admins.isEmpty()) {
             User superAdmin = User.builder()
                     .email(email)
                     .firstName(username)
@@ -41,8 +45,20 @@ public class SuperAdminBootstrap implements CommandLineRunner {
                     .build();
             userRepository.save(superAdmin);
             log.info("Super Admin created: email={}", email);
-        } else {
-            log.debug("Super Admin already exists, skipping bootstrap");
+            return;
         }
+
+        if (admins.size() > 1) {
+            log.warn("Multiple Super Admin accounts detected ({}). Only the first will be kept.", admins.size());
+            admins.stream().skip(1).forEach(userRepository::delete);
+        }
+
+        User superAdmin = admins.getFirst();
+        superAdmin.setEmail(email);
+        superAdmin.setFirstName(username);
+        superAdmin.setPasswordHash(passwordEncoder.encode(password));
+        superAdmin.setStatus(UserStatus.ACTIVE);
+        userRepository.save(superAdmin);
+        log.info("Super Admin credentials synced from environment: email={}", email);
     }
 }

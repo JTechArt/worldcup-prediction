@@ -46,7 +46,7 @@ public class AdminNotificationController {
         List<NotificationLog> recentLogs = notificationLogRepository.findTop50ByOrderBySentAtDesc();
         model.addAttribute("recentLogs", recentLogs);
 
-        List<Match> upcomingMatches = matchRepository.findByStatus(MatchStatus.SCHEDULED);
+        List<Match> upcomingMatches = matchRepository.findByStatusWithTeams(MatchStatus.SCHEDULED);
         model.addAttribute("upcomingMatches", upcomingMatches);
 
         model.addAttribute("communities", communityRepository.findAllByOrderByNameAsc());

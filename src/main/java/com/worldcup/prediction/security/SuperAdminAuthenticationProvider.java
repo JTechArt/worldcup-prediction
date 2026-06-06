@@ -25,11 +25,14 @@ public class SuperAdminAuthenticationProvider implements AuthenticationProvider 
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        String email = authentication.getName();
+        String loginInput = authentication.getName();
         String password = (String) authentication.getCredentials();
 
-        User user = userRepository.findByEmailIgnoreCase(email)
+        User user = userRepository.findByEmailIgnoreCase(loginInput)
                 .filter(u -> u.getRole() == UserRole.SUPER_ADMIN)
+                .or(() -> userRepository.findByRole(UserRole.SUPER_ADMIN).stream()
+                        .filter(u -> loginInput.equalsIgnoreCase(u.getFirstName()))
+                        .findFirst())
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
         if (user.getPasswordHash() == null || !passwordEncoder.matches(password, user.getPasswordHash())) {

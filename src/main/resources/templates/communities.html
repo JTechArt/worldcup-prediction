@@ -2,40 +2,128 @@
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: layout(~{::main-content})}">
-<head><title>My Communities</title></head>
+<head><title>Communities</title></head>
 <body>
 <th:block th:fragment="main-content">
 
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-    <div class="mb-8 animate-fade-up">
+    <!-- Flash messages -->
+    <div th:if="${successMessage}"
+         class="mb-6 p-4 bg-green-100 border border-green-300 text-green-800 rounded-xl text-sm animate-fade-up"
+         th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}"
+         class="mb-6 p-4 bg-red-100 border border-red-300 text-red-800 rounded-xl text-sm animate-fade-up"
+         th:text="${errorMessage}"></div>
+
+    <!-- Access-denied banner when redirected from a restricted community -->
+    <div th:if="${joinSlug != null}"
+         class="mb-6 p-4 bg-amber-50 border border-amber-300 text-amber-800 rounded-xl text-sm animate-fade-up flex items-start gap-3">
+      <span class="text-xl flex-shrink-0">🔒</span>
+      <div>
+        <p class="font-semibold">Access restricted</p>
+        <p class="mt-0.5">You need to be an approved member of <strong th:text="${joinSlug}">this community</strong> to view that page. Request to join below.</p>
+      </div>
+    </div>
+
+    <!-- My communities (active memberships) -->
+    <div th:if="${!#lists.isEmpty(activeMemberships)}" class="mb-10 animate-fade-up">
       <h1 class="font-display text-4xl sm:text-5xl text-green-dark tracking-wider mb-1">MY COMMUNITIES</h1>
-      <p class="text-gray-500 text-sm font-medium">Select a community to enter</p>
-    </div>
+      <p class="text-gray-500 text-sm font-medium mb-6">Select a community to enter</p>
 
-    <div th:if="${#lists.isEmpty(memberships)}" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center animate-fade-up stagger-1">
-      <div class="text-5xl mb-4">🏘</div>
-      <h2 class="font-display text-2xl text-green-dark tracking-wider mb-2">NO COMMUNITIES YET</h2>
-      <p class="text-gray-500 text-sm">You haven't joined any communities. Ask an admin to invite you!</p>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-up stagger-1" th:unless="${#lists.isEmpty(memberships)}">
-      <a th:each="membership : ${memberships}"
-         th:href="@{'/c/' + ${membership.community.slug} + '/home'}"
-         class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-green/30 transition-all duration-200 p-6 no-underline group">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="w-12 h-12 rounded-xl bg-green/10 flex items-center justify-center text-2xl flex-shrink-0 group-hover:bg-green/20 transition-colors">🏆</div>
-          <div>
-            <h3 class="font-bold text-gray-800 text-lg" th:text="${membership.community.name}">Community Name</h3>
-            <p class="text-xs text-gray-400 font-medium" th:text="${membership.role.name()}">MEMBER</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <a th:each="m : ${activeMemberships}"
+           th:href="@{'/c/' + ${m.community.slug} + '/home'}"
+           th:classappend="${m.community.slug == joinSlug} ? ' ring-2 ring-amber-400' : ''"
+           class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-green/30 transition-all duration-200 p-5 no-underline group">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-xl bg-green/10 flex items-center justify-center text-xl flex-shrink-0 group-hover:bg-green/20 transition-colors">🏆</div>
+            <div>
+              <h3 class="font-bold text-gray-800" th:text="${m.community.name}">Name</h3>
+              <p class="text-xs text-gray-400 font-medium" th:text="${m.role.name()}">MEMBER</p>
+            </div>
           </div>
+          <p th:if="${m.community.description}" class="text-xs text-gray-500 line-clamp-2 mb-3" th:text="${m.community.description}"></p>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-green">Enter →</span>
+            <span class="text-xs text-gray-400" th:text="${m.totalPoints} + ' pts'">0 pts</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- All communities / explore -->
+    <div class="animate-fade-up stagger-1">
+      <div class="mb-6">
+        <h2 class="font-display text-3xl text-green-dark tracking-wider"
+            th:text="${#lists.isEmpty(activeMemberships)} ? 'ALL COMMUNITIES' : 'EXPLORE MORE'">ALL COMMUNITIES</h2>
+        <p class="text-gray-500 text-sm">Request to join — a community admin will approve your request</p>
+      </div>
+
+      <div th:if="${#lists.isEmpty(allCommunities)}"
+           class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+        <div class="text-5xl mb-4">🏘</div>
+        <h3 class="font-display text-2xl text-green-dark tracking-wider mb-2">NO COMMUNITIES YET</h3>
+        <p class="text-gray-500 text-sm">No communities have been created. Ask the administrator.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" th:unless="${#lists.isEmpty(allCommunities)}">
+        <div th:each="community : ${allCommunities}"
+             th:with="status=${statusMap[community.id]}"
+             th:classappend="${community.slug == joinSlug} ? ' ring-2 ring-amber-400' : ''"
+             class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 transition-all duration-200">
+
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-green/10 flex items-center justify-center text-xl flex-shrink-0">🏘</div>
+            <div class="min-w-0">
+              <h3 class="font-bold text-gray-800 truncate" th:text="${community.name}">Name</h3>
+              <p th:if="${community.description}" class="text-xs text-gray-400 line-clamp-1" th:text="${community.description}"></p>
+            </div>
+          </div>
+
+          <!-- Active member -->
+          <div th:if="${status != null && status.name() == 'ACTIVE'}"
+               class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1 text-xs font-semibold text-green">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              Member
+            </span>
+            <a th:href="@{'/c/' + ${community.slug} + '/home'}"
+               class="text-xs font-semibold text-green hover:text-green-dark transition-colors">Enter →</a>
+          </div>
+
+          <!-- Pending -->
+          <div th:if="${status != null && status.name() == 'PENDING'}">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+              </svg>
+              Request pending approval
+            </span>
+          </div>
+
+          <!-- Rejected -->
+          <div th:if="${status != null && status.name() == 'DISABLED'}">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+              Request rejected — contact admin
+            </span>
+          </div>
+
+          <!-- Not a member -->
+          <div th:if="${status == null}">
+            <form th:action="@{'/communities/' + ${community.id} + '/join'}" method="post">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <button type="submit"
+                      class="w-full py-1.5 rounded-lg text-xs font-semibold bg-green-dark text-white hover:bg-green transition-colors cursor-pointer">
+                Request to join
+              </button>
+            </form>
+          </div>
+
         </div>
-        <p th:if="${membership.community.description}" class="text-sm text-gray-500 line-clamp-2" th:text="${membership.community.description}">Description</p>
-        <div class="mt-4 flex items-center justify-between">
-          <span class="text-xs font-semibold text-green">Enter →</span>
-          <span class="text-xs text-gray-400" th:text="${membership.totalPoints} + ' pts'">0 pts</span>
-        </div>
-      </a>
+      </div>
     </div>
 
   </div>

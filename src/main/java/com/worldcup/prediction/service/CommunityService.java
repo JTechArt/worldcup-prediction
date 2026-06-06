@@ -130,4 +130,27 @@ public class CommunityService {
     public long countActiveMembers(Long communityId) {
         return membershipRepository.countByCommunityIdAndStatus(communityId, MembershipStatus.ACTIVE);
     }
+
+    @Transactional(readOnly = true)
+    public List<CommunityMembership> getAllMembershipsForUser(Long userId) {
+        return membershipRepository.findByUserIdWithCommunity(userId);
+    }
+
+    @Transactional
+    public CommunityMembership requestJoin(Long communityId, Long userId) {
+        Optional<CommunityMembership> existing = membershipRepository.findByCommunityIdAndUserId(communityId, userId);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        Community community = findById(communityId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        CommunityMembership membership = CommunityMembership.builder()
+                .community(community).user(user)
+                .role(CommunityRole.MEMBER)
+                .status(MembershipStatus.PENDING)
+                .build();
+        log.info("User {} requested to join community {}", userId, communityId);
+        return membershipRepository.save(membership);
+    }
 }

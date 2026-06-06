@@ -67,7 +67,7 @@ public class CommunityInterceptor implements HandlerInterceptor {
                 membershipRepository.findByCommunityIdAndUserId(community.getId(), customUser.getUserId());
 
         if (membershipOpt.isEmpty() || membershipOpt.get().getStatus() != MembershipStatus.ACTIVE) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Not a member of this community");
+            response.sendRedirect("/communities?joinSlug=" + slug);
             return false;
         }
 
@@ -75,7 +75,7 @@ public class CommunityInterceptor implements HandlerInterceptor {
         request.setAttribute("communityMembership", membership);
 
         if (ADMIN_PATTERN.matcher(path).find() && membership.getRole() != CommunityRole.ADMIN) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Community admin access required");
+            response.sendRedirect("/c/" + slug + "/home");
             return false;
         }
 

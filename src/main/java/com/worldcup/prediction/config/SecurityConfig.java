@@ -2,6 +2,7 @@ package com.worldcup.prediction.config;
 
 import com.worldcup.prediction.security.AccountStatusFilter;
 import com.worldcup.prediction.security.CustomOAuth2UserService;
+import com.worldcup.prediction.security.CustomOidcUserService;
 import com.worldcup.prediction.security.OAuth2AuthenticationFailureHandler;
 import com.worldcup.prediction.security.OAuth2AuthenticationSuccessHandler;
 import com.worldcup.prediction.security.SuperAdminAuthenticationProvider;
@@ -23,6 +24,7 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomOidcUserService customOidcUserService;
     private final OAuth2AuthenticationSuccessHandler successHandler;
     private final OAuth2AuthenticationFailureHandler failureHandler;
     private final AccountStatusFilter accountStatusFilter;
@@ -65,6 +67,7 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
+                    .oidcUserService(customOidcUserService)
                 )
                 .successHandler(successHandler)
                 .failureHandler(failureHandler)

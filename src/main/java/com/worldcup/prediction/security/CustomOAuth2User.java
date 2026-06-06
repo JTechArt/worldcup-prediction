@@ -5,20 +5,46 @@ import com.worldcup.prediction.domain.enums.UserRole;
 import com.worldcup.prediction.domain.enums.UserStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class CustomOAuth2User implements OAuth2User {
+public class CustomOAuth2User implements OidcUser {
 
     private final User user;
     private final Map<String, Object> attributes;
+    private final OidcIdToken idToken;
+    private final OidcUserInfo userInfo;
 
     public CustomOAuth2User(User user, Map<String, Object> attributes) {
+        this(user, attributes, null, null);
+    }
+
+    public CustomOAuth2User(User user, Map<String, Object> attributes,
+                            OidcIdToken idToken, OidcUserInfo userInfo) {
         this.user = user;
         this.attributes = attributes;
+        this.idToken = idToken;
+        this.userInfo = userInfo;
+    }
+
+    @Override
+    public Map<String, Object> getClaims() {
+        return attributes;
+    }
+
+    @Override
+    public OidcUserInfo getUserInfo() {
+        return userInfo;
+    }
+
+    @Override
+    public OidcIdToken getIdToken() {
+        return idToken;
     }
 
     @Override

@@ -41,4 +41,12 @@ public interface CommunityMembershipRepository extends JpaRepository<CommunityMe
 
     Optional<CommunityMembership> findByCommunityIdAndUserIdAndRole(
             Long communityId, Long userId, CommunityRole role);
+
+    @Query("""
+            SELECT cm FROM CommunityMembership cm
+            JOIN FETCH cm.community
+            WHERE cm.user.id = :userId
+            ORDER BY cm.community.name ASC
+            """)
+    List<CommunityMembership> findByUserIdWithCommunity(@Param("userId") Long userId);
 }
