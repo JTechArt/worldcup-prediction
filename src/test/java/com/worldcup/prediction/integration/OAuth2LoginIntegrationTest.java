@@ -42,7 +42,7 @@ class OAuth2LoginIntegrationTest {
     void communitiesRoute_redirectsToLogin_whenUnauthenticated() throws Exception {
         mockMvc.perform(get("/communities"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(redirectedUrl("/login"));
     }
 
     @Test
