@@ -92,20 +92,6 @@ class MatchRepositoryTest {
     }
 
     @Test
-    void findOpenPredictionWindows_returnsOnlyOpenWindows() {
-        matchRepository.save(Match.builder().matchNumber(1).stage(MatchStage.GROUP).roundLabel("GS R1")
-                .kickoffTime(LocalDateTime.now().plusDays(1)).status(MatchStatus.SCHEDULED)
-                .predictionWindowOpen(false).build());
-        matchRepository.save(Match.builder().matchNumber(2).stage(MatchStage.GROUP).roundLabel("GS R1")
-                .kickoffTime(LocalDateTime.now().plusHours(2)).status(MatchStatus.SCHEDULED)
-                .predictionWindowOpen(true).predictionWindowClosesAt(LocalDateTime.now().plusHours(1)).build());
-
-        List<Match> open = matchRepository.findOpenPredictionWindows();
-        assertThat(open).hasSize(1);
-        assertThat(open.get(0).getMatchNumber()).isEqualTo(2);
-    }
-
-    @Test
     void findByKickoffTimeBetween_returnsMatchesInRange() {
         matchRepository.save(Match.builder().matchNumber(1).stage(MatchStage.GROUP).roundLabel("GS R1")
                 .kickoffTime(LocalDateTime.now().plusHours(2)).status(MatchStatus.SCHEDULED).build());

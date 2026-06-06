@@ -9,6 +9,7 @@ import com.worldcup.prediction.repository.PredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
 import com.worldcup.prediction.service.LeaderboardService;
 import com.worldcup.prediction.service.NotificationService;
+import com.worldcup.prediction.service.RoundWindowService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,12 +31,13 @@ class NotificationSchedulerTest {
     @Mock NotificationService notificationService;
     @Mock LeaderboardService leaderboardService;
     @Mock CommunityRepository communityRepository;
+    @Mock RoundWindowService roundWindowService;
 
     @InjectMocks NotificationScheduler scheduler;
 
     @Test
     void checkPredictionWindowOpen_noMatches_skips() {
-        when(matchRepository.findMatchesWhereWindowShouldOpen(any())).thenReturn(List.of());
+        when(roundWindowService.findAll()).thenReturn(List.of());
         scheduler.checkPredictionWindowOpen();
         verify(notificationService, never()).sendPredictionWindowOpen(anyList(), any(), anyLong());
     }

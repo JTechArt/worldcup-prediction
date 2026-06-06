@@ -56,7 +56,7 @@ class AuditLogServiceTest {
     void log_persistsNullNoteWithoutThrowing() {
         when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        AuditLog result = auditLogService.log(0L, AuditAction.PREDICTION_WINDOW_CLOSED, "MATCH", 7L, null);
+        AuditLog result = auditLogService.log(0L, AuditAction.ROUND_WINDOW_CLOSED, "ROUND", 7L, null);
 
         assertThat(result.getNote()).isNull();
         verify(auditLogRepository).save(any(AuditLog.class));

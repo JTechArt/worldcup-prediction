@@ -13,6 +13,7 @@ import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
+import com.worldcup.prediction.service.RoundWindowService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -39,6 +40,7 @@ class PredictionServiceTest {
     @Mock private MatchRepository matchRepository;
     @Mock private UserRepository userRepository;
     @Mock private CommunityRepository communityRepository;
+    @Mock private RoundWindowService roundWindowService;
 
     private PredictionService predictionService;
 
@@ -55,7 +57,7 @@ class PredictionServiceTest {
 
     @BeforeEach
     void setUp() {
-        predictionService = new PredictionService(predictionRepository, matchRepository, userRepository, communityRepository);
+        predictionService = new PredictionService(predictionRepository, matchRepository, userRepository, communityRepository, roundWindowService);
         testUser = User.builder().id(42L).email("test@example.com")
                 .firstName("Test").lastName("User")
                 .status(UserStatus.ACTIVE).role(UserRole.USER).build();
@@ -66,29 +68,18 @@ class PredictionServiceTest {
     @DisplayName("isWindowOpen")
     class IsWindowOpen {
 
-        @Test @DisplayName("returns true when now is within [openTime, lockTime)")
-        void openWindow_returnsTrue() {
-            assertThat(predictionService.isWindowOpen(buildMatch(1L, openTime, lockTime), nowOpen)).isTrue();
+        @Test @DisplayName("returns true when round is open")
+        void roundOpen_returnsTrue() {
+            Match m = buildMatch(1L, openTime, lockTime);
+            when(roundWindowService.isRoundOpen("Group Stage Round 1", nowOpen)).thenReturn(true);
+            assertThat(predictionService.isWindowOpen(m, nowOpen)).isTrue();
         }
 
-        @Test @DisplayName("returns false when now is before openTime")
-        void beforeOpen_returnsFalse() {
-            assertThat(predictionService.isWindowOpen(buildMatch(1L, openTime, lockTime), nowBeforeOpen)).isFalse();
-        }
-
-        @Test @DisplayName("returns false when now is exactly at lockTime")
-        void atLockTime_returnsFalse() {
-            assertThat(predictionService.isWindowOpen(buildMatch(1L, openTime, lockTime), lockTime)).isFalse();
-        }
-
-        @Test @DisplayName("returns false when now is after lockTime")
-        void afterLock_returnsFalse() {
-            assertThat(predictionService.isWindowOpen(buildMatch(1L, openTime, lockTime), nowLocked)).isFalse();
-        }
-
-        @Test @DisplayName("returns true exactly at openTime")
-        void atOpenTime_returnsTrue() {
-            assertThat(predictionService.isWindowOpen(buildMatch(1L, openTime, lockTime), openTime)).isTrue();
+        @Test @DisplayName("returns false when round is closed")
+        void roundClosed_returnsFalse() {
+            Match m = buildMatch(1L, openTime, lockTime);
+            when(roundWindowService.isRoundOpen("Group Stage Round 1", nowLocked)).thenReturn(false);
+            assertThat(predictionService.isWindowOpen(m, nowLocked)).isFalse();
         }
     }
 
@@ -101,6 +92,7 @@ class PredictionServiceTest {
             Match m1 = buildMatch(1L, openTime, lockTime);
             Match m2 = buildMatch(2L, openTime, lockTime);
 
+            when(roundWindowService.isRoundOpen("Group Stage Round 1", nowOpen)).thenReturn(true);
             when(userRepository.findById(42L)).thenReturn(Optional.of(testUser));
             when(matchRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(m1, m2));
             when(predictionRepository.findByUserIdAndMatchIdAndCommunityId(eq(42L), any(), eq(COMMUNITY_ID)))
@@ -122,6 +114,7 @@ class PredictionServiceTest {
             Prediction existing = Prediction.builder()
                     .user(testUser).match(m1).predictedHome(1).predictedAway(0).build();
 
+            when(roundWindowService.isRoundOpen("Group Stage Round 1", nowOpen)).thenReturn(true);
             when(userRepository.findById(42L)).thenReturn(Optional.of(testUser));
             when(matchRepository.findAllById(List.of(1L))).thenReturn(List.of(m1));
             when(predictionRepository.findByUserIdAndMatchIdAndCommunityId(42L, 1L, COMMUNITY_ID))
@@ -139,6 +132,7 @@ class PredictionServiceTest {
 
         @Test @DisplayName("throws PredictionWindowClosedException when window is locked")
         void windowLocked_throws() {
+            when(roundWindowService.isRoundOpen("Group Stage Round 1", nowLocked)).thenReturn(false);
             when(userRepository.findById(42L)).thenReturn(Optional.of(testUser));
             when(matchRepository.findAllById(List.of(1L)))
                     .thenReturn(List.of(buildMatch(1L, openTime, lockTime)));
@@ -151,6 +145,7 @@ class PredictionServiceTest {
 
         @Test @DisplayName("throws when window not yet open")
         void windowNotYetOpen_throws() {
+            when(roundWindowService.isRoundOpen("Group Stage Round 1", nowBeforeOpen)).thenReturn(false);
             when(userRepository.findById(42L)).thenReturn(Optional.of(testUser));
             when(matchRepository.findAllById(List.of(1L)))
                     .thenReturn(List.of(buildMatch(1L, openTime, lockTime)));
@@ -187,6 +182,7 @@ class PredictionServiceTest {
             Match match = buildMatch(10L, openTime, lockTime);
             Prediction pred = Prediction.builder().user(testUser).match(match)
                     .predictedHome(2).predictedAway(1).build();
+            when(roundWindowService.isRoundOpen("Group Stage Round 1", nowLocked)).thenReturn(false);
             when(predictionRepository.findByMatchIdAndCommunityId(10L, COMMUNITY_ID)).thenReturn(List.of(pred));
 
             assertThat(predictionService.getPredictionsForMatch(match, nowLocked, false, COMMUNITY_ID)).hasSize(1);
@@ -195,6 +191,7 @@ class PredictionServiceTest {
         @Test @DisplayName("returns empty before window locks (non-admin)")
         void beforeLock_nonAdmin_empty() {
             Match match = buildMatch(10L, openTime, lockTime);
+            when(roundWindowService.isRoundOpen("Group Stage Round 1", nowOpen)).thenReturn(true);
 
             assertThat(predictionService.getPredictionsForMatch(match, nowOpen, false, COMMUNITY_ID)).isEmpty();
             verify(predictionRepository, never()).findByMatchIdAndCommunityId(any(), any());
@@ -205,6 +202,7 @@ class PredictionServiceTest {
             Match match = buildMatch(10L, openTime, lockTime);
             Prediction pred = Prediction.builder().user(testUser).match(match)
                     .predictedHome(1).predictedAway(1).build();
+            when(roundWindowService.isRoundOpen("Group Stage Round 1", nowOpen)).thenReturn(true);
             when(predictionRepository.findByMatchIdAndCommunityId(10L, COMMUNITY_ID)).thenReturn(List.of(pred));
 
             assertThat(predictionService.getPredictionsForMatch(match, nowOpen, true, COMMUNITY_ID)).hasSize(1);
@@ -241,8 +239,6 @@ class PredictionServiceTest {
                 .roundLabel("Group Stage Round 1")
                 .kickoffTime(openTime.plusHours(24))
                 .status(MatchStatus.SCHEDULED)
-                .predictionWindowOpensAt(openTime)
-                .predictionWindowClosesAt(closeTime)
                 .build();
         m.setId(id);
         return m;

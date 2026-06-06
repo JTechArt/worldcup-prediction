@@ -73,12 +73,12 @@ class PredictionRepositoryTest {
         match1 = matchRepository.save(Match.builder()
                 .matchNumber(1).stage(MatchStage.GROUP).roundLabel("Group Stage Round 1")
                 .kickoffTime(LocalDateTime.now().plusDays(1)).status(MatchStatus.SCHEDULED)
-                .predictionWindowOpen(true).predictionWindowClosesAt(LocalDateTime.now().plusHours(23)).build());
+                .build());
 
         match2 = matchRepository.save(Match.builder()
                 .matchNumber(2).stage(MatchStage.GROUP).roundLabel("Group Stage Round 1")
                 .kickoffTime(LocalDateTime.now().plusDays(2)).status(MatchStatus.SCHEDULED)
-                .predictionWindowOpen(false).build());
+                .build());
 
         community = communityRepository.save(Community.builder()
                 .name("Test Community").slug("test-community").build());
