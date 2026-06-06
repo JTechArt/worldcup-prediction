@@ -1,6 +1,7 @@
 package com.worldcup.prediction.controller.admin;
 
 import com.worldcup.prediction.domain.Match;
+import com.worldcup.prediction.domain.RoundWindow;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.AuditAction;
 import com.worldcup.prediction.domain.enums.UserStatus;
@@ -8,6 +9,7 @@ import com.worldcup.prediction.security.CustomOAuth2User;
 import com.worldcup.prediction.service.AuditLogService;
 import com.worldcup.prediction.service.EmailService;
 import com.worldcup.prediction.service.MatchAdminService;
+import com.worldcup.prediction.service.RoundWindowService;
 import com.worldcup.prediction.service.UserService;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +20,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/matches")
@@ -30,10 +34,41 @@ public class AdminMatchController {
     private final AuditLogService auditLogService;
     private final EmailService emailService;
     private final UserService userService;
+    private final RoundWindowService roundWindowService;
 
     @GetMapping
     public String listMatches(Model model) {
-        model.addAttribute("matches", matchAdminService.findAllOrderByKickoffAsc());
+        List<Match> allMatches = matchAdminService.findAllOrderByKickoffAsc();
+        List<RoundWindow> roundWindows = roundWindowService.findAll();
+        LocalDateTime now = LocalDateTime.now();
+
+        Map<String, RoundWindow> windowMap = roundWindows.stream()
+                .collect(Collectors.toMap(RoundWindow::getRoundLabel, rw -> rw));
+
+        Map<String, List<Match>> matchesByRound = new LinkedHashMap<>();
+        for (Match m : allMatches) {
+            matchesByRound.computeIfAbsent(m.getRoundLabel(), k -> new ArrayList<>()).add(m);
+        }
+
+        Map<String, String> roundStatuses = new LinkedHashMap<>();
+        Map<String, Boolean> roundOverridden = new LinkedHashMap<>();
+        for (String roundLabel : matchesByRound.keySet()) {
+            List<Match> matches = matchesByRound.get(roundLabel);
+            boolean allCompleted = matches.stream().allMatch(Match::isCompleted);
+            if (allCompleted) {
+                roundStatuses.put(roundLabel, "PAST");
+            } else if (roundWindowService.isRoundOpen(roundLabel, now)) {
+                roundStatuses.put(roundLabel, "OPEN");
+            } else {
+                roundStatuses.put(roundLabel, "FUTURE");
+            }
+            RoundWindow rw = windowMap.get(roundLabel);
+            roundOverridden.put(roundLabel, rw != null && rw.getOverrideStatus() != null);
+        }
+
+        model.addAttribute("matchesByRound", matchesByRound);
+        model.addAttribute("roundStatuses", roundStatuses);
+        model.addAttribute("roundOverridden", roundOverridden);
         return "admin/matches";
     }
 
@@ -53,45 +88,56 @@ public class AdminMatchController {
         return "redirect:/admin/matches";
     }
 
-    @PostMapping("/{id}/open-window")
-    public String openWindow(@PathVariable Long id,
+    @PostMapping("/rounds/{roundLabel}/open")
+    public String openRound(@PathVariable String roundLabel,
+                            @AuthenticationPrincipal CustomOAuth2User admin,
+                            RedirectAttributes redirectAttributes) {
+        Long adminId = admin != null ? admin.getUserId() : 0L;
+        roundWindowService.openRound(roundLabel);
+        auditLogService.log(adminId, AuditAction.ROUND_WINDOW_OPENED, "ROUND", null,
+                "Round opened: " + roundLabel);
+        redirectAttributes.addFlashAttribute("successMessage",
+                "Prediction window opened for " + roundLabel);
+        return "redirect:/admin/matches";
+    }
+
+    @PostMapping("/rounds/{roundLabel}/close")
+    public String closeRound(@PathVariable String roundLabel,
                              @AuthenticationPrincipal CustomOAuth2User admin,
                              RedirectAttributes redirectAttributes) {
         Long adminId = admin != null ? admin.getUserId() : 0L;
-        Match match = matchAdminService.setPredictionWindowOpen(id, true);
-        auditLogService.log(adminId, AuditAction.PREDICTION_WINDOW_OPENED, "MATCH", id,
-                "Window opened: " + match.getHomeTeam().getName() + " vs " + match.getAwayTeam().getName());
+        roundWindowService.closeRound(roundLabel);
+        auditLogService.log(adminId, AuditAction.ROUND_WINDOW_CLOSED, "ROUND", null,
+                "Round closed: " + roundLabel);
         redirectAttributes.addFlashAttribute("successMessage",
-                "Prediction window opened for " + match.getHomeTeam().getName() + " vs " + match.getAwayTeam().getName());
+                "Prediction window closed for " + roundLabel);
         return "redirect:/admin/matches";
     }
 
-    @PostMapping("/{id}/close-window")
-    public String closeWindow(@PathVariable Long id,
-                              @AuthenticationPrincipal CustomOAuth2User admin,
-                              RedirectAttributes redirectAttributes) {
+    @PostMapping("/rounds/{roundLabel}/reset")
+    public String resetRound(@PathVariable String roundLabel,
+                             @AuthenticationPrincipal CustomOAuth2User admin,
+                             RedirectAttributes redirectAttributes) {
         Long adminId = admin != null ? admin.getUserId() : 0L;
-        Match match = matchAdminService.setPredictionWindowOpen(id, false);
-        auditLogService.log(adminId, AuditAction.PREDICTION_WINDOW_CLOSED, "MATCH", id,
-                "Window closed: " + match.getHomeTeam().getName() + " vs " + match.getAwayTeam().getName());
+        roundWindowService.resetOverride(roundLabel);
+        auditLogService.log(adminId, AuditAction.ROUND_WINDOW_RESET, "ROUND", null,
+                "Round reset to auto: " + roundLabel);
         redirectAttributes.addFlashAttribute("successMessage",
-                "Prediction window closed for " + match.getHomeTeam().getName() + " vs " + match.getAwayTeam().getName());
+                "Prediction window reset to automatic for " + roundLabel);
         return "redirect:/admin/matches";
     }
 
-    @PostMapping("/{id}/send-reminder")
-    public String sendReminder(@PathVariable Long id,
-                               @AuthenticationPrincipal CustomOAuth2User admin,
-                               RedirectAttributes redirectAttributes) {
+    @PostMapping("/rounds/{roundLabel}/send-reminder")
+    public String sendRoundReminder(@PathVariable String roundLabel,
+                                    @AuthenticationPrincipal CustomOAuth2User admin,
+                                    RedirectAttributes redirectAttributes) {
         Long adminId = admin != null ? admin.getUserId() : 0L;
-        Match match = matchAdminService.findById(id);
-        String matchInfo = match.getHomeTeam().getName() + " vs " + match.getAwayTeam().getName();
         List<User> activeUsers = userService.findByStatus(UserStatus.ACTIVE);
-        activeUsers.forEach(u -> emailService.sendPredictionReminder(u, matchInfo));
-        auditLogService.log(adminId, AuditAction.REMINDER_SENT, "MATCH", id,
-                "Reminder for: " + matchInfo + " (" + activeUsers.size() + " recipients)");
+        activeUsers.forEach(u -> emailService.sendPredictionReminder(u, roundLabel));
+        auditLogService.log(adminId, AuditAction.REMINDER_SENT, "ROUND", null,
+                "Reminder for: " + roundLabel + " (" + activeUsers.size() + " recipients)");
         redirectAttributes.addFlashAttribute("successMessage",
-                "Reminder logged for " + activeUsers.size() + " participants (stub — no email sent yet).");
+                "Reminder sent for " + roundLabel + " (" + activeUsers.size() + " participants).");
         return "redirect:/admin/matches";
     }
 }
