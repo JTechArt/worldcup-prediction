@@ -30,7 +30,12 @@ public interface TournamentWinnerPredictionRepository extends JpaRepository<Tour
 
     long countByTeamId(Long teamId);
 
-    Optional<TournamentWinnerPrediction> findByUserIdAndCommunityId(Long userId, Long communityId);
+    @Query("""
+            SELECT twp FROM TournamentWinnerPrediction twp
+            JOIN FETCH twp.team
+            WHERE twp.user.id = :userId AND twp.community.id = :communityId
+            """)
+    Optional<TournamentWinnerPrediction> findByUserIdAndCommunityId(@Param("userId") Long userId, @Param("communityId") Long communityId);
 
     List<TournamentWinnerPrediction> findByCommunityId(Long communityId);
 

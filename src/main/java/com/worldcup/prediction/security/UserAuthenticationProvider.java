@@ -28,15 +28,9 @@ public class UserAuthenticationProvider implements AuthenticationProvider {
         String email = authentication.getName();
         String password = (String) authentication.getCredentials();
 
-        // Return null (not throw) if user not found or is SUPER_ADMIN so
-        // ProviderManager skips cleanly instead of accumulating exception frames.
         User user = userRepository.findByEmailIgnoreCase(email)
                 .filter(u -> u.getRole() != UserRole.SUPER_ADMIN)
-                .orElse(null);
-
-        if (user == null) {
-            return null;
-        }
+                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
         if (user.getPasswordHash() == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid credentials");

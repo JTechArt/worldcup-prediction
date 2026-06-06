@@ -152,7 +152,7 @@ public class PredictionService {
 
     /** Returns ALL predictions for a match (admin use — bypasses window checks). */
     public List<Prediction> findAllByMatchId(Long matchId) {
-        return predictionRepository.findByMatchId(matchId);
+        return predictionRepository.findByMatchIdWithUsers(matchId);
     }
 
     /**
