@@ -47,8 +47,8 @@
         </svg>
       </div>
       <div>
-        <p class="text-2xl font-bold text-gray-900" th:text="${#lists.size(openWindows)}">0</p>
-        <p class="text-sm text-gray-500">Open Prediction Windows</p>
+        <p class="text-2xl font-bold text-gray-900" th:text="${openRoundCount}">0</p>
+        <p class="text-sm text-gray-500">Open Rounds</p>
       </div>
       <a th:href="@{/admin/matches}" class="ml-auto text-xs text-admin-dark hover:underline font-medium">Manage →</a>
     </div>
@@ -92,10 +92,7 @@
           <div class="flex items-center gap-2">
             <span class="text-gray-500 text-xs"
                   th:text="${#temporals.format(match.kickoffTime, 'HH:mm')}">00:00</span>
-            <span th:if="${match.predictionWindowOpen}"
-                  class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">Open</span>
-            <span th:unless="${match.predictionWindowOpen}"
-                  class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-medium">Closed</span>
+
           </div>
         </div>
       </div>
