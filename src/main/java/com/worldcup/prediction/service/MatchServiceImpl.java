@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -17,6 +18,7 @@ import java.util.List;
 public class MatchServiceImpl implements MatchService {
 
     private final MatchRepository matchRepository;
+    private final RoundWindowService roundWindowService;
 
     @Override
     public List<FixtureViewDto> getAllFixtures() {
@@ -47,7 +49,9 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public FixtureViewDto getNextPredictableMatch(Long userId) {
-        return matchRepository.findOpenPredictionWindows().stream()
+        LocalDateTime now = LocalDateTime.now();
+        return matchRepository.findAllWithTeams().stream()
+                .filter(m -> roundWindowService.isRoundOpen(m.getRoundLabel(), now))
                 .findFirst()
                 .map(this::toDto)
                 .orElse(null);
@@ -55,7 +59,10 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public int getOpenMatchCount() {
-        return matchRepository.findOpenPredictionWindows().size();
+        LocalDateTime now = LocalDateTime.now();
+        return (int) matchRepository.findAllWithTeams().stream()
+                .filter(m -> roundWindowService.isRoundOpen(m.getRoundLabel(), now))
+                .count();
     }
 
     private FixtureViewDto toDto(Match m) {
@@ -68,6 +75,7 @@ public class MatchServiceImpl implements MatchService {
         dto.setCity(m.getCity());
 
         if (m.getHomeTeam() != null) {
+            dto.setHomeTeamId(m.getHomeTeam().getId());
             dto.setHomeTeamName(m.getHomeTeam().getName());
             dto.setHomeTeamCode(m.getHomeTeam().getFlagCode());
         } else {
@@ -75,6 +83,7 @@ public class MatchServiceImpl implements MatchService {
         }
 
         if (m.getAwayTeam() != null) {
+            dto.setAwayTeamId(m.getAwayTeam().getId());
             dto.setAwayTeamName(m.getAwayTeam().getName());
             dto.setAwayTeamCode(m.getAwayTeam().getFlagCode());
         } else {
