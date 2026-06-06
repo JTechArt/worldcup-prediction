@@ -2,6 +2,7 @@ package com.worldcup.prediction.integration.football;
 
 import com.worldcup.prediction.domain.Group;
 import com.worldcup.prediction.domain.Match;
+import com.worldcup.prediction.domain.RoundWindow;
 import com.worldcup.prediction.domain.Team;
 import com.worldcup.prediction.domain.enums.MatchStage;
 import com.worldcup.prediction.domain.enums.MatchStatus;
@@ -13,6 +14,7 @@ import com.worldcup.prediction.repository.MatchGoalRepository;
 import com.worldcup.prediction.repository.MatchLineupRepository;
 import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
+import com.worldcup.prediction.repository.RoundWindowRepository;
 import com.worldcup.prediction.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +42,7 @@ public class MatchSyncService {
     private final MatchLineupRepository lineupRepository;
     private final MatchGoalRepository goalRepository;
     private final PredictionRepository predictionRepository;
+    private final RoundWindowRepository roundWindowRepository;
 
     /**
      * Wipes ALL match-dependent data (predictions, lineups, goals, matches) and
@@ -120,6 +123,22 @@ public class MatchSyncService {
 
             matchRepository.save(match);
             created++;
+        }
+
+        // Create or update RoundWindow entries for synced rounds
+        List<String> roundLabels = matchRepository.findDistinctRoundLabels();
+        for (String label : roundLabels) {
+            var matches = matchRepository.findByRoundLabelWithTeams(label);
+            if (matches.isEmpty()) continue;
+            LocalDateTime firstKickoff = matches.stream()
+                    .map(Match::getKickoffTime).min(LocalDateTime::compareTo).orElse(null);
+            LocalDateTime lastKickoff = matches.stream()
+                    .map(Match::getKickoffTime).max(LocalDateTime::compareTo).orElse(null);
+            RoundWindow rw = roundWindowRepository.findByRoundLabel(label)
+                    .orElse(RoundWindow.builder().roundLabel(label).build());
+            if (firstKickoff != null) rw.setAutoOpensAt(firstKickoff.minusHours(24));
+            if (lastKickoff != null) rw.setAutoClosesAt(lastKickoff.minusHours(1));
+            roundWindowRepository.save(rw);
         }
 
         return SyncResult.success(created + " group stage matches created" +
