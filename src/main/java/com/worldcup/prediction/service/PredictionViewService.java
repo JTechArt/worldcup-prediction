@@ -34,6 +34,7 @@ public class PredictionViewService {
     private final PredictionRepository predictionRepository;
     private final UserRepository userRepository;
     private final CommunityRepository communityRepository;
+    private final RoundWindowService roundWindowService;
 
     public List<RoundSummaryDto> getRoundSummaries(Long userId, Long communityId) {
         List<String> roundLabels = matchRepository.findDistinctRoundLabels();
@@ -51,15 +52,13 @@ public class PredictionViewService {
 
             List<Long> matchIds = matches.stream().map(Match::getId).toList();
             boolean allComplete = matches.stream().allMatch(m -> m.getStatus() == MatchStatus.COMPLETED);
-            LocalDateTime firstKickoff = matches.stream()
-                    .map(Match::getKickoffTime).min(Comparator.naturalOrder()).orElse(now);
 
             if (allComplete) {
                 dto.setStatus("PAST");
                 int pts = (int) predictionRepository.findByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId).stream()
                         .mapToInt(Prediction::getPointsAwarded).sum();
                 dto.setPointsEarned(pts);
-            } else if (now.isAfter(firstKickoff.minusHours(24))) {
+            } else if (roundWindowService.isRoundOpen(label, now)) {
                 dto.setStatus("OPEN");
                 long predicted = predictionRepository.countByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId);
                 dto.setPredictedCount((int) predicted);
@@ -99,6 +98,10 @@ public class PredictionViewService {
     public int submitPredictionsForRound(Long userId, PredictionSubmitDto dto, Long communityId) {
         List<Match> roundMatches = matchRepository.findByRoundLabelWithTeams(dto.getRoundLabel());
         LocalDateTime now = LocalDateTime.now();
+
+        if (!roundWindowService.isRoundOpen(dto.getRoundLabel(), now)) {
+            throw new IllegalStateException("The prediction window for " + dto.getRoundLabel() + " is not open.");
+        }
 
         for (Match m : roundMatches) {
             if (now.isAfter(m.getKickoffTime().minusHours(1))) {
