@@ -80,16 +80,6 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 
     @Query("""
             SELECT m FROM Match m
-            LEFT JOIN FETCH m.homeTeam
-            LEFT JOIN FETCH m.awayTeam
-            LEFT JOIN FETCH m.group
-            WHERE m.predictionWindowOpen = true
-            ORDER BY m.kickoffTime ASC
-            """)
-    List<Match> findOpenPredictionWindows();
-
-    @Query("""
-            SELECT m FROM Match m
             WHERE m.kickoffTime >= :from
               AND m.kickoffTime < :to
             ORDER BY m.kickoffTime ASC
@@ -98,23 +88,6 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to);
 
-    @Query("""
-            SELECT m FROM Match m
-            WHERE m.predictionWindowOpen = false
-              AND m.predictionWindowOpensAt IS NOT NULL
-              AND m.predictionWindowOpensAt <= :now
-              AND m.status = 'SCHEDULED'
-            """)
-    List<Match> findMatchesWhereWindowShouldOpen(@Param("now") LocalDateTime now);
-
-    @Query("""
-            SELECT m FROM Match m
-            WHERE m.predictionWindowOpen = true
-              AND m.predictionWindowClosesAt IS NOT NULL
-              AND m.predictionWindowClosesAt <= :now
-            """)
-    List<Match> findMatchesWhereWindowShouldClose(@Param("now") LocalDateTime now);
-
     long countByStatus(MatchStatus status);
 
     List<Match> findByStatusAndLineupFetchedFalse(MatchStatus status);
@@ -122,8 +95,6 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     long countByStatusAndKickoffTimeBefore(MatchStatus status, LocalDateTime time);
 
     long countByStatusAndUpdatedAtAfter(MatchStatus status, LocalDateTime time);
-
-    List<Match> findByPredictionWindowOpen(boolean open);
 
     @Query("""
             SELECT m FROM Match m
