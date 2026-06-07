@@ -95,7 +95,7 @@ public class AccountStatusFilter extends OncePerRequestFilter {
 
         // PENDING users may only see /pending (and the public paths already excluded above).
         if (!isSuperAdmin && dbStatus == UserStatus.PENDING) {
-            String path = request.getServletPath();
+            String path = request.getRequestURI();
             if (!path.startsWith("/pending")) {
                 response.sendRedirect("/pending");
                 return;
