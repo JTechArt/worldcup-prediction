@@ -1,10 +1,14 @@
 package com.worldcup.prediction.controller.community;
 
 import com.worldcup.prediction.domain.Community;
+import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.domain.TournamentWinnerPrediction;
+import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.dto.*;
+import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.TeamRepository;
 import com.worldcup.prediction.security.CustomOAuth2User;
+import com.worldcup.prediction.service.EmailService;
 import com.worldcup.prediction.service.PredictionViewService;
 import com.worldcup.prediction.service.TournamentWinnerPredictionService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,9 +21,13 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/c/{slug}/predictions")
@@ -29,6 +37,8 @@ public class CommunityPredictionController {
     private final PredictionViewService predictionViewService;
     private final TournamentWinnerPredictionService tournamentWinnerService;
     private final TeamRepository teamRepository;
+    private final EmailService emailService;
+    private final MatchRepository matchRepository;
 
     @GetMapping
     public String predictionsPage(@PathVariable String slug,
@@ -105,6 +115,35 @@ public class CommunityPredictionController {
             int count = predictionViewService.submitPredictionsForRound(principal.getUserId(), submitDto, community.getId());
             redirectAttributes.addFlashAttribute("successMessage",
                     "Predictions saved! " + count + " match" + (count == 1 ? "" : "es") + " locked in.");
+            final User user = principal.getUser();
+            final String roundLabel = submitDto.getRoundLabel();
+            final List<Match> roundMatches = matchRepository.findByRoundLabelWithTeams(roundLabel);
+            final Map<Long, PredictionSubmitDto.SinglePrediction> predMap = submitDto.getPredictions().stream()
+                    .collect(Collectors.toMap(PredictionSubmitDto.SinglePrediction::getMatchId, p -> p));
+            CompletableFuture.runAsync(() -> {
+                try {
+                    DateTimeFormatter kickoffFmt = DateTimeFormatter.ofPattern("EEE, MMM d 'at' HH:mm 'UTC'");
+                    List<Map<String, String>> predictionDetails = roundMatches.stream()
+                            .filter(m -> predMap.containsKey(m.getId()))
+                            .map(m -> {
+                                PredictionSubmitDto.SinglePrediction sp = predMap.get(m.getId());
+                                String home = m.getHomeTeam() != null ? m.getHomeTeam().getName() : "TBD";
+                                String away = m.getAwayTeam() != null ? m.getAwayTeam().getName() : "TBD";
+                                String kickoff = m.getKickoffTime() != null ? m.getKickoffTime().format(kickoffFmt) : "";
+                                return Map.of(
+                                        "homeTeam", home,
+                                        "awayTeam", away,
+                                        "predictedHome", String.valueOf(sp.getHomeScore()),
+                                        "predictedAway", String.valueOf(sp.getAwayScore()),
+                                        "kickoff", kickoff
+                                );
+                            })
+                            .collect(Collectors.toList());
+                    emailService.sendPredictionConfirmation(user, roundLabel, predictionDetails, LocalDateTime.now());
+                } catch (Exception e) {
+                    // logged inside EmailService.send
+                }
+            });
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
