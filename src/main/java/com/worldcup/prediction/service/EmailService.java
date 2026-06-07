@@ -10,6 +10,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -180,6 +181,45 @@ public class EmailService {
         model.put("appUrl", appUrl);
         String body = renderOrFallback("leaderboard-digest.ftlh", model, subject);
         send(user.getEmail(), subject, body);
+    }
+
+    public void sendPredictionConfirmation(User user, String roundLabel,
+                                            List<Map<String, String>> predictions,
+                                            LocalDateTime submittedAt) {
+        String subject = "Your predictions for " + roundLabel + " have been submitted";
+        Map<String, Object> model = new HashMap<>();
+        model.put("title", "Prediction Confirmation");
+        model.put("firstName", user.getFirstName());
+        model.put("roundLabel", roundLabel);
+        model.put("submittedAt", submittedAt.format(DATE_FMT));
+        model.put("predictions", predictions);
+        model.put("appUrl", appUrl);
+        String body = renderOrFallback("prediction-confirmation.ftlh", model, subject);
+        send(user.getEmail(), subject, body);
+    }
+
+    public void sendTestPredictionConfirmation(String to, String firstName, String roundLabel) {
+        String subject = "Your predictions for " + roundLabel + " have been submitted";
+        List<Map<String, String>> predictions = List.of(
+                Map.of("homeTeam", "Mexico", "awayTeam", "Canada",
+                        "predictedHome", "2", "predictedAway", "1",
+                        "kickoff", "Wed, Jun 11 at 19:00 UTC"),
+                Map.of("homeTeam", "USA", "awayTeam", "Brazil",
+                        "predictedHome", "1", "predictedAway", "3",
+                        "kickoff", "Thu, Jun 12 at 21:00 UTC"),
+                Map.of("homeTeam", "France", "awayTeam", "Germany",
+                        "predictedHome", "0", "predictedAway", "0",
+                        "kickoff", "Fri, Jun 13 at 18:00 UTC")
+        );
+        Map<String, Object> model = new HashMap<>();
+        model.put("title", "Prediction Confirmation");
+        model.put("firstName", firstName);
+        model.put("roundLabel", roundLabel);
+        model.put("submittedAt", LocalDateTime.now().format(DATE_FMT));
+        model.put("predictions", predictions);
+        model.put("appUrl", appUrl);
+        String body = renderOrFallback("prediction-confirmation.ftlh", model, subject);
+        send(to, subject, body);
     }
 
     public void sendInvitation(String email, User inviter) {

@@ -137,4 +137,21 @@ class EmailServiceTest {
 
         verify(mailSender, times(1)).send(any(MimeMessage.class));
     }
+
+    @Test
+    void sendPredictionConfirmation_invokesMailSender() {
+        List<Map<String, String>> predictions = List.of(
+                Map.of("homeTeam", "Mexico", "awayTeam", "Canada",
+                        "predictedHome", "2", "predictedAway", "1",
+                        "kickoff", "Wed, Jun 11 at 19:00 UTC"),
+                Map.of("homeTeam", "USA", "awayTeam", "Brazil",
+                        "predictedHome", "1", "predictedAway", "3",
+                        "kickoff", "Wed, Jun 11 at 21:00 UTC")
+        );
+
+        emailService.sendPredictionConfirmation(testUser, "Group Stage MD1", predictions,
+                LocalDateTime.of(2026, 6, 10, 14, 30));
+
+        verify(mailSender, times(1)).send(any(MimeMessage.class));
+    }
 }
