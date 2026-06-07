@@ -134,6 +134,20 @@ public class AdminEmailTestController {
         return "redirect:/admin/email-test";
     }
 
+    @PostMapping("/prediction-confirmation")
+    public String testPredictionConfirmation(@RequestParam String to,
+                                              @RequestParam String firstName,
+                                              @RequestParam String roundLabel,
+                                              RedirectAttributes ra) {
+        try {
+            emailService.sendTestPredictionConfirmation(to, firstName, roundLabel);
+            ra.addFlashAttribute("successMessage", "Prediction confirmation test sent to " + to);
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", "Failed: " + e.getMessage());
+        }
+        return "redirect:/admin/email-test";
+    }
+
     private User fakeUser(String email, String firstName) {
         return User.builder()
                 .email(email)

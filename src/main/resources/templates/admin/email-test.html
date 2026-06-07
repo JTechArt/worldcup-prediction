@@ -240,6 +240,37 @@
     </form>
   </div>
 
+  <!-- 8. Prediction Confirmation -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <h2 class="text-base font-semibold text-gray-800 mb-1">Prediction Confirmation</h2>
+    <p class="text-xs text-gray-400 mb-4">Template: <code class="bg-gray-100 px-1 rounded">prediction-confirmation.ftlh</code> — sends with 3 synthetic predictions.</p>
+    <form th:action="@{/admin/email-test/prediction-confirmation}" method="post" class="space-y-3">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">To email</label>
+          <input type="email" name="to" value="arthurho@adobe.com" required
+                 class="w-full rounded-lg border-gray-300 text-sm px-3 py-2 border focus:ring-admin-light focus:border-admin-light"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">First name</label>
+          <input type="text" name="firstName" value="Arthur" required
+                 class="w-full rounded-lg border-gray-300 text-sm px-3 py-2 border focus:ring-admin-light focus:border-admin-light"/>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Round label</label>
+          <input type="text" name="roundLabel" value="Group Stage MD1" required
+                 class="w-full rounded-lg border-gray-300 text-sm px-3 py-2 border focus:ring-admin-light focus:border-admin-light"/>
+        </div>
+      </div>
+      <div class="flex justify-end">
+        <button type="submit" class="bg-admin-dark hover:bg-admin-mid text-white rounded-lg px-4 py-2 text-sm font-semibold transition-colors">
+          Send Test →
+        </button>
+      </div>
+    </form>
+  </div>
+
 </div>
 </th:block>
 </body>
