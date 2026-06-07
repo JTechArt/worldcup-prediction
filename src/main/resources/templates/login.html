@@ -1,15 +1,30 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head th:replace="~{fragments/layout :: head('Sign In')}"></head>
+<style>
+  .login-bg-img {
+    position: absolute; inset: 0;
+    background: url('/images/landing-hero.jpg') center center / cover no-repeat;
+    filter: brightness(0.5) saturate(1.2);
+  }
+  @media (max-width: 640px) {
+    .login-bg-img {
+      background-size: 100% auto;
+      background-position: center top;
+    }
+  }
+</style>
 <body class="min-h-screen bg-wc-dark-green flex items-center justify-center overflow-hidden relative">
 
-    <!-- Background decoration -->
+    <!-- Background image (mobile: small band showing 2 player faces, gradient overlays fill top/bottom) -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        <div class="absolute text-6xl opacity-10 animate-bounce" style="top:10%;left:8%;animation-duration:3s;">⚽</div>
-        <div class="absolute text-4xl opacity-10 animate-bounce" style="top:25%;right:12%;animation-duration:4s;animation-delay:0.5s;">⚽</div>
-        <div class="absolute text-5xl opacity-10 animate-bounce" style="bottom:20%;left:15%;animation-duration:3.5s;animation-delay:1s;">⚽</div>
-        <div class="absolute w-64 h-64 rounded-full opacity-5 bg-wc-green" style="top:-4rem;right:-4rem;"></div>
-        <div class="absolute w-80 h-80 rounded-full opacity-5 bg-wc-green" style="bottom:-5rem;left:-5rem;"></div>
+        <div class="login-bg-img"></div>
+        <!-- Top overlay: just a subtle vignette on mobile so player faces show through -->
+        <div class="absolute inset-x-0 top-0"
+             style="height:25%; background: linear-gradient(to bottom, rgba(0,26,8,0.7) 0%, transparent 100%);"></div>
+        <!-- Bottom overlay: solid bg-color fading into image -->
+        <div class="absolute inset-x-0 bottom-0"
+             style="height:40%; background: linear-gradient(to top, #001a08 0%, #001a08 30%, rgba(0,26,8,0.6) 70%, transparent 100%);"></div>
     </div>
 
     <div class="relative z-10 w-full max-w-md px-6">

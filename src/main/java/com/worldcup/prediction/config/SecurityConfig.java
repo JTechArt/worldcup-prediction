@@ -7,6 +7,7 @@ import com.worldcup.prediction.security.OAuth2AuthenticationFailureHandler;
 import com.worldcup.prediction.security.OAuth2AuthenticationSuccessHandler;
 import com.worldcup.prediction.security.SuperAdminAuthenticationProvider;
 import com.worldcup.prediction.security.UserAuthenticationProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,12 +16,19 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -35,6 +43,7 @@ public class SecurityConfig {
     private final AccountStatusFilter accountStatusFilter;
     private final SuperAdminAuthenticationProvider superAdminAuthenticationProvider;
     private final UserAuthenticationProvider userAuthenticationProvider;
+    private final ClientRegistrationRepository clientRegistrationRepository;
 
     @Bean
     public AuthenticationManager authenticationManager() {
@@ -86,6 +95,9 @@ public class SecurityConfig {
                 .failureUrl("/admin/login?error")
             )
             .oauth2Login(oauth2 -> oauth2
+                .authorizationEndpoint(endpoint -> endpoint
+                    .authorizationRequestResolver(linkedInNonceAwareResolver())
+                )
                 .loginPage("/login")
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
@@ -109,5 +121,43 @@ public class SecurityConfig {
         http.addFilterAfter(accountStatusFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    private OAuth2AuthorizationRequestResolver linkedInNonceAwareResolver() {
+        DefaultOAuth2AuthorizationRequestResolver defaultResolver =
+                new DefaultOAuth2AuthorizationRequestResolver(
+                        clientRegistrationRepository, "/oauth2/authorization");
+
+        return new OAuth2AuthorizationRequestResolver() {
+            @Override
+            public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
+                return removeNonceForLinkedIn(defaultResolver.resolve(request));
+            }
+
+            @Override
+            public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
+                return removeNonceForLinkedIn(defaultResolver.resolve(request, clientRegistrationId));
+            }
+        };
+    }
+
+    private static OAuth2AuthorizationRequest removeNonceForLinkedIn(OAuth2AuthorizationRequest request) {
+        if (request == null) return null;
+        if (!"linkedin".equals(request.getAttributes().get("registration_id"))) return request;
+
+        Map<String, Object> params = new LinkedHashMap<>(request.getAdditionalParameters());
+        params.remove(OidcParameterNames.NONCE);
+        Map<String, Object> attrs = new LinkedHashMap<>(request.getAttributes());
+        attrs.remove(OidcParameterNames.NONCE);
+
+        return OAuth2AuthorizationRequest.authorizationCode()
+                .authorizationUri(request.getAuthorizationUri())
+                .clientId(request.getClientId())
+                .redirectUri(request.getRedirectUri())
+                .scopes(request.getScopes())
+                .state(request.getState())
+                .additionalParameters(params)
+                .attributes(attrs)
+                .build();
     }
 }

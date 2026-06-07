@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
@@ -28,10 +29,14 @@ public class LoginController {
 
     @GetMapping("/login")
     public String loginPage(
+            @AuthenticationPrincipal CustomOAuth2User currentUser,
             @RequestParam(value = "error", required = false) String error,
             @RequestParam(value = "disabled", required = false) String disabled,
             @RequestParam(value = "emailError", required = false) String emailError,
             Model model) {
+        if (currentUser != null) {
+            return currentUser.getStatus() == UserStatus.PENDING ? "redirect:/pending" : "redirect:/communities";
+        }
         if (error != null) {
             model.addAttribute("error", "Authentication failed. Please try again.");
         } else if (disabled != null) {

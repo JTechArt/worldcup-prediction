@@ -139,11 +139,12 @@
   <div th:if="${not #lists.isEmpty(players)}"
        class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-fade-up stagger-4">
     <h2 class="font-bold text-gray-700 text-sm uppercase tracking-wide mb-4">Squad</h2>
-    <div th:each="pos : ${ {'Goalkeeper','Defender','Midfielder','Forward'} }" class="mb-6">
-      <p class="text-xs font-semibold text-gray-400 uppercase mb-3" th:text="${pos}">Position</p>
+    <div th:each="pos : ${ {'Goalkeeper','Defence','Midfield','Offence'} }" class="mb-6">
+      <p class="text-xs font-semibold text-gray-400 uppercase mb-3"
+         th:text="${pos == 'Defence' ? 'Defenders' : (pos == 'Midfield' ? 'Midfielders' : (pos == 'Offence' ? 'Forwards' : 'Goalkeepers'))}">Position</p>
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         <div th:each="p : ${players}"
-             th:if="${p.position != null and p.position.contains(pos.substring(0,3))}"
+             th:if="${p.position == pos}"
              class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors">
           <div class="relative flex-shrink-0">
             <img src="/images/default-player.svg"

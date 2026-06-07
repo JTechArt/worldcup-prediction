@@ -4,11 +4,13 @@ import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.UserRole;
 import com.worldcup.prediction.domain.enums.UserStatus;
 import com.worldcup.prediction.repository.UserRepository;
+import com.worldcup.prediction.security.CustomOAuth2User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,7 +37,10 @@ public class RegistrationController {
     }
 
     @GetMapping("/register")
-    public String registerPage(Model model) {
+    public String registerPage(@AuthenticationPrincipal CustomOAuth2User currentUser, Model model) {
+        if (currentUser != null) {
+            return currentUser.getStatus() == UserStatus.PENDING ? "redirect:/pending" : "redirect:/communities";
+        }
         return "register";
     }
 
