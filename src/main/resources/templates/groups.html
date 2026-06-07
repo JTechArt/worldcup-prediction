@@ -44,7 +44,8 @@
 
         <!-- Standings rows -->
         <div class="divide-y divide-gray-50">
-          <div th:each="team, tStat : ${groupEntry.value}"
+          <a th:each="team, tStat : ${groupEntry.value}"
+             th:href="${team.teamId != null ? '/teams/' + team.teamId : '#'}"
                class="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 transition-colors duration-150"
                th:classappend="${team.qualificationStatus == 'QUALIFIED' ? 'bg-green/5 border-l-4 border-l-green/60' :
                                (team.qualificationStatus == 'THIRD' and qualifiedThirdGroups.contains(groupEntry.key)) ? 'bg-gold/5 border-l-4 border-l-gold/50' :
@@ -86,7 +87,7 @@
                     title="Qualified as best third-place team" class="text-gold text-sm">✓</span>
             </div>
 
-          </div>
+          </a>
         </div>
 
         <!-- Matches for this group -->

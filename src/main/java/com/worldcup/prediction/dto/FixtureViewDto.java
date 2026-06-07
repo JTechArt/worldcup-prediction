@@ -11,8 +11,10 @@ public class FixtureViewDto {
     private String venue;
     private String city;
 
+    private Long homeTeamId;
     private String homeTeamName;
     private String homeTeamCode;
+    private Long awayTeamId;
     private String awayTeamName;
     private String awayTeamCode;
 
@@ -41,11 +43,17 @@ public class FixtureViewDto {
     public String getCity() { return city; }
     public void setCity(String city) { this.city = city; }
 
+    public Long getHomeTeamId() { return homeTeamId; }
+    public void setHomeTeamId(Long homeTeamId) { this.homeTeamId = homeTeamId; }
+
     public String getHomeTeamName() { return homeTeamName; }
     public void setHomeTeamName(String homeTeamName) { this.homeTeamName = homeTeamName; }
 
     public String getHomeTeamCode() { return homeTeamCode; }
     public void setHomeTeamCode(String homeTeamCode) { this.homeTeamCode = homeTeamCode; }
+
+    public Long getAwayTeamId() { return awayTeamId; }
+    public void setAwayTeamId(Long awayTeamId) { this.awayTeamId = awayTeamId; }
 
     public String getAwayTeamName() { return awayTeamName; }
     public void setAwayTeamName(String awayTeamName) { this.awayTeamName = awayTeamName; }

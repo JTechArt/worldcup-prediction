@@ -61,6 +61,7 @@ public class GroupServiceImpl implements GroupService {
 
         for (Team t : group.getTeams()) {
             GroupStandingDto dto = new GroupStandingDto();
+            dto.setTeamId(t.getId());
             dto.setTeamName(t.getName());
             dto.setTeamCode(t.getFlagCode());
             dto.setQualificationStatus("PENDING");

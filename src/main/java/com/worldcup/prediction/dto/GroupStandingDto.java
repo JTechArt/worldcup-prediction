@@ -2,6 +2,7 @@ package com.worldcup.prediction.dto;
 
 public class GroupStandingDto {
 
+    private Long teamId;
     private String teamName;
     private String teamCode;
     private int played;
@@ -16,6 +17,9 @@ public class GroupStandingDto {
     private String qualificationStatus;
 
     public GroupStandingDto() {}
+
+    public Long getTeamId() { return teamId; }
+    public void setTeamId(Long teamId) { this.teamId = teamId; }
 
     public String getTeamName() { return teamName; }
     public void setTeamName(String teamName) { this.teamName = teamName; }

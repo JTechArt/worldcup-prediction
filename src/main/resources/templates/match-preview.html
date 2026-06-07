@@ -15,12 +15,15 @@
 
     <div class="flex items-center justify-center gap-6 mt-3">
       <!-- Home team -->
-      <div class="flex flex-col items-center gap-2 w-36">
-        <img th:if="${match.homeTeam != null}"
-             th:src="@{'/images/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
+      <a th:if="${match.homeTeam != null}" th:href="@{'/teams/' + ${match.homeTeam.id}}"
+         class="flex flex-col items-center gap-2 w-36 hover:opacity-80 transition-opacity">
+        <img th:src="@{'/images/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
              class="w-16 h-16 rounded-full shadow" th:alt="${match.homeTeam.name}"/>
-        <span class="font-bold text-gray-800 text-sm text-center"
-              th:text="${match.homeTeam != null ? match.homeTeam.name : match.homeTeamPlaceholder}">Home</span>
+        <span class="font-bold text-gray-800 text-sm text-center" th:text="${match.homeTeam.name}">Home</span>
+      </a>
+      <div th:unless="${match.homeTeam != null}" class="flex flex-col items-center gap-2 w-36">
+        <div class="w-16 h-16 rounded-full shadow bg-gray-100"></div>
+        <span class="font-bold text-gray-800 text-sm text-center" th:text="${match.homeTeamPlaceholder}">TBD</span>
       </div>
 
       <!-- Score / time -->
@@ -36,12 +39,15 @@
       </div>
 
       <!-- Away team -->
-      <div class="flex flex-col items-center gap-2 w-36">
-        <img th:if="${match.awayTeam != null}"
-             th:src="@{'/images/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
+      <a th:if="${match.awayTeam != null}" th:href="@{'/teams/' + ${match.awayTeam.id}}"
+         class="flex flex-col items-center gap-2 w-36 hover:opacity-80 transition-opacity">
+        <img th:src="@{'/images/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
              class="w-16 h-16 rounded-full shadow" th:alt="${match.awayTeam.name}"/>
-        <span class="font-bold text-gray-800 text-sm text-center"
-              th:text="${match.awayTeam != null ? match.awayTeam.name : match.awayTeamPlaceholder}">Away</span>
+        <span class="font-bold text-gray-800 text-sm text-center" th:text="${match.awayTeam.name}">Away</span>
+      </a>
+      <div th:unless="${match.awayTeam != null}" class="flex flex-col items-center gap-2 w-36">
+        <div class="w-16 h-16 rounded-full shadow bg-gray-100"></div>
+        <span class="font-bold text-gray-800 text-sm text-center" th:text="${match.awayTeamPlaceholder}">TBD</span>
       </div>
     </div>
   </div>
