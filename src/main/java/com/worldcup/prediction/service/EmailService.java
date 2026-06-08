@@ -12,6 +12,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -326,9 +327,11 @@ public class EmailService {
                     .body(payload)
                     .retrieve()
                     .toBodilessEntity();
-            log.debug("Email sent to {} via Resend API — {}", to, subject);
+            log.info("Email sent to {} — {}", to, subject);
+        } catch (RestClientResponseException e) {
+            log.error("Resend API rejected email to {} — HTTP {}: {}", to, e.getStatusCode(), e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("Failed to send email to {} via Resend API: {}", to, e.getMessage(), e);
+            log.error("Failed to send email to {}: {}", to, e.getMessage(), e);
         }
     }
 
@@ -341,7 +344,7 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(htmlBody, true);
             mailSender.send(message);
-            log.debug("Email sent to {} via SMTP — {}", to, subject);
+            log.info("Email sent to {} via SMTP — {}", to, subject);
         } catch (MessagingException | MailException e) {
             log.error("Failed to send email to {}: {}", to, e.getMessage(), e);
         }
