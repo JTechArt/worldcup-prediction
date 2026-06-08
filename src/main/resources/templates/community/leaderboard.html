@@ -14,98 +14,68 @@
     --card:#fff; --text:#0d1a10; --muted:#667c70;
     --border:rgba(0,160,70,0.15);
     --h-phase: 32px;
-    --h-game:  52px;
+    --h-game:  68px;
     --h-row:   64px;
     --pw: 240px;
     --tw: 90px;
+    --gc: 76px;   /* group match column width */
+    --kc: 80px;   /* knockout aggregate column width */
   }
 
-  /* HERO */
+  /* ── HERO ── */
   .lb-hero { margin-bottom: 18px; animation: lbFUp .6s ease .1s both; }
   @keyframes lbFUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-  .lb-hero-eye  { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--green-m); margin-bottom: 4px; }
-  .lb-hero-title{ font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 1; letter-spacing: 4px; color: #fff; }
+  .lb-hero-eye   { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--green-m); margin-bottom: 4px; }
+  .lb-hero-title { font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 1; letter-spacing: 4px; color: #fff; }
   .lb-hero-title em { color: var(--green); font-style: normal; }
-  .lb-hero-sub  { color: rgba(255,255,255,.55); font-size: 13px; margin-top: 3px; }
+  .lb-hero-sub   { color: rgba(255,255,255,.55); font-size: 13px; margin-top: 3px; }
 
   .lb-kpi-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-  .lb-kpi {
-    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
-    backdrop-filter: blur(8px); border-radius: 12px; padding: 10px 16px;
-    animation: lbFUp .5s ease both;
-  }
-  .lb-kpi:nth-child(1){animation-delay:.2s} .lb-kpi:nth-child(2){animation-delay:.3s}
-  .lb-kpi:nth-child(3){animation-delay:.4s} .lb-kpi:nth-child(4){animation-delay:.5s}
+  .lb-kpi { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(8px); border-radius: 12px; padding: 10px 16px; animation: lbFUp .5s ease both; }
+  .lb-kpi:nth-child(1){animation-delay:.2s} .lb-kpi:nth-child(2){animation-delay:.3s} .lb-kpi:nth-child(3){animation-delay:.4s} .lb-kpi:nth-child(4){animation-delay:.5s}
   .lb-kpi-v { font-size: 22px; font-weight: 900; color: #fff; line-height: 1; }
   .lb-kpi-l { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
 
-  /* CONTROLS */
+  /* ── CONTROLS ── */
   .lb-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; animation: lbFUp .5s ease .3s both; }
   .lb-legend { display: flex; gap: 12px; flex-wrap: wrap; }
   .lb-leg { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,.75); }
   .lb-ld { width: 11px; height: 11px; border-radius: 3px; }
-  .l-ex .lb-ld  { background: rgba(0,200,83,.65); }
-  .l-wi .lb-ld  { background: rgba(255,195,0,.75); }
-  .l-dr .lb-ld  { background: rgba(60,120,255,.55); }
-  .l-wr .lb-ld  { background: rgba(239,68,68,.5); }
-  .l-no .lb-ld  { background: rgba(255,255,255,.2); }
+  .l-ex .lb-ld { background: rgba(0,200,83,.65); } .l-wi .lb-ld { background: rgba(255,195,0,.75); }
+  .l-dr .lb-ld { background: rgba(60,120,255,.55); } .l-wr .lb-ld { background: rgba(239,68,68,.5); }
+  .l-no .lb-ld { background: rgba(255,255,255,.2); }
 
   .lb-phase-nav { display: flex; gap: 5px; flex-wrap: wrap; }
-  .lb-phase-btn {
-    padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: 700;
-    border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.1);
-    color: rgba(255,255,255,.7); cursor: pointer; transition: all .2s; white-space: nowrap;
-  }
+  .lb-phase-btn { padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: 700; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.1); color: rgba(255,255,255,.7); cursor: pointer; transition: all .2s; white-space: nowrap; }
   .lb-phase-btn:hover { background: rgba(0,200,83,.2); color: #fff; border-color: var(--green-m); }
-  .lb-phase-btn.current { background: var(--green-d); color: white; border-color: var(--green-d); }
+  .lb-phase-btn.active { background: var(--green-d); color: white; border-color: var(--green-d); }
 
   /* ═══════════════════════════════════════════
-     THREE-PANEL LAYOUT
+     THREE-PANEL LEADERBOARD
   ═══════════════════════════════════════════ */
-  .lb-outer {
-    display: flex; align-items: stretch;
-    border-radius: 16px; border: 1px solid var(--border);
-    box-shadow: 0 4px 28px rgba(0,0,0,.12); background: var(--card);
-    overflow: hidden; animation: lbFUp .6s ease .35s both;
-  }
+  .lb-outer { display: flex; align-items: stretch; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 28px rgba(0,0,0,.12); background: var(--card); overflow: hidden; animation: lbFUp .6s ease .35s both; }
 
-  /* LEFT */
-  .lb-left { flex-shrink: 0; width: var(--pw); min-width: var(--pw); box-shadow: 4px 0 12px rgba(0,0,0,.08); z-index: 2; background: var(--card); }
-
-  /* MID */
-  .lb-mid { flex: 1; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: rgba(0,160,70,.25) rgba(0,160,70,.04); }
-  .lb-mid::-webkit-scrollbar { height: 6px; }
-  .lb-mid::-webkit-scrollbar-track { background: rgba(0,160,70,.04); }
-  .lb-mid::-webkit-scrollbar-thumb { background: rgba(0,160,70,.25); border-radius: 3px; }
+  .lb-left  { flex-shrink: 0; width: var(--pw); min-width: var(--pw); box-shadow: 4px 0 12px rgba(0,0,0,.08); z-index: 2; background: var(--card); }
+  .lb-mid   { flex: 1; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: rgba(0,160,70,.25) rgba(0,160,70,.04); }
+  .lb-mid::-webkit-scrollbar { height: 6px; } .lb-mid::-webkit-scrollbar-track { background: rgba(0,160,70,.04); } .lb-mid::-webkit-scrollbar-thumb { background: rgba(0,160,70,.25); border-radius: 3px; }
   .lb-mid-inner { display: inline-flex; flex-direction: column; min-width: 100%; }
-
-  /* RIGHT */
   .lb-right { flex-shrink: 0; width: var(--tw); min-width: var(--tw); box-shadow: -4px 0 12px rgba(0,0,0,.08); z-index: 2; background: var(--card); }
 
-  /* ROW PRIMITIVES */
+  /* ── ROW PRIMITIVES ── */
   .lb-row-phase { height: var(--h-phase); display: flex; align-items: stretch; }
   .lb-row-game  { height: var(--h-game);  display: flex; align-items: stretch; }
-  .lb-row-data  { height: var(--h-row);   display: flex; align-items: center; border-bottom: 1px solid rgba(0,160,70,.07); transition: background .12s; }
+  .lb-row-data  { height: var(--h-row); display: flex; align-items: center; border-bottom: 1px solid rgba(0,160,70,.07); transition: background .12s; }
   .lb-row-data:last-child { border-bottom: none; }
   .lb-row-data:nth-child(even) { background: #f8fefb; }
   .lb-row-data.you { background: #e8fdf1 !important; }
   .lb-row-data:hover { background: #edfff6 !important; }
 
-  /* PHASE HEADER */
-  .lb-phase-hd-cell {
-    flex: 1; display: flex; align-items: center; gap: 6px; padding: 0 12px;
-    font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
-    color: white; white-space: nowrap; position: relative; overflow: hidden;
-    cursor: pointer; min-width: 80px;
-  }
-  .lb-phase-hd-cell::before {
-    content: ''; position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent);
-    animation: lbSw 3.5s ease-in-out infinite;
-  }
+  /* ── PHASE HEADER ── */
+  .lb-phase-hd-cell { display: flex; align-items: center; gap: 6px; padding: 0 12px; font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: white; white-space: nowrap; position: relative; overflow: hidden; flex-shrink: 0; }
+  .lb-phase-hd-cell::before { content: ''; position: absolute; top: 0; left: -80%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent); animation: lbSw 3.5s ease-in-out infinite; }
   @keyframes lbSw { 0%{left:-80%} 55%{left:130%} 100%{left:130%} }
-
   .phase-gs    { background: linear-gradient(90deg,#004d1e,#00a845); }
+  .lb-phase-current { outline: 2px solid rgba(255,255,255,.5); outline-offset: -2px; }
   .phase-r32   { background: linear-gradient(90deg,#162060,#3a5acc); border-bottom: 3px solid #6080ff; }
   .phase-r16   { background: linear-gradient(90deg,#4a1560,#a030cc); }
   .phase-qf    { background: linear-gradient(90deg,#5c2800,#c05800); }
@@ -114,23 +84,32 @@
   .phase-final { background: linear-gradient(90deg,#4a3c00,#c89000); }
 
   /* Spacers */
-  .lb-ph-spacer { height: var(--h-phase); background: rgba(0,160,70,.07); border-bottom: 1px solid rgba(0,160,70,.1); flex-shrink: 0; }
+  .lb-ph-spacer     { height: var(--h-phase); background: rgba(0,160,70,.07); border-bottom: 1px solid rgba(0,160,70,.1); }
   .lb-left-game-hd  { height: var(--h-game); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: rgba(0,160,70,.07); border-bottom: 2px solid rgba(0,160,70,.2); padding: 6px 10px; }
   .lb-right-game-hd { height: var(--h-game); background: rgba(0,160,70,.07); border-bottom: 2px solid rgba(0,160,70,.2); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: var(--green-d); letter-spacing: 1px; text-transform: uppercase; }
-  .lb-fifa-lbl { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 2px; color: var(--green-d); line-height: 1; }
+  .lb-fifa-lbl { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 2px; color: var(--green-d); line-height: 1; }
   .lb-fifa-sub { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
 
-  /* PHASE SCORE COLUMN (mid header) */
-  .lb-psc-hd {
-    min-width: 80px; flex-shrink: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; padding: 4px 6px;
-    background: rgba(0,160,70,.07); border-right: 1px solid rgba(0,160,70,.1);
-    border-bottom: 2px solid rgba(0,160,70,.2);
-  }
-  .lb-psc-hd-label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; }
+  /* ── INDIVIDUAL GAME COLUMN HEADER (group stage) ── */
+  .lb-game-col-hd { width: var(--gc); flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 5px 3px; background: rgba(0,160,70,.07); border-right: 1px solid rgba(0,160,70,.1); border-bottom: 2px solid rgba(0,160,70,.2); }
+  .lb-ghd  { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; white-space: nowrap; }
+  .lb-ghf  { display: flex; align-items: center; gap: 3px; }
+  .lb-ghflag { width: 18px; height: 18px; border-radius: 50%; overflow: hidden; border: 1px solid rgba(0,0,0,.1); flex-shrink: 0; background: rgba(0,160,70,.1); }
+  .lb-ghflag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .lb-ghv  { font-size: 8px; font-weight: 800; color: var(--muted); }
+  .lb-ghs  { font-size: 10px; font-weight: 900; letter-spacing: 1px; color: var(--text); background: rgba(0,0,0,.07); border-radius: 4px; padding: 1px 5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lb-ghs-tbd { display: flex; gap: 2px; align-items: center; }
+  .lb-pd   { width: 3px; height: 3px; border-radius: 50%; background: rgba(0,160,70,.4); animation: lbPdA 1.4s ease-in-out infinite; }
+  .lb-pd:nth-child(2){animation-delay:.2s} .lb-pd:nth-child(3){animation-delay:.4s}
+  @keyframes lbPdA { 0%,100%{opacity:.3;transform:scale(1)} 50%{opacity:1;transform:scale(1.5)} }
 
-  /* PHASE SCORE DATA CELL */
-  .lb-psc-cell { min-width: 80px; flex-shrink: 0; height: var(--h-row); display: flex; align-items: center; justify-content: center; border-right: 1px solid rgba(0,160,70,.06); font-size: 15px; font-weight: 700; }
+  /* ── INDIVIDUAL GAME DATA CELL (group stage, no prediction yet) ── */
+  .lb-game-cell { width: var(--gc); flex-shrink: 0; height: var(--h-row); display: flex; align-items: center; justify-content: center; border-right: 1px solid rgba(0,160,70,.05); color: rgba(0,0,0,.12); font-size: 13px; }
+
+  /* ── AGGREGATE PHASE COLUMN (knockout stages) ── */
+  .lb-psc-hd  { width: var(--kc); flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 6px; background: rgba(0,160,70,.07); border-right: 1px solid rgba(0,160,70,.1); border-bottom: 2px solid rgba(0,160,70,.2); }
+  .lb-psc-hd-label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; }
+  .lb-psc-cell { width: var(--kc); flex-shrink: 0; height: var(--h-row); display: flex; align-items: center; justify-content: center; border-right: 1px solid rgba(0,160,70,.06); font-size: 15px; font-weight: 700; }
   .lb-psc-cell:last-child { border-right: none; }
   .cell-exact   { background: rgba(0,200,83,.14);  color: #005a20; }
   .cell-winner  { background: rgba(255,195,0,.2);  color: #7a5000; }
@@ -138,9 +117,8 @@
   .cell-zero    { background: transparent; color: var(--muted); }
   .cell-pending { background: transparent; color: rgba(0,0,0,.15); }
 
-  /* PLAYER CELL */
+  /* ── PLAYER CELL ── */
   .lb-pc { display: flex; align-items: center; gap: 9px; padding: 0 10px; height: var(--h-row); width: 100%; }
-
   .lb-rk { width: 24px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; flex-shrink: 0; }
   .lb-rk-1 { background: linear-gradient(135deg,#ffd600,#ff9800); color: #1a1a1a; box-shadow: 0 1px 6px rgba(255,214,0,.5); }
   .lb-rk-2 { background: linear-gradient(135deg,#b0bac8,#8090a8); color: white; }
@@ -154,54 +132,49 @@
   @keyframes lbArrowUp { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
   @keyframes lbArrowDn { 0%,100%{transform:translateY(0)} 50%{transform:translateY(3px)} }
 
-  .lb-av-wrap { position: relative; width: 42px; height: 42px; flex-shrink: 0; }
-  .lb-av-ring { position: absolute; inset: -2px; border-radius: 50%; animation: lbRotRing 4s linear infinite; }
-  .rank-1 .lb-av-ring { background: conic-gradient(#ffd600,#ff9800,#ffd600); }
-  .rank-2 .lb-av-ring { background: conic-gradient(#b0bac8,#8090a8,#b0bac8); }
-  .rank-3 .lb-av-ring { background: conic-gradient(#cd7c3a,#a85a20,#cd7c3a); }
-  .rank-other .lb-av-ring { display: none; }
-  @keyframes lbRotRing { to { transform: rotate(360deg); } }
+  /* ── AVATAR: rounded square + waving flag badge ── */
+  .lb-av-wrap   { position: relative; width: 46px; height: 46px; flex-shrink: 0; }
+  .lb-av-photo  { width: 46px; height: 46px; border-radius: 12px; overflow: hidden; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,.18); background: linear-gradient(135deg,var(--green-m),var(--green-d)); display: flex; align-items: center; justify-content: center; }
+  .lb-av-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .lb-av-initials { font-size: 14px; font-weight: 900; color: white; line-height: 1; }
+  .rank-1 .lb-av-photo { border-color: #ffd600; box-shadow: 0 2px 10px rgba(255,214,0,.45); }
+  .rank-2 .lb-av-photo { border-color: #b0bac8; box-shadow: 0 2px 10px rgba(176,186,200,.45); }
+  .rank-3 .lb-av-photo { border-color: #cd7c3a; box-shadow: 0 2px 10px rgba(205,124,58,.45); }
 
-  .lb-av { position: absolute; inset: 2px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg,var(--green-m),var(--green-d)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: white; }
-  .rank-other .lb-av { inset: 0; }
-  .lb-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .lb-flag-badge { position: absolute; bottom: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; overflow: hidden; border: 2.5px solid white; box-shadow: 0 2px 8px rgba(0,0,0,.35); animation: lbFlagWave 2.8s ease-in-out infinite; transform-style: preserve-3d; }
+  .lb-flag-badge img { width: 100%; height: 100%; object-fit: cover; display: block; animation: lbFlagFilter 2.8s ease-in-out infinite; }
+  @keyframes lbFlagWave { 0%,100%{transform:perspective(80px) rotateY(0deg)} 25%{transform:perspective(80px) rotateY(-18deg)} 75%{transform:perspective(80px) rotateY(18deg)} }
+  @keyframes lbFlagFilter { 0%,50%,100%{filter:brightness(1)} 25%,75%{filter:brightness(.82)} }
 
-  .lb-flag-badge { position: absolute; bottom: -3px; right: -3px; width: 18px; height: 18px; border-radius: 50%; overflow: hidden; border: 2px solid #f0fdf5; animation: lbFlagWave 3.5s ease-in-out infinite; }
-  .lb-flag-badge img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  @keyframes lbFlagWave { 0%,100%{transform:perspective(200px) rotateY(0deg)} 25%{transform:perspective(200px) rotateY(-18deg)} 75%{transform:perspective(200px) rotateY(18deg)} }
-
-  .lb-pn { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; color: var(--text); display: flex; align-items: center; gap: 4px; }
+  .lb-pn { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 108px; color: var(--text); display: flex; align-items: center; gap: 4px; }
   .lb-ytag { display: inline-block; background: var(--green); color: white; font-size: 7px; font-weight: 800; padding: 1px 3px; border-radius: 3px; }
   .lb-pm { font-size: 10px; color: var(--muted); margin-top: 1px; }
 
-  /* TOTAL CELL */
+  /* ── TOTAL CELL ── */
   .lb-total-cell { height: var(--h-row); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 8px; }
   .lb-tv { font-size: 16px; font-weight: 900; line-height: 1; }
   .lb-tl { font-size: 8px; color: var(--muted); font-weight: 600; margin-top: 1px; }
-  .rank-1 .lb-tv { color: #c8900a; }
-  .rank-2 .lb-tv { color: #607080; }
-  .rank-3 .lb-tv { color: var(--green); }
-  .rank-other .lb-tv { color: var(--text); }
+  .rank-1 .lb-tv { color: #c8900a; } .rank-2 .lb-tv { color: #607080; }
+  .rank-3 .lb-tv { color: var(--green); } .rank-other .lb-tv { color: var(--text); }
 
   /* Mobile compact */
   @media (max-width: 639px) {
-    :root { --pw: 155px; --tw: 60px; }
+    :root { --pw: 155px; --tw: 60px; --gc: 60px; --kc: 64px; }
     .lb-pc { padding: 0 6px; gap: 5px; }
-    .lb-av-wrap { width: 32px; height: 32px; }
-    .lb-av { font-size: 10px; }
+    .lb-av-wrap { width: 36px; height: 36px; }
+    .lb-av-photo { width: 36px; height: 36px; border-radius: 9px; }
+    .lb-av-initials { font-size: 11px; }
+    .lb-flag-badge { width: 18px; height: 18px; bottom: -4px; right: -4px; }
     .lb-rank-delta { width: 10px; font-size: 8px; }
     .lb-pn { font-size: 11px; max-width: 60px; }
     .lb-pm { font-size: 9px; }
-    .lb-tv { font-size: 13px; }
-    .lb-tl { font-size: 7px; }
+    .lb-tv { font-size: 13px; } .lb-tl { font-size: 7px; }
     .lb-hero-title { font-size: 32px; }
-    .lb-kpi-row { gap: 6px; }
-    .lb-kpi { padding: 8px 10px; }
-    .lb-kpi-v { font-size: 18px; }
+    .lb-kpi { padding: 8px 10px; } .lb-kpi-v { font-size: 18px; }
   }
 </style>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<div class="w-full px-4 sm:px-6 lg:px-8 py-6">
 
   <!-- Hero -->
   <div class="lb-hero">
@@ -226,8 +199,7 @@
         <div class="lb-kpi-l">Exact Scores</div>
       </div>
       <div class="lb-kpi" th:if="${entries != null and !entries.isEmpty()}">
-        <div class="lb-kpi-v"
-             th:text="${entries[0].totalPoints - currentUserEntry.totalPoints}">0</div>
+        <div class="lb-kpi-v" th:text="${entries[0].totalPoints - currentUserEntry.totalPoints}">0</div>
         <div class="lb-kpi-l">Pts to #1</div>
       </div>
     </div>
@@ -242,23 +214,31 @@
       <div class="lb-leg l-wr"><div class="lb-ld"></div>Wrong 0</div>
       <div class="lb-leg l-no"><div class="lb-ld"></div>Pending</div>
     </div>
-    <div class="lb-phase-nav" id="lb-phase-nav">
+    <div class="lb-phase-nav">
+      <!-- One button per group stage round -->
+      <button th:each="entry, iter : ${groupRounds}"
+              th:data-phase="${'ph-gs-r' + iter.count}"
+              th:text="${'GS R' + iter.count}"
+              th:classappend="${entry.key == currentRoundLabel} ? ' active' : ''"
+              class="lb-phase-btn">GS R1</button>
+      <!-- Knockout stage buttons -->
       <button th:each="stage : ${stages}"
+              th:if="${stage.name() != 'GROUP'}"
               th:data-phase="${'ph-' + stage.name().toLowerCase()}"
               th:text="${stage.shortLabel}"
-              class="lb-phase-btn">GS</button>
+              class="lb-phase-btn">R32</button>
     </div>
   </div>
 
   <!-- THREE-PANEL LEADERBOARD -->
   <div class="lb-outer" th:unless="${#lists.isEmpty(entries)}">
 
-    <!-- LEFT: player column -->
-    <div class="lb-left" id="lb-left">
+    <!-- ══ LEFT: player column ══ -->
+    <div class="lb-left">
       <div class="lb-ph-spacer"></div>
       <div class="lb-left-game-hd">
         <img src="https://upload.wikimedia.org/wikipedia/en/thumb/9/9c/2026_FIFA_World_Cup_official_emblem.svg/120px-2026_FIFA_World_Cup_official_emblem.svg.png"
-             style="height:24px;width:auto;object-fit:contain" alt=""
+             style="height:22px;width:auto;object-fit:contain" alt=""
              onerror="this.style.display='none'"/>
         <div class="lb-fifa-lbl">FIFA 2026</div>
         <div class="lb-fifa-sub">World Cup</div>
@@ -280,12 +260,12 @@
             </div>
 
             <div class="lb-av-wrap">
-              <div class="lb-av-ring"></div>
-              <div class="lb-av">
+              <div class="lb-av-photo">
                 <img th:if="${entry.avatarUrl != null}" th:src="${entry.avatarUrl}"
                      th:alt="${entry.displayName}"
-                     th:onerror="'this.style.display=\'none\''"/>
-                <span th:if="${entry.avatarUrl == null}" th:text="${entry.initials}">AB</span>
+                     th:data-fallback="'https://ui-avatars.com/api/?name=' + ${entry.displayName} + '&background=006b2a&color=fff&size=80'"
+                     onerror="this.src=this.dataset.fallback;this.onerror=null"/>
+                <span class="lb-av-initials" th:if="${entry.avatarUrl == null}" th:text="${entry.initials}">AB</span>
               </div>
               <div class="lb-flag-badge" th:if="${entry.predictedWinnerFlagCode != null}">
                 <img th:src="${entry.flagUrl}" th:alt="${entry.predictedWinnerFlagCode}"/>
@@ -305,33 +285,75 @@
       </th:block>
     </div>
 
-    <!-- MID: phase columns, scrollable -->
+    <!-- ══ MID: scrollable columns ══ -->
     <div class="lb-mid" id="lb-mid">
-      <div class="lb-mid-inner" id="lb-mid-inner">
+      <div class="lb-mid-inner">
 
-        <!-- Phase header row -->
+        <!-- ── Phase header row ── -->
         <div class="lb-row-phase">
+          <!-- One cell per group stage ROUND, spanning that round's match columns -->
+          <div th:each="entry, iter : ${groupRounds}"
+               th:id="'ph-gs-r' + ${iter.count}"
+               class="lb-phase-hd-cell phase-gs"
+               th:classappend="${entry.key == currentRoundLabel} ? ' lb-phase-current' : ''"
+               th:style="'width:' + (${entry.value.size()} * 76) + 'px'">
+            <span th:text="'⚽ GS · Round ' + ${iter.count}">⚽ GS · Round 1</span>
+          </div>
+          <!-- Knockout stages: one fixed-width cell each -->
           <div th:each="stage : ${stages}"
+               th:if="${stage.name() != 'GROUP'}"
                th:id="'ph-' + ${stage.name().toLowerCase()}"
                th:class="'lb-phase-hd-cell ' + ${stage.cssClass}"
-               th:text="${stage.shortLabel}">GS</div>
+               style="width:var(--kc)"
+               th:text="${stage.shortLabel}">R32</div>
         </div>
 
-        <!-- Phase score column headers -->
+        <!-- ── Game header row ── -->
         <div class="lb-row-game" style="display:flex">
-          <div th:each="stage : ${stages}" class="lb-psc-hd">
-            <div class="lb-psc-hd-label" th:text="${stage.shortLabel}">GS</div>
+          <!-- Individual match columns per round -->
+          <th:block th:each="entry : ${groupRounds}">
+            <div th:each="m : ${entry.value}" class="lb-game-col-hd">
+              <div class="lb-ghd" th:text="${#temporals.format(m.kickoffTime, 'MMM d')}">Jun 12</div>
+              <div class="lb-ghf">
+                <div class="lb-ghflag">
+                  <img th:if="${m.homeTeam != null}"
+                       th:src="@{'/images/flags/' + ${m.homeTeam.flagCode} + '.svg'}"
+                       onerror="this.style.display='none'"/>
+                </div>
+                <span class="lb-ghv">v</span>
+                <div class="lb-ghflag">
+                  <img th:if="${m.awayTeam != null}"
+                       th:src="@{'/images/flags/' + ${m.awayTeam.flagCode} + '.svg'}"
+                       onerror="this.style.display='none'"/>
+                </div>
+              </div>
+              <div th:if="${m.homeScore != null}" class="lb-ghs"
+                   th:text="${m.homeScore} + '–' + ${m.awayScore}">0–0</div>
+              <div th:unless="${m.homeScore != null}" class="lb-ghs-tbd">
+                <div class="lb-pd"></div><div class="lb-pd"></div><div class="lb-pd"></div>
+              </div>
+            </div>
+          </th:block>
+          <!-- Aggregate knockout stage headers -->
+          <div th:each="stage : ${stages}" th:if="${stage.name() != 'GROUP'}" class="lb-psc-hd">
+            <div class="lb-psc-hd-label" th:text="${stage.shortLabel}">R32</div>
           </div>
         </div>
 
-        <!-- Data rows -->
+        <!-- ── Data rows ── -->
         <th:block th:each="entry : ${entries}">
           <div th:class="'lb-row-data ' + ${entry.rankCssClass}
                          + (${#authentication != null
                              and !#authentication.principal.equals('anonymousUser')
                              and #authentication.principal.userId == entry.userId} ? ' you' : '')"
                style="display:flex">
+            <!-- Empty cell per group match (no predictions shown) -->
+            <th:block th:each="roundEntry : ${groupRounds}">
+              <div th:each="m : ${roundEntry.value}" class="lb-game-cell">·</div>
+            </th:block>
+            <!-- Knockout aggregate cells -->
             <div th:each="stage : ${stages}"
+                 th:if="${stage.name() != 'GROUP'}"
                  th:with="pts=${phasePoints != null ? phasePoints.get(entry.userId)?.get(stage) : null}"
                  th:class="'lb-psc-cell ' + (${pts == null} ? 'cell-pending' : (${pts >= 3} ? 'cell-exact' : (${pts == 2} ? 'cell-draw' : (${pts == 1} ? 'cell-winner' : 'cell-zero'))))">
               <span th:text="${pts != null ? pts : '·'}">·</span>
@@ -342,8 +364,8 @@
       </div>
     </div>
 
-    <!-- RIGHT: totals column -->
-    <div class="lb-right" id="lb-right">
+    <!-- ══ RIGHT: totals column ══ -->
+    <div class="lb-right">
       <div class="lb-ph-spacer"></div>
       <div class="lb-right-game-hd">Total</div>
       <th:block th:each="entry : ${entries}">
@@ -371,22 +393,34 @@
 
 </div>
 
-<script>
+<script th:inline="javascript">
   document.addEventListener('DOMContentLoaded', () => {
-    const mid = document.getElementById('lb-mid');
+    const mid  = document.getElementById('lb-mid');
+    const btns = document.querySelectorAll('.lb-phase-btn');
 
-    document.querySelectorAll('.lb-phase-btn').forEach(btn => {
+    function scrollToPhase(id, animate) {
+      const target = document.getElementById(id);
+      if (!target || !mid) return;
+      const midR = mid.getBoundingClientRect();
+      const tR   = target.getBoundingClientRect();
+      mid.scrollTo({ left: mid.scrollLeft + tR.left - midR.left, behavior: animate ? 'smooth' : 'instant' });
+    }
+
+    btns.forEach(btn => {
       btn.addEventListener('click', () => {
-        const id = btn.dataset.phase;
-        const target = document.getElementById(id);
-        if (target && mid) {
-          const midR = mid.getBoundingClientRect();
-          const tR   = target.getBoundingClientRect();
-          mid.scrollTo({ left: mid.scrollLeft + tR.left - midR.left, behavior: 'smooth' });
-        }
-        document.querySelectorAll('.lb-phase-btn').forEach(b => b.classList.remove('current'));
-        btn.classList.add('current');
+        scrollToPhase(btn.dataset.phase, true);
+        btns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
       });
+    });
+
+    // Auto-scroll to current phase on load (no animation, instant position)
+    const currentId = /*[[${currentPhaseId}]]*/ 'ph-gs-r1';
+    scrollToPhase(currentId, false);
+
+    // Mark the matching nav button active
+    btns.forEach(b => {
+      b.classList.toggle('active', b.dataset.phase === currentId);
     });
   });
 </script>
