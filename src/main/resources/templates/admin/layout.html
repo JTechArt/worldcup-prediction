@@ -176,8 +176,12 @@
       <h1 class="font-bebas text-2xl tracking-wide text-gray-800">
         <th:block layout:fragment="page-title">Admin</th:block>
       </h1>
-      <div class="text-xs text-gray-400"
-           th:text="${#temporals.format(#temporals.createNow(), 'EEE d MMM yyyy')}"></div>
+      <div class="flex items-center gap-3">
+        <div class="text-xs text-gray-400"
+             th:text="${#temporals.format(#temporals.createNow(), 'EEE d MMM yyyy')}"></div>
+        <span class="text-xs text-gray-400"
+              th:text="'· ' + (${timezoneLabel} ?: 'GMT+4 · Yerevan')">· GMT+4 · Yerevan</span>
+      </div>
     </header>
 
     <!-- Flash messages -->
