@@ -10,10 +10,14 @@ import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.annotation.PostConstruct;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,8 +31,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PredictionViewService {
 
-    private static final DateTimeFormatter ISO = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
     private static final DateTimeFormatter DISPLAY = DateTimeFormatter.ofPattern("EEE, d MMM · HH:mm");
+
+    @Value("${app.timezone}")
+    private String timezoneId;
+
+    private ZoneId appZone;
+    private DateTimeFormatter isoFmt;
+
+    @PostConstruct
+    private void initFormatters() {
+        appZone = ZoneId.of(timezoneId);
+        isoFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX").withZone(appZone);
+    }
 
     private final MatchRepository matchRepository;
     private final PredictionRepository predictionRepository;
@@ -88,7 +103,7 @@ public class PredictionViewService {
         Map<String, List<MatchPredictionDto>> result = new LinkedHashMap<>();
         for (MatchPredictionDto m : matches) {
             String dk = m.getKickoffIso() != null
-                    ? LocalDateTime.parse(m.getKickoffIso(), ISO).format(key) : "TBD";
+                    ? OffsetDateTime.parse(m.getKickoffIso()).toLocalDateTime().format(key) : "TBD";
             result.computeIfAbsent(dk, k -> new ArrayList<>()).add(m);
         }
         return result;
@@ -204,8 +219,8 @@ public class PredictionViewService {
         dto.setRoundLabel(m.getRoundLabel());
         dto.setStage(m.getStage().name());
         dto.setGroup(m.getGroup() != null ? m.getGroup().getName() : null);
-        dto.setKickoffIso(m.getKickoffTime().format(ISO));
-        dto.setLockTimeIso(m.getKickoffTime().minusHours(1).format(ISO));
+        dto.setKickoffIso(m.getKickoffTime().atZone(appZone).format(isoFmt));
+        dto.setLockTimeIso(m.getKickoffTime().minusHours(1).atZone(appZone).format(isoFmt));
         dto.setLocked(now.isAfter(m.getKickoffTime().minusHours(1)));
         dto.setHomeTeamName(m.getHomeTeam() != null ? m.getHomeTeam().getName() : "TBD");
         dto.setHomeTeamCode(m.getHomeTeam() != null ? m.getHomeTeam().getFlagCode() : "xx");
