@@ -103,7 +103,7 @@ public class PredictionViewService {
         Map<String, List<MatchPredictionDto>> result = new LinkedHashMap<>();
         for (MatchPredictionDto m : matches) {
             String dk = m.getKickoffIso() != null
-                    ? OffsetDateTime.parse(m.getKickoffIso()).toLocalDateTime().format(key) : "TBD";
+                    ? OffsetDateTime.parse(m.getKickoffIso()).atZoneSameInstant(appZone).toLocalDateTime().format(key) : "TBD";
             result.computeIfAbsent(dk, k -> new ArrayList<>()).add(m);
         }
         return result;

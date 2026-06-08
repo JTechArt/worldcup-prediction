@@ -27,7 +27,7 @@ public class TimezoneControllerAdvice {
     }
 
     private static String buildLabel(String zoneId) {
-        ZoneOffset offset = ZoneId.of(zoneId).getRules().getStandardOffset(Instant.now());
+        ZoneOffset offset = ZoneId.of(zoneId).getRules().getOffset(Instant.now());
         int totalSeconds = offset.getTotalSeconds();
         int hours = totalSeconds / 3600;
         int minutes = Math.abs((totalSeconds % 3600) / 60);
