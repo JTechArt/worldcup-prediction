@@ -202,6 +202,10 @@
     </div>
   </div>
 
+  <script th:inline="javascript">
+    const APP_TZ = /*[[${appTimezone}]]*/ 'Asia/Yerevan';
+  </script>
+
   <script>
   function communityPredictionsApp(rawData, activeLabel, slug) {
     return {
@@ -274,16 +278,16 @@
       },
       fmtKickoff(iso) {
         if (!iso) return '';
-        return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + ' · ' +
-               new Date(iso).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+        return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:APP_TZ}) + ' · ' +
+               new Date(iso).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:APP_TZ});
       },
       fmtDate(iso) {
         if (!iso) return '';
-        return new Date(iso).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+        return new Date(iso).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',timeZone:APP_TZ});
       },
       fmtDateKey(iso) {
         if (!iso) return 'TBD';
-        return new Date(iso).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+        return new Date(iso).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',timeZone:APP_TZ});
       },
 
       init() { setInterval(() => { this.matches = [...this.matches]; }, 1000); }
