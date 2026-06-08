@@ -14,7 +14,7 @@ public class ScorersSyncScheduler {
 
     private final ScorersService scorersService;
 
-    @Scheduled(cron = "0 0 2 * * *")
+    @Scheduled(cron = "0 0 2 * * *", zone = "${app.timezone}")
     public void syncScorers() {
         try {
             SyncResult result = scorersService.syncScorers();

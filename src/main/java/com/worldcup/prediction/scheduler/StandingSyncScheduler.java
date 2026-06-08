@@ -14,7 +14,7 @@ public class StandingSyncScheduler {
 
     private final StandingSyncService syncService;
 
-    @Scheduled(cron = "0 0 */6 * * *")
+    @Scheduled(cron = "0 0 */6 * * *", zone = "${app.timezone}")
     public void syncStandings() {
         try {
             SyncResult result = syncService.syncStandings();
