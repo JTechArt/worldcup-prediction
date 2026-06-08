@@ -62,12 +62,12 @@
                   <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                   <button type="submit" class="px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200">Reject</button>
                 </form>
-                <form th:if="${m.status.name() == 'ACTIVE' && m.role.name() == 'MEMBER'}" th:action="@{'/c/' + ${slug} + '/admin/members/' + ${m.user.id} + '/role'}" method="post" class="inline">
+                <form th:if="${isSuperAdmin && m.status.name() == 'ACTIVE' && m.role.name() == 'MEMBER'}" th:action="@{'/c/' + ${slug} + '/admin/members/' + ${m.user.id} + '/role'}" method="post" class="inline">
                   <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                   <input type="hidden" name="role" value="ADMIN"/>
                   <button type="submit" class="px-2 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-700 hover:bg-amber-200">Make Admin</button>
                 </form>
-                <form th:if="${m.status.name() == 'ACTIVE' && m.role.name() == 'ADMIN'}" th:action="@{'/c/' + ${slug} + '/admin/members/' + ${m.user.id} + '/role'}" method="post" class="inline">
+                <form th:if="${isSuperAdmin && m.status.name() == 'ACTIVE' && m.role.name() == 'ADMIN'}" th:action="@{'/c/' + ${slug} + '/admin/members/' + ${m.user.id} + '/role'}" method="post" class="inline">
                   <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                   <input type="hidden" name="role" value="MEMBER"/>
                   <button type="submit" class="px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200">Remove Admin</button>

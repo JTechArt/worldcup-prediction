@@ -246,8 +246,7 @@
       <button th:each="stage : ${stages}"
               th:data-phase="${'ph-' + stage.name().toLowerCase()}"
               th:text="${stage.shortLabel}"
-              class="lb-phase-btn"
-              th:classappend="${stage.current} ? ' current' : ''">GS</button>
+              class="lb-phase-btn">GS</button>
     </div>
   </div>
 
