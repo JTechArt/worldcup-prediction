@@ -6,10 +6,12 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -20,8 +22,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Email service. When no SMTP host is configured (JavaMailSender not in context),
- * all methods log intent only — no exception is thrown.
+ * Email service. When MAIL_ENABLED=false (default), all methods log intent only.
+ * When enabled with an API key, uses Resend's HTTP API (port 443 — never blocked).
+ * Falls back to SMTP when no API key is set (legacy path, used by unit tests via mock).
  */
 @Service
 @Slf4j
@@ -31,6 +34,7 @@ public class EmailService {
             DateTimeFormatter.ofPattern("EEE, MMM d 'at' HH:mm 'UTC'");
 
     private final JavaMailSender mailSender;
+    private final RestClient resendClient;
     private final String fromAddress;
     private final boolean enabled;
     private final FreemarkerEmailRenderer renderer;
@@ -38,41 +42,50 @@ public class EmailService {
     @Value("${app.base-url:http://localhost:8888}")
     private String appUrl;
 
-    /**
-     * Spring injection.
-     * Set MAIL_ENABLED=true in .env (and configure SMTP_* vars) to send real emails.
-     * When disabled, all methods log intent only — the app starts without SMTP.
-     */
     @org.springframework.beans.factory.annotation.Autowired
     public EmailService(@Value("${app.mail.enabled:false}") boolean mailEnabled,
                         Optional<JavaMailSender> mailSenderOpt,
                         @Value("${app.mail.from:noreply@worldcup.example.com}") String fromAddress,
+                        @Value("${spring.mail.password:}") String apiKey,
                         Optional<FreemarkerEmailRenderer> rendererOpt) {
         this.fromAddress = fromAddress;
         this.renderer = rendererOpt.orElse(null);
         if (!mailEnabled) {
-            this.mailSender = null;
-            this.enabled    = false;
+            this.mailSender   = null;
+            this.resendClient = null;
+            this.enabled      = false;
             log.info("EmailService: MAIL_ENABLED=false — running in log-only mode");
-        } else if (mailSenderOpt.isEmpty()) {
-            this.mailSender = null;
-            this.enabled    = false;
-            log.warn("EmailService: MAIL_ENABLED=true but no JavaMailSender configured (check SPRING_MAIL_HOST)");
+        } else if (!apiKey.isBlank()) {
+            // Prefer HTTP API — bypasses SMTP port restrictions entirely
+            this.mailSender   = null;
+            this.resendClient = RestClient.builder()
+                    .baseUrl("https://api.resend.com")
+                    .defaultHeader("Authorization", "Bearer " + apiKey)
+                    .build();
+            this.enabled = true;
+            log.info("EmailService: mail sending enabled via Resend HTTP API (from={})", fromAddress);
         } else {
-            this.mailSender = mailSenderOpt.get();
-            this.enabled    = true;
-            log.info("EmailService: mail sending enabled via {}", fromAddress);
+            // Legacy SMTP path (no API key configured)
+            this.resendClient = null;
+            this.mailSender   = mailSenderOpt.orElse(null);
+            this.enabled      = this.mailSender != null;
+            if (this.enabled) {
+                log.info("EmailService: mail sending enabled via SMTP (from={})", fromAddress);
+            } else {
+                log.warn("EmailService: MAIL_ENABLED=true but neither RESEND API key nor JavaMailSender is configured");
+            }
         }
     }
 
-    /** Package-private constructor for unit tests (inject mock directly). */
+    /** Package-private constructor for unit tests (inject mock JavaMailSender directly). */
     EmailService(JavaMailSender mailSender, String fromAddress, boolean enabled,
                  FreemarkerEmailRenderer renderer, String appUrl) {
-        this.mailSender  = mailSender;
-        this.fromAddress = fromAddress;
-        this.enabled     = enabled;
-        this.renderer    = renderer;
-        this.appUrl      = appUrl;
+        this.mailSender   = mailSender;
+        this.resendClient = null;
+        this.fromAddress  = fromAddress;
+        this.enabled      = enabled;
+        this.renderer     = renderer;
+        this.appUrl       = appUrl;
     }
 
     public void sendApprovalEmail(User user) {
@@ -280,22 +293,46 @@ public class EmailService {
         send(to, subject, body);
     }
 
-    /**
-     * Render an email template via Freemarker, or fall back to a plain-text body
-     * when the renderer is not available (e.g., log-only mode in tests).
-     */
     private String renderOrFallback(String templateName, Map<String, Object> model, String subject) {
         if (renderer != null) {
             return renderer.render(templateName, model);
         }
-        return subject; // plain-text fallback
+        return subject;
     }
 
     private void send(String to, String subject, String htmlBody) {
-        if (!enabled || mailSender == null) {
+        if (!enabled) {
             log.info("[EMAIL LOG-ONLY] To: {} | Subject: {}", to, subject);
             return;
         }
+        if (resendClient != null) {
+            sendViaResendApi(to, subject, htmlBody);
+        } else {
+            sendViaSmtp(to, subject, htmlBody);
+        }
+    }
+
+    private void sendViaResendApi(String to, String subject, String htmlBody) {
+        try {
+            Map<String, Object> payload = Map.of(
+                    "from", fromAddress,
+                    "to", List.of(to),
+                    "subject", subject,
+                    "html", htmlBody
+            );
+            resendClient.post()
+                    .uri("/emails")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(payload)
+                    .retrieve()
+                    .toBodilessEntity();
+            log.debug("Email sent to {} via Resend API — {}", to, subject);
+        } catch (Exception e) {
+            log.error("Failed to send email to {} via Resend API: {}", to, e.getMessage(), e);
+        }
+    }
+
+    private void sendViaSmtp(String to, String subject, String htmlBody) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
@@ -304,7 +341,7 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(htmlBody, true);
             mailSender.send(message);
-            log.debug("Email sent to {} — {}", to, subject);
+            log.debug("Email sent to {} via SMTP — {}", to, subject);
         } catch (MessagingException | MailException e) {
             log.error("Failed to send email to {}: {}", to, e.getMessage(), e);
         }
