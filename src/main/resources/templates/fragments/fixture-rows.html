@@ -24,7 +24,7 @@
     <!-- Date groups within phase -->
     <div th:each="dateEntry : ${phaseEntry.value}" class="mb-6">
 
-      <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1"
+      <div class="text-xs font-bold text-white uppercase tracking-widest mb-3 pl-1"
            th:text="${#temporals.format(dateEntry.key, 'EEEE, d MMMM yyyy')}">
         Monday, 15 June 2026
       </div>
