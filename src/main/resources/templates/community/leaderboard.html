@@ -1,81 +1,396 @@
 <!DOCTYPE html>
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
       th:replace="~{layout/community-base :: layout(~{::main-content})}">
 <head><title>Leaderboard</title></head>
 <body>
 <th:block th:fragment="main-content">
 
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<style>
+  :root {
+    --green:#00c853; --green-d:#006b2a; --green-m:#00a845;
+    --orange:#FF5722; --yellow:#FFD600;
+    --card:#fff; --text:#0d1a10; --muted:#667c70;
+    --border:rgba(0,160,70,0.15);
+    --h-phase: 32px;
+    --h-game:  52px;
+    --h-row:   64px;
+    --pw: 240px;
+    --tw: 90px;
+  }
 
-    <div class="mb-8 animate-fade-up">
-      <h1 class="font-display text-4xl sm:text-5xl text-white tracking-wider mb-1">LEADERBOARD</h1>
-      <p class="text-white/60 text-sm font-medium" th:text="${community.name}">Community</p>
+  /* HERO */
+  .lb-hero { margin-bottom: 18px; animation: lbFUp .6s ease .1s both; }
+  @keyframes lbFUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  .lb-hero-eye  { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--green-m); margin-bottom: 4px; }
+  .lb-hero-title{ font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 1; letter-spacing: 4px; color: #fff; }
+  .lb-hero-title em { color: var(--green); font-style: normal; }
+  .lb-hero-sub  { color: rgba(255,255,255,.55); font-size: 13px; margin-top: 3px; }
+
+  .lb-kpi-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .lb-kpi {
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+    backdrop-filter: blur(8px); border-radius: 12px; padding: 10px 16px;
+    animation: lbFUp .5s ease both;
+  }
+  .lb-kpi:nth-child(1){animation-delay:.2s} .lb-kpi:nth-child(2){animation-delay:.3s}
+  .lb-kpi:nth-child(3){animation-delay:.4s} .lb-kpi:nth-child(4){animation-delay:.5s}
+  .lb-kpi-v { font-size: 22px; font-weight: 900; color: #fff; line-height: 1; }
+  .lb-kpi-l { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+
+  /* CONTROLS */
+  .lb-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; animation: lbFUp .5s ease .3s both; }
+  .lb-legend { display: flex; gap: 12px; flex-wrap: wrap; }
+  .lb-leg { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,.75); }
+  .lb-ld { width: 11px; height: 11px; border-radius: 3px; }
+  .l-ex .lb-ld  { background: rgba(0,200,83,.65); }
+  .l-wi .lb-ld  { background: rgba(255,195,0,.75); }
+  .l-dr .lb-ld  { background: rgba(60,120,255,.55); }
+  .l-wr .lb-ld  { background: rgba(239,68,68,.5); }
+  .l-no .lb-ld  { background: rgba(255,255,255,.2); }
+
+  .lb-phase-nav { display: flex; gap: 5px; flex-wrap: wrap; }
+  .lb-phase-btn {
+    padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: 700;
+    border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.1);
+    color: rgba(255,255,255,.7); cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .lb-phase-btn:hover { background: rgba(0,200,83,.2); color: #fff; border-color: var(--green-m); }
+  .lb-phase-btn.current { background: var(--green-d); color: white; border-color: var(--green-d); }
+
+  /* ═══════════════════════════════════════════
+     THREE-PANEL LAYOUT
+  ═══════════════════════════════════════════ */
+  .lb-outer {
+    display: flex; align-items: stretch;
+    border-radius: 16px; border: 1px solid var(--border);
+    box-shadow: 0 4px 28px rgba(0,0,0,.12); background: var(--card);
+    overflow: hidden; animation: lbFUp .6s ease .35s both;
+  }
+
+  /* LEFT */
+  .lb-left { flex-shrink: 0; width: var(--pw); min-width: var(--pw); box-shadow: 4px 0 12px rgba(0,0,0,.08); z-index: 2; background: var(--card); }
+
+  /* MID */
+  .lb-mid { flex: 1; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: rgba(0,160,70,.25) rgba(0,160,70,.04); }
+  .lb-mid::-webkit-scrollbar { height: 6px; }
+  .lb-mid::-webkit-scrollbar-track { background: rgba(0,160,70,.04); }
+  .lb-mid::-webkit-scrollbar-thumb { background: rgba(0,160,70,.25); border-radius: 3px; }
+  .lb-mid-inner { display: inline-flex; flex-direction: column; min-width: 100%; }
+
+  /* RIGHT */
+  .lb-right { flex-shrink: 0; width: var(--tw); min-width: var(--tw); box-shadow: -4px 0 12px rgba(0,0,0,.08); z-index: 2; background: var(--card); }
+
+  /* ROW PRIMITIVES */
+  .lb-row-phase { height: var(--h-phase); display: flex; align-items: stretch; }
+  .lb-row-game  { height: var(--h-game);  display: flex; align-items: stretch; }
+  .lb-row-data  { height: var(--h-row);   display: flex; align-items: center; border-bottom: 1px solid rgba(0,160,70,.07); transition: background .12s; }
+  .lb-row-data:last-child { border-bottom: none; }
+  .lb-row-data:nth-child(even) { background: #f8fefb; }
+  .lb-row-data.you { background: #e8fdf1 !important; }
+  .lb-row-data:hover { background: #edfff6 !important; }
+
+  /* PHASE HEADER */
+  .lb-phase-hd-cell {
+    flex: 1; display: flex; align-items: center; gap: 6px; padding: 0 12px;
+    font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    color: white; white-space: nowrap; position: relative; overflow: hidden;
+    cursor: pointer; min-width: 80px;
+  }
+  .lb-phase-hd-cell::before {
+    content: ''; position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent);
+    animation: lbSw 3.5s ease-in-out infinite;
+  }
+  @keyframes lbSw { 0%{left:-80%} 55%{left:130%} 100%{left:130%} }
+
+  .phase-gs    { background: linear-gradient(90deg,#004d1e,#00a845); }
+  .phase-r32   { background: linear-gradient(90deg,#162060,#3a5acc); border-bottom: 3px solid #6080ff; }
+  .phase-r16   { background: linear-gradient(90deg,#4a1560,#a030cc); }
+  .phase-qf    { background: linear-gradient(90deg,#5c2800,#c05800); }
+  .phase-sf    { background: linear-gradient(90deg,#5a0015,#c0002a); }
+  .phase-3rd   { background: linear-gradient(90deg,#3a3a00,#909000); }
+  .phase-final { background: linear-gradient(90deg,#4a3c00,#c89000); }
+
+  /* Spacers */
+  .lb-ph-spacer { height: var(--h-phase); background: rgba(0,160,70,.07); border-bottom: 1px solid rgba(0,160,70,.1); flex-shrink: 0; }
+  .lb-left-game-hd  { height: var(--h-game); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: rgba(0,160,70,.07); border-bottom: 2px solid rgba(0,160,70,.2); padding: 6px 10px; }
+  .lb-right-game-hd { height: var(--h-game); background: rgba(0,160,70,.07); border-bottom: 2px solid rgba(0,160,70,.2); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: var(--green-d); letter-spacing: 1px; text-transform: uppercase; }
+  .lb-fifa-lbl { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 2px; color: var(--green-d); line-height: 1; }
+  .lb-fifa-sub { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  /* PHASE SCORE COLUMN (mid header) */
+  .lb-psc-hd {
+    min-width: 80px; flex-shrink: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 4px 6px;
+    background: rgba(0,160,70,.07); border-right: 1px solid rgba(0,160,70,.1);
+    border-bottom: 2px solid rgba(0,160,70,.2);
+  }
+  .lb-psc-hd-label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; }
+
+  /* PHASE SCORE DATA CELL */
+  .lb-psc-cell { min-width: 80px; flex-shrink: 0; height: var(--h-row); display: flex; align-items: center; justify-content: center; border-right: 1px solid rgba(0,160,70,.06); font-size: 15px; font-weight: 700; }
+  .lb-psc-cell:last-child { border-right: none; }
+  .cell-exact   { background: rgba(0,200,83,.14);  color: #005a20; }
+  .cell-winner  { background: rgba(255,195,0,.2);  color: #7a5000; }
+  .cell-draw    { background: rgba(60,120,255,.12); color: #1e3fa0; }
+  .cell-zero    { background: transparent; color: var(--muted); }
+  .cell-pending { background: transparent; color: rgba(0,0,0,.15); }
+
+  /* PLAYER CELL */
+  .lb-pc { display: flex; align-items: center; gap: 9px; padding: 0 10px; height: var(--h-row); width: 100%; }
+
+  .lb-rk { width: 24px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; flex-shrink: 0; }
+  .lb-rk-1 { background: linear-gradient(135deg,#ffd600,#ff9800); color: #1a1a1a; box-shadow: 0 1px 6px rgba(255,214,0,.5); }
+  .lb-rk-2 { background: linear-gradient(135deg,#b0bac8,#8090a8); color: white; }
+  .lb-rk-3 { background: linear-gradient(135deg,#cd7c3a,#a85a20); color: white; }
+  .lb-rk-n { background: rgba(0,0,0,.06); color: var(--muted); }
+
+  .lb-rank-delta { font-size: 10px; font-weight: 800; width: 12px; flex-shrink: 0; }
+  .lb-rank-delta.up { color: var(--green); animation: lbArrowUp 1.3s ease infinite; }
+  .lb-rank-delta.dn { color: var(--orange); animation: lbArrowDn 1.3s ease infinite; }
+  .lb-rank-delta.eq { color: var(--muted); }
+  @keyframes lbArrowUp { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+  @keyframes lbArrowDn { 0%,100%{transform:translateY(0)} 50%{transform:translateY(3px)} }
+
+  .lb-av-wrap { position: relative; width: 42px; height: 42px; flex-shrink: 0; }
+  .lb-av-ring { position: absolute; inset: -2px; border-radius: 50%; animation: lbRotRing 4s linear infinite; }
+  .rank-1 .lb-av-ring { background: conic-gradient(#ffd600,#ff9800,#ffd600); }
+  .rank-2 .lb-av-ring { background: conic-gradient(#b0bac8,#8090a8,#b0bac8); }
+  .rank-3 .lb-av-ring { background: conic-gradient(#cd7c3a,#a85a20,#cd7c3a); }
+  .rank-other .lb-av-ring { display: none; }
+  @keyframes lbRotRing { to { transform: rotate(360deg); } }
+
+  .lb-av { position: absolute; inset: 2px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg,var(--green-m),var(--green-d)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: white; }
+  .rank-other .lb-av { inset: 0; }
+  .lb-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .lb-flag-badge { position: absolute; bottom: -3px; right: -3px; width: 18px; height: 18px; border-radius: 50%; overflow: hidden; border: 2px solid #f0fdf5; animation: lbFlagWave 3.5s ease-in-out infinite; }
+  .lb-flag-badge img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @keyframes lbFlagWave { 0%,100%{transform:perspective(200px) rotateY(0deg)} 25%{transform:perspective(200px) rotateY(-18deg)} 75%{transform:perspective(200px) rotateY(18deg)} }
+
+  .lb-pn { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; color: var(--text); display: flex; align-items: center; gap: 4px; }
+  .lb-ytag { display: inline-block; background: var(--green); color: white; font-size: 7px; font-weight: 800; padding: 1px 3px; border-radius: 3px; }
+  .lb-pm { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+  /* TOTAL CELL */
+  .lb-total-cell { height: var(--h-row); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 8px; }
+  .lb-tv { font-size: 16px; font-weight: 900; line-height: 1; }
+  .lb-tl { font-size: 8px; color: var(--muted); font-weight: 600; margin-top: 1px; }
+  .rank-1 .lb-tv { color: #c8900a; }
+  .rank-2 .lb-tv { color: #607080; }
+  .rank-3 .lb-tv { color: var(--green); }
+  .rank-other .lb-tv { color: var(--text); }
+
+  /* Mobile compact */
+  @media (max-width: 639px) {
+    :root { --pw: 155px; --tw: 60px; }
+    .lb-pc { padding: 0 6px; gap: 5px; }
+    .lb-av-wrap { width: 32px; height: 32px; }
+    .lb-av { font-size: 10px; }
+    .lb-rank-delta { width: 10px; font-size: 8px; }
+    .lb-pn { font-size: 11px; max-width: 60px; }
+    .lb-pm { font-size: 9px; }
+    .lb-tv { font-size: 13px; }
+    .lb-tl { font-size: 7px; }
+    .lb-hero-title { font-size: 32px; }
+    .lb-kpi-row { gap: 6px; }
+    .lb-kpi { padding: 8px 10px; }
+    .lb-kpi-v { font-size: 18px; }
+  }
+</style>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+  <!-- Hero -->
+  <div class="lb-hero">
+    <div class="lb-hero-eye">⚽ FIFA World Cup 2026</div>
+    <div class="lb-hero-title">LEADER<em>BOARD</em></div>
+    <div class="lb-hero-sub">
+      <b th:text="${community.name}">Community</b>
+      · <span th:text="${totalParticipants} + ' participants'">0 participants</span>
     </div>
 
-    <!-- KPI strip for current user -->
-    <div th:if="${currentUserEntry != null}" class="mb-8 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-wrap items-center gap-8 animate-fade-up stagger-1">
-      <div class="flex items-center gap-3">
-        <div class="text-2xl">🏆</div>
-        <div>
-          <div class="font-display text-3xl text-green-dark tracking-wider" th:text="'#' + ${currentUserEntry.rank}">#1</div>
-          <div class="text-xs font-semibold text-gray-400">Your Rank</div>
-        </div>
+    <div class="lb-kpi-row" sec:authorize="isAuthenticated()" th:if="${currentUserEntry != null}">
+      <div class="lb-kpi">
+        <div class="lb-kpi-v" th:text="${currentUserEntry.totalPoints}">0</div>
+        <div class="lb-kpi-l">Your Points</div>
       </div>
-      <div>
-        <div class="font-display text-3xl text-green tracking-wider" th:text="${currentUserEntry.totalPoints}">0</div>
-        <div class="text-xs font-semibold text-gray-400">Points</div>
+      <div class="lb-kpi">
+        <div class="lb-kpi-v" style="color:#FFD600" th:text="'#' + ${currentUserEntry.rank}">#–</div>
+        <div class="lb-kpi-l">Your Rank</div>
       </div>
-      <div>
-        <div class="font-display text-3xl text-gold tracking-wider" th:text="${currentUserEntry.exactCount}">0</div>
-        <div class="text-xs font-semibold text-gray-400">Exact Scores</div>
+      <div class="lb-kpi">
+        <div class="lb-kpi-v" th:text="${currentUserEntry.exactCount}">0</div>
+        <div class="lb-kpi-l">Exact Scores</div>
       </div>
-    </div>
-
-    <!-- Leaderboard table -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-fade-up stagger-2">
-      <div th:if="${#lists.isEmpty(entries)}" class="p-12 text-center text-gray-400">
-        <div class="text-5xl mb-4">🏆</div>
-        <p class="font-semibold">No participants yet.</p>
+      <div class="lb-kpi" th:if="${entries != null and !entries.isEmpty()}">
+        <div class="lb-kpi-v"
+             th:text="${entries[0].totalPoints - currentUserEntry.totalPoints}">0</div>
+        <div class="lb-kpi-l">Pts to #1</div>
       </div>
-
-      <table th:unless="${#lists.isEmpty(entries)}" class="w-full text-sm">
-        <thead class="bg-green-dark text-white">
-          <tr>
-            <th class="px-4 py-3 text-left font-semibold">#</th>
-            <th class="px-4 py-3 text-left font-semibold">Player</th>
-            <th class="px-4 py-3 text-center font-semibold">Points</th>
-            <th class="px-4 py-3 text-center font-semibold hidden sm:table-cell">Exact</th>
-            <th class="px-4 py-3 text-center font-semibold hidden sm:table-cell">Winner</th>
-            <th class="px-4 py-3 text-center font-semibold hidden md:table-cell">Draw</th>
-            <th class="px-4 py-3 text-center font-semibold hidden md:table-cell" th:each="stage : ${stages}" th:text="${stage.name()}">STAGE</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-50">
-          <tr th:each="entry : ${entries}" class="hover:bg-green-light/30 transition-colors"
-              th:classappend="${currentUserEntry != null && entry.userId == currentUserEntry.userId} ? 'bg-green-light/50 font-bold' : ''">
-            <td class="px-4 py-3 font-display text-xl text-green-dark" th:text="${entry.rank}">1</td>
-            <td class="px-4 py-3">
-              <div class="flex items-center gap-3">
-                <img th:src="${entry.avatarUrl}" th:alt="${entry.displayName}"
-                     class="w-8 h-8 rounded-full object-cover border border-gray-200"
-                     onerror="this.src='https://ui-avatars.com/api/?name='+encodeURIComponent(this.alt)+'&background=006b2a&color=fff'"/>
-                <span class="font-semibold text-gray-800" th:text="${entry.displayName}">Name</span>
-                <img th:if="${entry.predictedWinnerFlagCode}" th:src="@{'/images/flags/' + ${entry.predictedWinnerFlagCode} + '.svg'}"
-                     class="w-5 h-5 rounded-full object-cover" title="Tournament winner pick"/>
-              </div>
-            </td>
-            <td class="px-4 py-3 text-center font-bold text-green-dark" th:text="${entry.totalPoints}">0</td>
-            <td class="px-4 py-3 text-center hidden sm:table-cell" th:text="${entry.exactCount}">0</td>
-            <td class="px-4 py-3 text-center hidden sm:table-cell" th:text="${entry.correctWinnerCount}">0</td>
-            <td class="px-4 py-3 text-center hidden md:table-cell" th:text="${entry.drawCount}">0</td>
-            <td th:each="stage : ${stages}" class="px-4 py-3 text-center text-xs text-gray-500 hidden md:table-cell"
-                th:text="${phasePoints.containsKey(entry.userId) && phasePoints.get(entry.userId).containsKey(stage)} ? ${phasePoints.get(entry.userId).get(stage)} : '—'">—</td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   </div>
+
+  <!-- Controls: legend + phase jump -->
+  <div class="lb-controls">
+    <div class="lb-legend">
+      <div class="lb-leg l-ex"><div class="lb-ld"></div>Exact +3</div>
+      <div class="lb-leg l-wi"><div class="lb-ld"></div>Winner +1</div>
+      <div class="lb-leg l-dr"><div class="lb-ld"></div>Draw +2</div>
+      <div class="lb-leg l-wr"><div class="lb-ld"></div>Wrong 0</div>
+      <div class="lb-leg l-no"><div class="lb-ld"></div>Pending</div>
+    </div>
+    <div class="lb-phase-nav" id="lb-phase-nav">
+      <button th:each="stage : ${stages}"
+              th:data-phase="${'ph-' + stage.name().toLowerCase()}"
+              th:text="${stage.shortLabel}"
+              class="lb-phase-btn"
+              th:classappend="${stage.current} ? ' current' : ''">GS</button>
+    </div>
+  </div>
+
+  <!-- THREE-PANEL LEADERBOARD -->
+  <div class="lb-outer" th:unless="${#lists.isEmpty(entries)}">
+
+    <!-- LEFT: player column -->
+    <div class="lb-left" id="lb-left">
+      <div class="lb-ph-spacer"></div>
+      <div class="lb-left-game-hd">
+        <img src="https://upload.wikimedia.org/wikipedia/en/thumb/9/9c/2026_FIFA_World_Cup_official_emblem.svg/120px-2026_FIFA_World_Cup_official_emblem.svg.png"
+             style="height:24px;width:auto;object-fit:contain" alt=""
+             onerror="this.style.display='none'"/>
+        <div class="lb-fifa-lbl">FIFA 2026</div>
+        <div class="lb-fifa-sub">World Cup</div>
+      </div>
+      <th:block th:each="entry, iter : ${entries}">
+        <div th:class="'lb-row-data ' + ${entry.rankCssClass}
+                       + (${#authentication != null
+                           and !#authentication.principal.equals('anonymousUser')
+                           and #authentication.principal.userId == entry.userId} ? ' you' : '')"
+             th:style="'animation: lbFUp .4s ease ' + (${iter.index} * 0.04) + 's both'">
+          <div class="lb-pc">
+            <div th:class="'lb-rk ' + (${entry.rank == 1} ? 'lb-rk-1' : (${entry.rank == 2} ? 'lb-rk-2' : (${entry.rank == 3} ? 'lb-rk-3' : 'lb-rk-n')))"
+                 th:text="${entry.rank}">1</div>
+
+            <div th:class="'lb-rank-delta ' + (${entry.rankChange > 0} ? 'up' : (${entry.rankChange < 0} ? 'dn' : 'eq'))">
+              <span th:if="${entry.rankChange > 0}">▲</span>
+              <span th:if="${entry.rankChange < 0}">▼</span>
+              <span th:if="${entry.rankChange == 0}">—</span>
+            </div>
+
+            <div class="lb-av-wrap">
+              <div class="lb-av-ring"></div>
+              <div class="lb-av">
+                <img th:if="${entry.avatarUrl != null}" th:src="${entry.avatarUrl}"
+                     th:alt="${entry.displayName}"
+                     th:onerror="'this.style.display=\'none\''"/>
+                <span th:if="${entry.avatarUrl == null}" th:text="${entry.initials}">AB</span>
+              </div>
+              <div class="lb-flag-badge" th:if="${entry.predictedWinnerFlagCode != null}">
+                <img th:src="${entry.flagUrl}" th:alt="${entry.predictedWinnerFlagCode}"/>
+              </div>
+            </div>
+
+            <div>
+              <div class="lb-pn">
+                <span th:text="${entry.displayName}">Player</span>
+                <span class="lb-ytag" sec:authorize="isAuthenticated()"
+                      th:if="${#authentication.principal.userId == entry.userId}">YOU</span>
+              </div>
+              <div class="lb-pm" th:text="${entry.exactCount} + ' exact · ' + ${entry.correctWinnerCount} + ' winner'">0 exact</div>
+            </div>
+          </div>
+        </div>
+      </th:block>
+    </div>
+
+    <!-- MID: phase columns, scrollable -->
+    <div class="lb-mid" id="lb-mid">
+      <div class="lb-mid-inner" id="lb-mid-inner">
+
+        <!-- Phase header row -->
+        <div class="lb-row-phase">
+          <div th:each="stage : ${stages}"
+               th:id="'ph-' + ${stage.name().toLowerCase()}"
+               th:class="'lb-phase-hd-cell ' + ${stage.cssClass}"
+               th:text="${stage.shortLabel}">GS</div>
+        </div>
+
+        <!-- Phase score column headers -->
+        <div class="lb-row-game" style="display:flex">
+          <div th:each="stage : ${stages}" class="lb-psc-hd">
+            <div class="lb-psc-hd-label" th:text="${stage.shortLabel}">GS</div>
+          </div>
+        </div>
+
+        <!-- Data rows -->
+        <th:block th:each="entry : ${entries}">
+          <div th:class="'lb-row-data ' + ${entry.rankCssClass}
+                         + (${#authentication != null
+                             and !#authentication.principal.equals('anonymousUser')
+                             and #authentication.principal.userId == entry.userId} ? ' you' : '')"
+               style="display:flex">
+            <div th:each="stage : ${stages}"
+                 th:with="pts=${phasePoints != null ? phasePoints.get(entry.userId)?.get(stage) : null}"
+                 th:class="'lb-psc-cell ' + (${pts == null} ? 'cell-pending' : (${pts >= 3} ? 'cell-exact' : (${pts == 2} ? 'cell-draw' : (${pts == 1} ? 'cell-winner' : 'cell-zero'))))">
+              <span th:text="${pts != null ? pts : '·'}">·</span>
+            </div>
+          </div>
+        </th:block>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: totals column -->
+    <div class="lb-right" id="lb-right">
+      <div class="lb-ph-spacer"></div>
+      <div class="lb-right-game-hd">Total</div>
+      <th:block th:each="entry : ${entries}">
+        <div th:class="'lb-row-data ' + ${entry.rankCssClass}
+                       + (${#authentication != null
+                           and !#authentication.principal.equals('anonymousUser')
+                           and #authentication.principal.userId == entry.userId} ? ' you' : '')">
+          <div class="lb-total-cell">
+            <div class="lb-tv" th:text="${entry.totalPoints}">0</div>
+            <div class="lb-tl">pts</div>
+          </div>
+        </div>
+      </th:block>
+    </div>
+
+  </div><!-- /.lb-outer -->
+
+  <!-- Empty state -->
+  <div th:if="${#lists.isEmpty(entries)}"
+       class="bg-white/10 backdrop-blur rounded-2xl border border-white/20 p-12 text-center">
+    <div class="text-5xl mb-4">🏆</div>
+    <p class="font-display text-2xl text-white tracking-wider mb-2">NO PARTICIPANTS YET</p>
+    <p class="text-white/50 text-sm">Be the first to predict — rankings update after each match.</p>
+  </div>
+
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const mid = document.getElementById('lb-mid');
+
+    document.querySelectorAll('.lb-phase-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.phase;
+        const target = document.getElementById(id);
+        if (target && mid) {
+          const midR = mid.getBoundingClientRect();
+          const tR   = target.getBoundingClientRect();
+          mid.scrollTo({ left: mid.scrollLeft + tR.left - midR.left, behavior: 'smooth' });
+        }
+        document.querySelectorAll('.lb-phase-btn').forEach(b => b.classList.remove('current'));
+        btn.classList.add('current');
+      });
+    });
+  });
+</script>
 
 </th:block>
 </body>
