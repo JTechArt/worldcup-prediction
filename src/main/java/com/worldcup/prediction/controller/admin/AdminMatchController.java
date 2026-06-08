@@ -88,6 +88,19 @@ public class AdminMatchController {
         return "redirect:/admin/matches";
     }
 
+    @PostMapping("/{id}/reset-result")
+    public String resetResult(@PathVariable Long id,
+                              @AuthenticationPrincipal CustomOAuth2User admin,
+                              RedirectAttributes redirectAttributes) {
+        Long adminId = admin != null ? admin.getUserId() : 0L;
+        Match match = matchAdminService.resetResult(id);
+        auditLogService.log(adminId, AuditAction.MATCH_RESULT_RESET, "MATCH", id,
+                match.getHomeTeam().getName() + " vs " + match.getAwayTeam().getName());
+        redirectAttributes.addFlashAttribute("successMessage",
+                "Result reset for: " + match.getHomeTeam().getName() + " vs " + match.getAwayTeam().getName());
+        return "redirect:/admin/matches";
+    }
+
     @PostMapping("/rounds/{roundLabel}/open")
     public String openRound(@PathVariable String roundLabel,
                             @AuthenticationPrincipal CustomOAuth2User admin,

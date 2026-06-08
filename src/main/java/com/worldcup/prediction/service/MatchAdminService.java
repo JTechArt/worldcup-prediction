@@ -55,6 +55,34 @@ public class MatchAdminService {
         return matchRepository.save(match);
     }
 
+    @Transactional
+    public Match resetResult(Long matchId) {
+        Match match = findById(matchId);
+        match.setHomeScore(null);
+        match.setAwayScore(null);
+        match.setHomeScore90(null);
+        match.setAwayScore90(null);
+        match.setStatus(MatchStatus.SCHEDULED);
+        match.setResultEnteredAt(null);
+        match.setResultEnteredBy(null);
+
+        List<Prediction> predictions = predictionRepository.findByMatchId(matchId);
+        Set<String> updatedMembershipKeys = new HashSet<>();
+        for (Prediction p : predictions) {
+            p.setPointsAwarded(0);
+            p.setScoreResult(PredictionScore.PENDING);
+            predictionRepository.save(p);
+            if (p.getCommunity() != null) {
+                String key = p.getUser().getId() + ":" + p.getCommunity().getId();
+                if (updatedMembershipKeys.add(key)) {
+                    recalculateMembershipStats(p.getUser().getId(), p.getCommunity().getId());
+                }
+            }
+        }
+
+        return matchRepository.save(match);
+    }
+
     /**
      * Scores all predictions for a completed match across all communities. Call after setResult().
      * Updates each Prediction's pointsAwarded and scoreResult fields, then recalculates

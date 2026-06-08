@@ -121,6 +121,16 @@
                         class="px-3 py-1 text-xs font-medium rounded-md bg-admin-dark hover:bg-admin-mid text-white transition-colors duration-150"
                         th:text="${match.completed} ? 'Update Result' : 'Enter Result'">Enter Result</button>
 
+                <form th:if="${match.completed}"
+                      th:action="@{'/admin/matches/' + ${match.id} + '/reset-result'}" method="post" class="inline"
+                      onsubmit="return confirm('Reset result and all prediction scores for this match?')">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                  <button type="submit"
+                          class="px-3 py-1 text-xs font-medium rounded-md bg-red-100 hover:bg-red-200 text-red-800 transition-colors duration-150">
+                    Reset Result
+                  </button>
+                </form>
+
                 <div x-show="showResultForm" x-transition class="w-full mt-2">
                   <form th:action="@{'/admin/matches/' + ${match.id} + '/result'}" method="post"
                         class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
