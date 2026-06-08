@@ -28,8 +28,8 @@
 
     <!-- My communities (active memberships) -->
     <div th:if="${!#lists.isEmpty(activeMemberships)}" class="mb-10 animate-fade-up">
-      <h1 class="font-display text-4xl sm:text-5xl text-green-dark tracking-wider mb-1">MY COMMUNITIES</h1>
-      <p class="text-gray-500 text-sm font-medium mb-6">Select a community to enter</p>
+      <h1 class="font-display text-4xl sm:text-5xl text-white tracking-wider mb-1">MY COMMUNITIES</h1>
+      <p class="text-white/60 text-sm font-medium mb-6">Select a community to enter</p>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <a th:each="m : ${activeMemberships}"
@@ -55,9 +55,9 @@
     <!-- All communities / explore -->
     <div class="animate-fade-up stagger-1">
       <div class="mb-6">
-        <h2 class="font-display text-3xl text-green-dark tracking-wider"
+        <h2 class="font-display text-3xl text-white tracking-wider"
             th:text="${#lists.isEmpty(activeMemberships)} ? 'ALL COMMUNITIES' : 'EXPLORE MORE'">ALL COMMUNITIES</h2>
-        <p class="text-gray-500 text-sm">Request to join — a community admin will approve your request</p>
+        <p class="text-white/60 text-sm">Request to join — a community admin will approve your request</p>
       </div>
 
       <div th:if="${#lists.isEmpty(allCommunities)}"

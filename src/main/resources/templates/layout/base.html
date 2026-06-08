@@ -47,7 +47,7 @@
   </script>
 
   <style>
-    body { font-family: 'Inter', sans-serif; background: #f0fdf5; color: #1a2e1a; }
+    body { font-family: 'Inter', sans-serif; background: transparent; color: #1a2e1a; }
     .font-display { font-family: 'Bebas Neue', sans-serif; }
 
     @keyframes fadeUp   { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
@@ -84,11 +84,17 @@
     }
 
     ::-webkit-scrollbar { width:6px; height:6px; }
-    ::-webkit-scrollbar-track { background:#e8f5e9; }
+    ::-webkit-scrollbar-track { background:#001a08; }
     ::-webkit-scrollbar-thumb { background:#00c853; border-radius:99px; }
   </style>
 </head>
-<body class="min-h-screen bg-bg flex flex-col">
+<body class="min-h-screen flex flex-col">
+
+  <!-- Stadium background -->
+  <div class="fixed inset-0 pointer-events-none" style="z-index:-1" aria-hidden="true">
+    <div style="position:absolute;inset:0;background:url('/images/leaderboard-bg.jpg') center/cover no-repeat;filter:brightness(0.85) saturate(1.1)"></div>
+    <div style="position:absolute;inset:0;background:rgba(0,40,15,0.15)"></div>
+  </div>
 
   <!-- NAVBAR -->
   <nav class="navbar fixed top-0 left-0 right-0 z-50 bg-green-dark/95 border-b border-green/20 shadow-lg"

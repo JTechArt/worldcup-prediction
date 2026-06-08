@@ -15,10 +15,10 @@
 
     <!-- Page title -->
     <div style="margin-bottom:24px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:4px;color:var(--green-d,#006b2a);">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:4px;color:#ffffff;">
         My Predictions
       </div>
-      <div style="font-size:13px;font-weight:600;color:#667c70;margin-top:2px;">
+      <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.6);margin-top:2px;">
         <span th:text="${community.name}">Community</span> · All-or-nothing per round · Predictions lock 1 hour before kickoff
       </div>
     </div>
@@ -155,7 +155,7 @@
     </div>
 
     <div th:if="${#lists.isEmpty(pastRounds)}"
-         style="margin-top:32px;text-align:center;padding:32px;color:#667c70;font-size:13px;font-weight:600;">
+         style="margin-top:32px;text-align:center;padding:32px;color:rgba(255,255,255,0.5);font-size:13px;font-weight:600;">
       Past round results will appear here after matches are completed.
     </div>
 
