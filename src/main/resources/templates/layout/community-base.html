@@ -117,6 +117,8 @@
         </div>
 
         <div class="flex items-center gap-3">
+          <span class="hidden md:block text-xs text-white/50 font-normal tracking-wide"
+                th:text="${timezoneLabel ?: 'GMT+4 · Yerevan'}">GMT+4 · Yerevan</span>
           <div sec:authorize="isAuthenticated()" class="flex items-center gap-3">
             <div class="relative" x-data="{ open: false }">
               <button @click="open = !open" class="flex items-center gap-2 focus:outline-none group">

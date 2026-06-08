@@ -18,11 +18,13 @@ import com.worldcup.prediction.repository.RoundWindowRepository;
 import com.worldcup.prediction.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +45,9 @@ public class MatchSyncService {
     private final MatchGoalRepository goalRepository;
     private final PredictionRepository predictionRepository;
     private final RoundWindowRepository roundWindowRepository;
+
+    @Value("${app.timezone}")
+    private String timezoneId;
 
     /**
      * Wipes ALL match-dependent data (predictions, lineups, goals, matches) and
@@ -190,7 +195,9 @@ public class MatchSyncService {
 
     private LocalDateTime parseUtc(String utcDate) {
         try {
-            return OffsetDateTime.parse(utcDate).toLocalDateTime();
+            return OffsetDateTime.parse(utcDate)
+                    .atZoneSameInstant(ZoneId.of(timezoneId))
+                    .toLocalDateTime();
         } catch (Exception e) {
             log.warn("Cannot parse UTC date '{}', using epoch", utcDate);
             return LocalDateTime.of(2026, 6, 11, 0, 0);
