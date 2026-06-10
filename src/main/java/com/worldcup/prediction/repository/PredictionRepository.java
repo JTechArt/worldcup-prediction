@@ -136,4 +136,19 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
             GROUP BY p.user.id, p.match.stage
             """)
     List<Object[]> sumPointsByUserAndStageAndCommunityId(@Param("communityId") Long communityId);
+
+    @Query("""
+            SELECT p FROM Prediction p
+            JOIN FETCH p.user u
+            JOIN FETCH p.match m
+            LEFT JOIN FETCH m.homeTeam
+            LEFT JOIN FETCH m.awayTeam
+            WHERE p.community.id = :communityId
+              AND p.scoreResult = 'EXACT'
+              AND m.id IN :matchIds
+            ORDER BY u.id ASC
+            """)
+    List<Prediction> findExactPredictionsByMatchIdsAndCommunityId(
+            @Param("matchIds") java.util.Collection<Long> matchIds,
+            @Param("communityId") Long communityId);
 }

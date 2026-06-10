@@ -125,4 +125,14 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     @Query("SELECT MAX(m.matchNumber) FROM Match m WHERE m.stage != :stage")
     Optional<Integer> findMaxMatchNumberExcludingStage(@Param("stage") MatchStage stage);
 
+    @Query("""
+            SELECT m FROM Match m
+            LEFT JOIN FETCH m.homeTeam
+            LEFT JOIN FETCH m.awayTeam
+            WHERE m.status = 'COMPLETED'
+              AND m.kickoffTime < :before
+            ORDER BY m.kickoffTime DESC
+            """)
+    List<Match> findCompletedMatchesBefore(@Param("before") LocalDateTime before);
+
 }
