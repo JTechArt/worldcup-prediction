@@ -118,7 +118,6 @@
              class="px-4 py-2 rounded-lg text-sm font-semibold text-amber-300 hover:text-white hover:bg-white/10 transition-all duration-200">👥 Members</a>
           <a th:if="${communityMembership != null && communityMembership.role.name() == 'ADMIN'}"
              th:href="@{'/c/' + ${slug} + '/admin/submission-status'}"
-             th:classappend="${#strings.startsWith(#httpServletRequest.requestURI, '/c/' + slug + '/admin/submission-status') ? ' text-white' : ''}"
              class="px-4 py-2 rounded-lg text-sm font-semibold text-amber-300 hover:text-white hover:bg-white/10 transition-all duration-200">📋 Submissions</a>
         </div>
 
