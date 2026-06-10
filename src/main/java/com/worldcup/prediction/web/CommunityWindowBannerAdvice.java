@@ -33,7 +33,7 @@ public class CommunityWindowBannerAdvice {
     private ZoneId appZone;
 
     @PostConstruct
-    private void init() {
+    void init() {
         appZone = ZoneId.of(timezoneId);
     }
 
@@ -51,9 +51,8 @@ public class CommunityWindowBannerAdvice {
                 .filter(rw -> isOpen(rw, now))
                 .findFirst()
                 .map(rw -> {
-                    ZoneId zone = appZone != null ? appZone : ZoneId.of("UTC");
                     String closesAtIso = rw.getAutoClosesAt() != null
-                            ? rw.getAutoClosesAt().atZone(zone).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            ? rw.getAutoClosesAt().atZone(appZone).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                             : null;
                     boolean submitted = roundSubmissionService.hasSubmitted(
                             user.getUserId(), community.getId(), rw.getRoundLabel());

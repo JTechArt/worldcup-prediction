@@ -39,6 +39,12 @@ class CommunityWindowBannerAdviceTest {
     @BeforeEach
     void setUp() {
         advice = new CommunityWindowBannerAdvice(roundWindowService, roundSubmissionService);
+        try {
+            var f = CommunityWindowBannerAdvice.class.getDeclaredField("timezoneId");
+            f.setAccessible(true);
+            f.set(advice, "UTC");
+        } catch (Exception e) { throw new RuntimeException(e); }
+        advice.init();
 
         Community community = new Community();
         community.setId(COMMUNITY_ID);
