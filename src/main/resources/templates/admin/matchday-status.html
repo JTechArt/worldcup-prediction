@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout}">
+<head><title>Matchday Status</title></head>
+<body>
+
+<th:block layout:fragment="page-title">Matchday Submission Status</th:block>
+
+<th:block layout:fragment="content">
+  <div class="space-y-6">
+
+    <!-- Header -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-1"
+          th:text="${community.name} + ' · Submission Status'">Community</h2>
+
+      <!-- Round selector -->
+      <form method="get" class="flex items-center gap-3 mt-4 flex-wrap">
+        <label class="text-sm font-medium text-gray-700">Matchday:</label>
+        <select name="round"
+                onchange="this.form.submit()"
+                class="rounded-lg border-gray-300 text-sm px-3 py-2 border">
+          <option value="" th:if="${selectedRound == null}">Select round…</option>
+          <option th:each="rw : ${allWindows}"
+                  th:value="${rw.roundLabel}"
+                  th:text="${rw.roundLabel}"
+                  th:selected="${rw.roundLabel == selectedRound}">Round</option>
+        </select>
+      </form>
+
+      <!-- Countdown (only when window is currently open) -->
+      <div th:if="${closesAtIso != null}"
+           x-data="adminCountdown()"
+           th:attr="x-init=|start('${closesAtIso}')|"
+           class="mt-4 inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-semibold px-4 py-2 rounded-lg">
+        <span>⏱ Window closes in</span>
+        <span class="font-mono" x-text="formatted">--:--:--</span>
+      </div>
+    </div>
+
+    <!-- Flash messages -->
+    <div th:if="${successMessage}" class="p-3 bg-green-100 border border-green-300 text-green-800 rounded-lg text-sm"
+         th:text="${successMessage}"></div>
+
+    <!-- Member status table -->
+    <div th:if="${selectedRound != null}" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-gray-700">
+          <span th:text="${selectedRound}">Round</span> ·
+          <span th:text="${#lists.size(statuses)}">0</span> members
+        </h3>
+        <div class="flex gap-4 text-xs font-medium">
+          <span class="text-green-700">✅ Submitted: <span th:text="${statuses.stream().filter(s -> s.submitted()).count()}">0</span></span>
+          <span class="text-red-600">⏳ Pending: <span th:text="${statuses.stream().filter(s -> !s.submitted()).count()}">0</span></span>
+        </div>
+      </div>
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-100">
+          <tr>
+            <th class="px-4 py-3 text-left font-semibold text-gray-600">Member</th>
+            <th class="px-4 py-3 text-center font-semibold text-gray-600">Status</th>
+            <th class="px-4 py-3 text-center font-semibold text-gray-600">Submitted At</th>
+            <th class="px-4 py-3 text-right font-semibold text-gray-600">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <tr th:each="s : ${statuses}" class="hover:bg-gray-50">
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-2">
+                <img th:src="${s.avatarUrl()}"
+                     th:alt="${s.displayName()}"
+                     class="w-8 h-8 rounded-full object-cover border border-gray-200"
+                     onerror="this.src='https://ui-avatars.com/api/?name='+encodeURIComponent(this.alt)+'&background=006b2a&color=fff'"/>
+                <div>
+                  <div class="font-semibold text-gray-800" th:text="${s.displayName()}">Name</div>
+                  <div class="text-xs text-gray-400" th:text="${s.email()}">email</div>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <span th:if="${s.submitted()}" class="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">✅ Submitted</span>
+              <span th:unless="${s.submitted()}" class="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">⏳ Pending</span>
+            </td>
+            <td class="px-4 py-3 text-center text-xs text-gray-500"
+                th:text="${s.submittedAt() != null ? #temporals.format(s.submittedAt(), 'dd MMM · HH:mm') : '—'}">—</td>
+            <td class="px-4 py-3 text-right">
+              <form th:unless="${s.submitted()}"
+                    th:action="@{'/admin/communities/' + ${communityId} + '/matchday-status/' + ${s.userId()} + '/remind'}"
+                    method="post" class="inline">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="round" th:value="${selectedRound}"/>
+                <button type="submit"
+                        class="px-3 py-1.5 rounded text-xs font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                  Send Reminder
+                </button>
+              </form>
+              <span th:if="${s.submitted()}" class="text-xs text-gray-300">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div th:unless="${selectedRound != null}" class="text-sm text-gray-500">Select a matchday to view submission status.</div>
+
+  </div>
+
+  <script>
+    function adminCountdown() {
+      return {
+        formatted: '--:--:--',
+        start(isoStr) {
+          if (!isoStr || isoStr === 'null') return;
+          const target = new Date(isoStr).getTime();
+          const tick = () => {
+            const diff = target - Date.now();
+            if (diff <= 0) { this.formatted = '00:00:00'; return; }
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            this.formatted = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+            setTimeout(tick, 1000);
+          };
+          tick();
+        }
+      };
+    }
+  </script>
+</th:block>
+</body>
+</html>
