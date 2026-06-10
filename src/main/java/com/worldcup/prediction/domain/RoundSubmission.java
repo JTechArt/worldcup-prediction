@@ -2,8 +2,11 @@ package com.worldcup.prediction.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
+// Stores scalar FK ids intentionally (no @ManyToOne) — only existence checks and
+// community-scoped list queries are needed; eager/lazy association loading is unnecessary.
 @Entity
 @Table(name = "round_submissions",
        uniqueConstraints = @UniqueConstraint(
@@ -31,6 +34,7 @@ public class RoundSubmission {
     @Column(name = "round_label", nullable = false, length = 50)
     private String roundLabel;
 
+    @CreationTimestamp
     @Column(name = "submitted_at", nullable = false)
     private LocalDateTime submittedAt;
 }
