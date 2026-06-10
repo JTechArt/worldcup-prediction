@@ -5,7 +5,6 @@ import com.worldcup.prediction.domain.enums.MembershipStatus;
 import com.worldcup.prediction.domain.enums.RoundOverrideStatus;
 import com.worldcup.prediction.dto.MemberSubmissionStatusDto;
 import com.worldcup.prediction.repository.CommunityMembershipRepository;
-import com.worldcup.prediction.repository.UserRepository;
 import com.worldcup.prediction.service.EmailService;
 import com.worldcup.prediction.service.RoundSubmissionService;
 import com.worldcup.prediction.service.RoundWindowService;
@@ -34,7 +33,6 @@ public class CommunityAdminSubmissionController {
     private final RoundWindowService roundWindowService;
     private final RoundSubmissionService roundSubmissionService;
     private final CommunityMembershipRepository communityMembershipRepository;
-    private final UserRepository userRepository;
     private final EmailService emailService;
 
     @Value("${app.timezone:UTC}")
@@ -81,7 +79,7 @@ public class CommunityAdminSubmissionController {
         List<MemberSubmissionStatusDto> statuses = List.of();
         if (selectedRound != null) {
             List<CommunityMembership> members = communityMembershipRepository
-                    .findByCommunityIdAndStatus(communityId, MembershipStatus.ACTIVE);
+                    .findByCommunityIdAndStatusWithUser(communityId, MembershipStatus.ACTIVE);
             Map<Long, RoundSubmission> submissionMap =
                     roundSubmissionService.findStatusesForCommunityRound(communityId, selectedRound);
             statuses = members.stream()
@@ -118,12 +116,10 @@ public class CommunityAdminSubmissionController {
         Community community = (Community) request.getAttribute("community");
         Long communityId = community.getId();
 
-        communityMembershipRepository.findByCommunityIdAndUserId(communityId, userId)
+        CommunityMembership membership = communityMembershipRepository.findByCommunityIdAndUserId(communityId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "User is not a member of this community"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "User not found: " + userId));
+        User user = membership.getUser();
 
         emailService.sendPredictionReminder(user, round);
         redirectAttributes.addFlashAttribute("successMessage",

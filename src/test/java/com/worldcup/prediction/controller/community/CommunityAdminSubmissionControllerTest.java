@@ -4,7 +4,6 @@ import com.worldcup.prediction.domain.*;
 import com.worldcup.prediction.domain.enums.*;
 import com.worldcup.prediction.dto.MemberSubmissionStatusDto;
 import com.worldcup.prediction.repository.CommunityMembershipRepository;
-import com.worldcup.prediction.repository.UserRepository;
 import com.worldcup.prediction.service.EmailService;
 import com.worldcup.prediction.service.RoundSubmissionService;
 import com.worldcup.prediction.service.RoundWindowService;
@@ -33,7 +32,6 @@ class CommunityAdminSubmissionControllerTest {
     @Mock private CommunityMembershipRepository communityMembershipRepository;
     @Mock private RoundWindowService roundWindowService;
     @Mock private RoundSubmissionService roundSubmissionService;
-    @Mock private UserRepository userRepository;
     @Mock private EmailService emailService;
 
     private CommunityAdminSubmissionController controller;
@@ -45,7 +43,7 @@ class CommunityAdminSubmissionControllerTest {
     void setUp() {
         controller = new CommunityAdminSubmissionController(
                 roundWindowService, roundSubmissionService,
-                communityMembershipRepository, userRepository, emailService);
+                communityMembershipRepository, emailService);
         ReflectionTestUtils.setField(controller, "timezoneId", "UTC");
         controller.init();
 
@@ -77,7 +75,7 @@ class CommunityAdminSubmissionControllerTest {
                 .autoClosesAt(LocalDateTime.now().plusHours(3)).build();
 
         when(roundWindowService.findAll()).thenReturn(List.of(rw));
-        when(communityMembershipRepository.findByCommunityIdAndStatus(1L, MembershipStatus.ACTIVE))
+        when(communityMembershipRepository.findByCommunityIdAndStatusWithUser(1L, MembershipStatus.ACTIVE))
                 .thenReturn(List.of(m1, m2));
 
         RoundSubmission rs = RoundSubmission.builder()
@@ -117,7 +115,7 @@ class CommunityAdminSubmissionControllerTest {
                 .autoClosesAt(LocalDateTime.now().plusHours(3)).build();
 
         when(roundWindowService.findAll()).thenReturn(List.of(rw));
-        when(communityMembershipRepository.findByCommunityIdAndStatus(1L, MembershipStatus.ACTIVE))
+        when(communityMembershipRepository.findByCommunityIdAndStatusWithUser(1L, MembershipStatus.ACTIVE))
                 .thenReturn(List.of());
         when(roundSubmissionService.findStatusesForCommunityRound(1L, round))
                 .thenReturn(Map.of());
@@ -140,7 +138,6 @@ class CommunityAdminSubmissionControllerTest {
 
         when(communityMembershipRepository.findByCommunityIdAndUserId(1L, userId))
                 .thenReturn(Optional.of(membership));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         var redirectAttributes = new RedirectAttributesModelMap();
         String view = controller.remind("test-league", userId, round, request, redirectAttributes);
