@@ -6,7 +6,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title th:text="${pageTitle} + ' · WC Predict 2026'">WC Predict 2026</title>
+  <title th:text="${pageTitle != null} ? |${pageTitle} · Mundial '26| : |Mundial '26|">Mundial '26</title>
+  <link rel="icon" type="image/webp" href="/images/favicon.webp" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -92,8 +93,8 @@
 
   <!-- Stadium background -->
   <div class="fixed inset-0 pointer-events-none" style="z-index:-1" aria-hidden="true">
-    <div style="position:absolute;inset:0;background:url('/images/leaderboard-bg.webp') center/cover no-repeat;filter:brightness(0.85) saturate(1.1)"></div>
-    <div style="position:absolute;inset:0;background:rgba(0,40,15,0.15)"></div>
+    <div style="position:absolute;inset:0;background:url('/images/leaderboard-bg.webp') center/cover no-repeat;filter:brightness(1.05) saturate(1.0)"></div>
+    <div style="position:absolute;inset:0;background:rgba(0,40,15,0.05)"></div>
   </div>
 
   <!-- NAVBAR -->
@@ -102,13 +103,8 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
 
-        <a th:href="@{/}" class="flex items-center gap-2.5 no-underline">
-          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-green to-green-dark
-                      flex items-center justify-center text-lg
-                      animate-spin-slow shadow-lg shadow-green/40">⚽</div>
-          <span class="font-display text-2xl tracking-widest text-white">
-            WC PREDICT&nbsp;<span class="text-gold">2026</span>
-          </span>
+        <a th:href="@{/}" class="flex items-center no-underline hover:opacity-80 transition-opacity">
+          <img src="/images/logo.webp" alt="Mundial '26" style="height:76px;width:auto;" />
         </a>
 
         <div class="hidden md:flex items-center gap-1">
@@ -196,8 +192,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="flex items-center gap-2">
-          <span class="text-2xl">⚽</span>
-          <span class="font-display text-xl tracking-widest text-white">WC PREDICT <span class="text-gold">2026</span></span>
+          <img src="/images/logo.webp" alt="Mundial '26" style="height:60px;width:auto;opacity:0.85;" />
         </div>
         <div class="flex items-center gap-6 text-sm">
           <a th:href="@{/fixtures}"    class="hover:text-white transition-colors">Fixtures</a>

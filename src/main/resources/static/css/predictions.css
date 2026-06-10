@@ -25,13 +25,14 @@
 .round-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:24px; animation:fUp .5s ease .2s both; }
 .round-tab {
   display:flex; align-items:center; gap:6px; padding:8px 16px;
-  border-radius:99px; border:1.5px solid var(--border);
-  background:white; font-size:12px; font-weight:700; color:var(--muted);
+  border-radius:99px; border:1.5px solid rgba(0,160,70,0.25);
+  background:rgba(255,255,255,0.95);
+  font-size:12px; font-weight:700; color:var(--green-d);
   cursor:pointer; transition:all .2s; user-select:none;
 }
-.round-tab:hover { background:rgba(0,200,83,.07); border-color:rgba(0,200,83,.3); color:var(--green-d); }
-.round-tab.active { background:var(--green-d); border-color:var(--green-d); color:white; box-shadow:0 3px 12px rgba(0,100,42,.3); }
-.round-tab.future { opacity:.45; cursor:default; }
+.round-tab:hover { background:white; border-color:rgba(0,200,83,.5); }
+.round-tab.active { background:var(--green-d); border-color:var(--green-d); color:white; box-shadow:0 3px 14px rgba(0,100,42,.4); }
+.round-tab.future { opacity:.5; cursor:default; }
 .tab-status { font-size:14px; }
 
 #round-content { animation:fUp .4s ease; }
@@ -67,7 +68,7 @@
 
 /* ─── List View ──────────────────────────────────────── */
 .date-group { margin-bottom:28px; }
-.date-header { font-size:11px; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:var(--green-d); margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.date-header { font-size:11px; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:#fff; margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid var(--border); }
 
 .match-row { background:white; border:1.5px solid var(--border); border-radius:16px; padding:16px 20px; margin-bottom:10px; display:flex; align-items:center; gap:16px; box-shadow:0 2px 10px rgba(0,0,0,.04); transition:border-color .2s,box-shadow .2s; }
 .match-row:hover { border-color:rgba(0,200,83,.3); box-shadow:0 4px 18px rgba(0,160,70,.1); }

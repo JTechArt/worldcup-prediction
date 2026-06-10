@@ -6,7 +6,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title layout:title-pattern="$CONTENT_TITLE — WC2026 Admin">WC2026 Admin</title>
+  <title layout:title-pattern="$CONTENT_TITLE — Mundial '26 Admin">Mundial '26 Admin</title>
+  <link rel="icon" type="image/webp" href="/images/favicon.webp" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -38,7 +39,7 @@
   <aside class="w-64 bg-admin-dark text-white flex flex-col min-h-screen shadow-xl flex-shrink-0">
     <div class="px-6 py-5 border-b border-admin-mid">
       <a th:href="@{/}" class="no-underline">
-        <span class="font-bebas text-3xl tracking-widest text-admin-light">WC2026</span>
+        <img src="/images/logo.webp" alt="Mundial '26" style="height:64px;width:auto;" class="mb-1" />
         <span class="block text-xs text-green-300 uppercase tracking-widest mt-0.5">Admin Panel</span>
       </a>
     </div>

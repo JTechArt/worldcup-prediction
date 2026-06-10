@@ -34,7 +34,7 @@
 
       <!-- View toggle + header -->
       <div class="view-toggle">
-        <div style="font-size:14px;font-weight:800;color:var(--green-d);"
+        <div style="font-size:14px;font-weight:800;color:#fff;"
              x-text="'Round: ' + activeLabel"></div>
         <div class="view-toggle-btns">
           <button class="view-btn" :class="{ active: viewMode === 'list' }" @click="viewMode = 'list'">☰ List</button>
@@ -71,7 +71,6 @@
                   </div>
                 </div>
                 <div class="mr-stepper" x-show="!match.locked">
-                  <div class="stepper-team-name" x-text="match.homeTeamName"></div>
                   <div class="score-widget">
                     <button type="button" class="score-btn" @click="adj(match,'home',-1)">−</button>
                     <input class="score-val" type="number" min="0" max="20"
@@ -87,7 +86,6 @@
                            @input="setScore(match,'away',$event.target.value)" autocomplete="off">
                     <button type="button" class="score-btn" @click="adj(match,'away',1)">+</button>
                   </div>
-                  <div class="stepper-team-name" x-text="match.awayTeamName"></div>
                 </div>
                 <div x-show="match.locked"
                      style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--muted);"

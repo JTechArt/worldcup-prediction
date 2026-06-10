@@ -4,7 +4,8 @@
 <head th:fragment="head(title)">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title th:text="${title} + ' · World Cup 2026'">World Cup 2026</title>
+    <title th:text="${title != null} ? |${title} · Mundial '26| : |Mundial '26|">Mundial '26</title>
+    <link rel="icon" type="image/webp" href="/images/favicon.webp" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -76,8 +77,8 @@
 <nav th:fragment="navbar" class="bg-wc-dark-green text-white px-4 sm:px-6 py-3 shadow-lg animate-slide-down"
      x-data="{ mobileMenu: false }">
     <div class="flex items-center justify-between">
-        <a href="/" class="font-display text-2xl tracking-wider text-wc-gold hover:text-yellow-300 transition-colors">
-            ⚽ WC2026
+        <a href="/" class="flex items-center hover:opacity-80 transition-opacity">
+            <img src="/images/logo.webp" alt="Mundial '26" style="height:70px;width:auto;" />
         </a>
         <div class="hidden md:flex items-center gap-6 text-sm font-medium">
             <span class="text-xs text-wc-gold/70 font-normal tracking-wide"
