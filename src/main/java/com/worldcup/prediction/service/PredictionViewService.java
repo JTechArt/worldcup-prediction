@@ -50,6 +50,7 @@ public class PredictionViewService {
     private final UserRepository userRepository;
     private final CommunityRepository communityRepository;
     private final RoundWindowService roundWindowService;
+    private final RoundSubmissionService roundSubmissionService;
 
     public List<RoundSummaryDto> getRoundSummaries(Long userId, Long communityId) {
         List<String> roundLabels = matchRepository.findDistinctRoundLabels();
@@ -160,6 +161,7 @@ public class PredictionViewService {
             predictionRepository.save(prediction);
         }
 
+        roundSubmissionService.upsert(userId, communityId, dto.getRoundLabel());
         return roundMatches.size();
     }
 
