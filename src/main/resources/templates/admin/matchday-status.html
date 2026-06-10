@@ -48,8 +48,8 @@
           <span th:text="${#lists.size(statuses)}">0</span> members
         </h3>
         <div class="flex gap-4 text-xs font-medium">
-          <span class="text-green-700">✅ Submitted: <span th:text="${statuses.stream().filter(s -> s.submitted()).count()}">0</span></span>
-          <span class="text-red-600">⏳ Pending: <span th:text="${statuses.stream().filter(s -> !s.submitted()).count()}">0</span></span>
+          <span class="text-green-700">✅ Submitted: <span th:text="${statuses.?[submitted()].size()}">0</span></span>
+          <span class="text-red-600">⏳ Pending: <span th:text="${statuses.?[!submitted()].size()}">0</span></span>
         </div>
       </div>
       <table class="w-full text-sm">
