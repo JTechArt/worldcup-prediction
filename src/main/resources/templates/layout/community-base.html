@@ -181,6 +181,47 @@
     </div>
   </nav>
 
+  <!-- Window banner: countdown if not submitted, confirmation if submitted -->
+  <div th:if="${windowBanner != null}" class="relative z-40">
+    <!-- Not submitted: show countdown -->
+    <div th:if="${!windowBanner.submitted}"
+         x-data="windowCountdown()"
+         th:attr="x-init='start(\'' + ${windowBanner.closesAtIso} + '\')'"
+         class="w-full bg-amber-500 text-white text-sm font-semibold px-4 py-2 flex items-center justify-center gap-3 flex-wrap">
+      <span>⏱ <span th:text="${windowBanner.roundLabel}">Matchday</span> closes in</span>
+      <span class="font-mono bg-black/20 px-2 py-0.5 rounded" x-text="formatted">--:--:--</span>
+      <a th:href="@{'/c/' + ${slug} + '/predictions'}"
+         class="underline hover:no-underline">Submit now →</a>
+    </div>
+    <!-- Submitted: show confirmation -->
+    <div th:if="${windowBanner.submitted}"
+         class="w-full bg-green-600 text-white text-sm font-semibold px-4 py-2 flex items-center justify-center gap-2">
+      <span>✅ Predictions submitted for <span th:text="${windowBanner.roundLabel}">Matchday</span></span>
+    </div>
+  </div>
+
+  <script>
+    function windowCountdown() {
+      return {
+        formatted: '--:--:--',
+        start(isoStr) {
+          if (!isoStr || isoStr === 'null') return;
+          const target = new Date(isoStr).getTime();
+          const tick = () => {
+            const diff = target - Date.now();
+            if (diff <= 0) { this.formatted = '00:00:00'; return; }
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            this.formatted = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+            setTimeout(tick, 1000);
+          };
+          tick();
+        }
+      };
+    }
+  </script>
+
   <!-- PAGE CONTENT -->
   <main class="flex-1 pt-16">
     <th:block th:replace="${content}" />
