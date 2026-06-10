@@ -188,8 +188,31 @@
     </template>
 
     <template x-if="started">
-      <div class="countdown-label" style="font-size:16px;color:#00e564;letter-spacing:1px;">
-        ⚽ The tournament is LIVE!
+      <div x-data="{
+        day: 1,
+        init() {
+          const start = new Date('2026-06-11T18:00:00Z');
+          this.day = Math.max(1, Math.floor((new Date() - start) / 86400000) + 1);
+        }
+      }">
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:20px;">
+          <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,0,60,0.18);border:1px solid rgba(255,0,60,0.4);
+                       border-radius:99px;padding:7px 18px;font-size:12px;font-weight:800;letter-spacing:2px;color:#ff4d6d;text-transform:uppercase;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#ff4d6d;display:inline-block;animation:pulseDot 1s ease infinite;"></span>
+            LIVE NOW
+          </span>
+          <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.55);">
+            Day <span x-text="day">1</span> of 32
+          </span>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,7vw,72px);
+                    letter-spacing:4px;color:#00e564;text-shadow:0 0 30px rgba(0,229,100,0.5);
+                    margin-bottom:8px;line-height:1;">
+          TOURNAMENT IS LIVE
+        </div>
+        <div style="font-size:15px;font-weight:500;color:rgba(255,255,255,0.65);margin-bottom:32px;">
+          Sign in to predict matches and climb the leaderboard
+        </div>
       </div>
     </template>
 

@@ -59,6 +59,21 @@ public class RoundWindowService {
         return roundWindowRepository.findByRoundLabel(roundLabel);
     }
 
+    /**
+     * Returns true if the tournament winner prediction can still be changed.
+     * Locked once the first matchday window closes (autoClosesAt of "Matchday 1" has passed,
+     * or the window is FORCE_CLOSED).
+     */
+    public boolean isWinnerChangeable(LocalDateTime now) {
+        return roundWindowRepository.findByRoundLabel("Matchday 1")
+                .map(rw -> {
+                    if (rw.getOverrideStatus() == RoundOverrideStatus.FORCE_CLOSED) return false;
+                    if (rw.getAutoClosesAt() == null) return true;
+                    return now.isBefore(rw.getAutoClosesAt());
+                })
+                .orElse(true);
+    }
+
     @Transactional
     public void recalculateAutoTimes(String roundLabel) {
         RoundWindow rw = findOrThrow(roundLabel);

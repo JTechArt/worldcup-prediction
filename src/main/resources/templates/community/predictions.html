@@ -37,17 +37,48 @@
       <div class="winner-banner-body">
         <div class="winner-banner-title">Tournament Winner Prediction</div>
 
-        <!-- Already submitted -->
-        <div th:if="${winnerSubmitted}" class="winner-picked" style="margin-top:8px;">
-          <div class="winner-flag">
-            <img th:src="@{'/images/flags/' + ${winnerPick.flagCode} + '.svg'}"
-                 th:alt="${winnerPick.name}" />
+        <!-- Already submitted — show current pick, with change option if window still open -->
+        <div th:if="${winnerSubmitted}">
+          <div class="winner-picked" style="margin-top:8px;">
+            <div class="winner-flag">
+              <img th:src="@{'/images/flags/' + ${winnerPick.flagCode} + '.svg'}"
+                   th:alt="${winnerPick.name}" />
+            </div>
+            <div>
+              <div class="winner-banner-sub">Your pick</div>
+              <div class="winner-team-name" th:text="${winnerPick.name}">Brazil</div>
+            </div>
+            <div class="winner-pts-badge">+10 pts if correct</div>
           </div>
-          <div>
-            <div class="winner-banner-sub">Your pick</div>
-            <div class="winner-team-name" th:text="${winnerPick.name}">Brazil</div>
+
+          <!-- Change pick form — only while Matchday 1 window is still open -->
+          <div th:if="${canChangeWinner}" x-data="{ open: false }" style="margin-top:10px;">
+            <button @click="open = !open"
+                    style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.75);
+                           border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;"
+                    @mouseenter="$el.style.background='rgba(255,255,255,0.18)'"
+                    @mouseleave="$el.style.background='rgba(255,255,255,0.1)'">
+              ✏️ Change pick
+            </button>
+            <form x-show="open" x-transition
+                  th:action="@{'/c/' + ${slug} + '/predictions/winner'}" method="post"
+                  class="winner-banner-form" style="margin-top:10px;">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <select name="teamId" class="winner-select" required>
+                <option value="">Select a team…</option>
+                <option th:each="team : ${allTeams}"
+                        th:value="${team.id}"
+                        th:text="${team.name}"
+                        th:selected="${team.id == winnerPick.id}">Team</option>
+              </select>
+              <button type="submit" class="winner-btn">🔄 Update Pick</button>
+            </form>
           </div>
-          <div class="winner-pts-badge">+10 pts if correct</div>
+
+          <div th:unless="${canChangeWinner}"
+               style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.4);font-weight:600;">
+            🔒 Pick locked — Matchday 1 window closed
+          </div>
         </div>
 
         <!-- Not yet submitted -->

@@ -10,6 +10,7 @@ import com.worldcup.prediction.repository.TeamRepository;
 import com.worldcup.prediction.security.CustomOAuth2User;
 import com.worldcup.prediction.service.EmailService;
 import com.worldcup.prediction.service.PredictionViewService;
+import com.worldcup.prediction.service.RoundWindowService;
 import com.worldcup.prediction.service.TournamentWinnerPredictionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -36,6 +37,7 @@ public class CommunityPredictionController {
 
     private final PredictionViewService predictionViewService;
     private final TournamentWinnerPredictionService tournamentWinnerService;
+    private final RoundWindowService roundWindowService;
     private final TeamRepository teamRepository;
     private final EmailService emailService;
     private final MatchRepository matchRepository;
@@ -77,6 +79,7 @@ public class CommunityPredictionController {
         Optional<TournamentWinnerPrediction> winnerOpt = tournamentWinnerService.getForUser(userId, communityId);
         model.addAttribute("winnerSubmitted", winnerOpt.isPresent());
         model.addAttribute("winnerPick", winnerOpt.map(TournamentWinnerPrediction::getTeam).orElse(null));
+        model.addAttribute("canChangeWinner", roundWindowService.isWinnerChangeable(LocalDateTime.now()));
         model.addAttribute("allTeams", teamRepository.findAllByOrderByNameAsc());
 
         model.addAttribute("community", community);
