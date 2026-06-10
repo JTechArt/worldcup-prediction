@@ -9,12 +9,17 @@ import com.worldcup.prediction.repository.UserRepository;
 import com.worldcup.prediction.service.EmailService;
 import com.worldcup.prediction.service.RoundSubmissionService;
 import com.worldcup.prediction.service.RoundWindowService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -33,6 +38,16 @@ public class AdminMatchdayStatusController {
     private final RoundSubmissionService roundSubmissionService;
     private final UserRepository userRepository;
     private final EmailService emailService;
+
+    @Value("${app.timezone:UTC}")
+    private String timezoneId;
+
+    private ZoneId appZone;
+
+    @PostConstruct
+    void init() {
+        appZone = ZoneId.of(timezoneId);
+    }
 
     @GetMapping
     public String statusPage(@PathVariable Long communityId,
@@ -58,7 +73,7 @@ public class AdminMatchdayStatusController {
             closesAtIso = allWindows.stream()
                     .filter(rw -> rw.getRoundLabel().equals(finalRound) && rw.getAutoClosesAt() != null)
                     .map(rw -> rw.getAutoClosesAt()
-                            .atZone(ZoneId.of("UTC"))
+                            .atZone(appZone)
                             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
                     .findFirst().orElse(null);
         }
@@ -97,9 +112,16 @@ public class AdminMatchdayStatusController {
                          RedirectAttributes redirectAttributes) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        membershipRepository.findByCommunityIdAndUserId(communityId, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "User is not a member of this community"));
         emailService.sendPredictionReminder(user, round);
         redirectAttributes.addFlashAttribute("successMessage",
                 "Reminder sent to " + user.getFullName());
-        return "redirect:/admin/communities/" + communityId + "/matchday-status?round=" + round;
+        return "redirect:" + UriComponentsBuilder.fromPath("/admin/communities/{communityId}/matchday-status")
+                .queryParam("round", round)
+                .buildAndExpand(communityId)
+                .encode()
+                .toUriString();
     }
 }

@@ -18,10 +18,14 @@ import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +44,8 @@ class AdminMatchdayStatusControllerTest {
     void setUp() {
         controller = new AdminMatchdayStatusController(communityRepository, membershipRepository,
                 roundWindowService, roundSubmissionService, userRepository, emailService);
+        ReflectionTestUtils.setField(controller, "timezoneId", "UTC");
+        controller.init(); // simulate @PostConstruct — initialises appZone
     }
 
     @Test
@@ -100,13 +106,39 @@ class AdminMatchdayStatusControllerTest {
 
         User user = User.builder().id(userId).firstName("Alice").lastName("Smith")
                 .email("alice@example.com").build();
+        CommunityMembership membership = new CommunityMembership();
+        membership.setUser(user);
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(membershipRepository.findByCommunityIdAndUserId(communityId, userId))
+                .thenReturn(Optional.of(membership));
 
         var redirectAttributes = new RedirectAttributesModelMap();
         String view = controller.remind(communityId, round, userId, redirectAttributes);
 
         verify(emailService).sendPredictionReminder(user, round);
-        assertThat(view).isEqualTo("redirect:/admin/communities/" + communityId + "/matchday-status?round=" + round);
+        assertThat(view).isEqualTo("redirect:/admin/communities/" + communityId + "/matchday-status?round=Matchday%201");
         assertThat(redirectAttributes.getFlashAttributes()).containsKey("successMessage");
+    }
+
+    @Test
+    void remind_throwsNotFound_whenUserNotMemberOfCommunity() {
+        Long communityId = 1L;
+        String round = "Matchday 1";
+        Long userId = 99L;
+
+        User user = User.builder().id(userId).firstName("Eve").lastName("Hacker")
+                .email("eve@example.com").build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(membershipRepository.findByCommunityIdAndUserId(communityId, userId))
+                .thenReturn(Optional.empty());
+
+        var redirectAttributes = new RedirectAttributesModelMap();
+        assertThatThrownBy(() -> controller.remind(communityId, round, userId, redirectAttributes))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("User is not a member of this community");
+
+        verifyNoInteractions(emailService);
     }
 }
