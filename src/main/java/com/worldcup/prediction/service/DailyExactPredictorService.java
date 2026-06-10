@@ -88,14 +88,27 @@ public class DailyExactPredictorService {
     }
 
     private List<Match> findLastMatchday(LocalDateTime now) {
-        List<Match> completed = matchRepository.findCompletedMatchesBefore(now);
-        if (completed.isEmpty()) {
+        // Get ALL completed matches, regardless of time
+        List<Match> allCompleted = matchRepository.findByStatusWithTeams(
+            com.worldcup.prediction.domain.enums.MatchStatus.COMPLETED);
+        
+        if (allCompleted.isEmpty()) {
             return List.of();
         }
 
-        LocalDate latestDate = completed.get(0).getKickoffTime().toLocalDate();
+        // Filter to only matches before now
+        List<Match> completedBeforeNow = allCompleted.stream()
+                .filter(m -> m.getKickoffTime().isBefore(now))
+                .sorted((a, b) -> b.getKickoffTime().compareTo(a.getKickoffTime())) // descending
+                .toList();
+        
+        if (completedBeforeNow.isEmpty()) {
+            return List.of();
+        }
 
-        return completed.stream()
+        LocalDate latestDate = completedBeforeNow.get(0).getKickoffTime().toLocalDate();
+
+        return completedBeforeNow.stream()
                 .filter(m -> m.getKickoffTime().toLocalDate().equals(latestDate))
                 .toList();
     }
