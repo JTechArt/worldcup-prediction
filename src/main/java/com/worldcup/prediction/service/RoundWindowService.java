@@ -32,7 +32,8 @@ public class RoundWindowService {
 
     @Transactional
     public RoundWindow openRound(String roundLabel) {
-        RoundWindow rw = findOrThrow(roundLabel);
+        RoundWindow rw = roundWindowRepository.findByRoundLabel(roundLabel)
+                .orElseGet(() -> RoundWindow.builder().roundLabel(roundLabel).build());
         rw.setOverrideStatus(RoundOverrideStatus.FORCE_OPEN);
         return roundWindowRepository.save(rw);
     }
