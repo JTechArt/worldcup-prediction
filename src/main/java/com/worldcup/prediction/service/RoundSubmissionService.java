@@ -21,10 +21,7 @@ public class RoundSubmissionService {
     public void upsert(Long userId, Long communityId, String roundLabel) {
         repository.findByUserIdAndCommunityIdAndRoundLabel(userId, communityId, roundLabel)
                 .ifPresentOrElse(
-                        rs -> {
-                            rs.setSubmittedAt(LocalDateTime.now());
-                            repository.save(rs);
-                        },
+                        rs -> rs.setSubmittedAt(LocalDateTime.now()),
                         () -> repository.save(RoundSubmission.builder()
                                 .userId(userId)
                                 .communityId(communityId)

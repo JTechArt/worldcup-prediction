@@ -56,7 +56,7 @@ class RoundSubmissionServiceTest {
 
         service.upsert(1L, 2L, "Matchday 1");
 
-        verify(repository).save(existing);
+        verify(repository, never()).save(existing);
         assertThat(existing.getSubmittedAt()).isAfter(original);
     }
 
