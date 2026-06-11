@@ -109,7 +109,7 @@
            hx-swap="innerHTML"
            style="cursor:pointer;">
         <span class="tab-status"
-              th:text="${round.status == 'PAST'} ? '✅' : '⚡'"></span>
+              th:text="${round.status == 'PAST'} ? '✅' : (${round.status == 'CLOSED'} ? '🔒' : '⚡')"></span>
         <span th:text="${round.displayLabel}">MD1</span>
         <span th:if="${round.status == 'PAST'}"
               style="background:rgba(0,200,83,.15);border-radius:6px;padding:1px 6px;font-size:10px;color:#006b2a;"
@@ -171,7 +171,8 @@
               </div>
             </div>
             <div class="pm-scores">
-              <span class="pm-actual" th:text="|${match.actualHome}–${match.actualAway}|">2–1</span>
+              <span class="pm-actual"
+                    th:text="${match.resultsAvailable} ? |${match.actualHome}–${match.actualAway}| : 'TBD'">2–1</span>
               <span class="pm-sep">actual · pred</span>
               <span class="pm-predicted"
                     th:classappend="${match.outcome == 'EXACT'} ? 'exact' : (${match.outcome == 'DRAW'} ? 'draw' : (${match.outcome == 'WINNER'} ? 'winner' : (${match.outcome == 'WRONG'} ? 'wrong' : 'none')))"
@@ -179,7 +180,7 @@
             </div>
             <div class="pm-pts"
                  th:classappend="${match.outcome == 'EXACT'} ? 'pts-exact' : (${match.outcome == 'DRAW'} ? 'pts-draw' : (${match.outcome == 'WINNER'} ? 'pts-winner' : (${match.outcome == 'WRONG'} ? 'pts-wrong' : 'pts-none')))"
-                 th:text="${match.outcome == 'NOT_PREDICTED'} ? '—' : |+${match.pointsEarned}|">+3</div>
+                 th:text="${match.outcome == 'NOT_PREDICTED' or match.outcome == 'PENDING'} ? '—' : |+${match.pointsEarned}|">+3</div>
           </div>
         </div>
       </div>

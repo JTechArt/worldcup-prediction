@@ -2,12 +2,15 @@ package com.worldcup.prediction.controller.community;
 
 import com.worldcup.prediction.domain.Community;
 import com.worldcup.prediction.domain.Match;
+import com.worldcup.prediction.domain.Prediction;
 import com.worldcup.prediction.domain.enums.MatchStage;
+import com.worldcup.prediction.domain.enums.MatchStatus;
 import com.worldcup.prediction.dto.LeaderboardEntryDto;
 import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
 import com.worldcup.prediction.security.CustomOAuth2User;
 import com.worldcup.prediction.service.LeaderboardService;
+import com.worldcup.prediction.service.RoundWindowService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -15,14 +18,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import com.worldcup.prediction.domain.enums.MatchStatus;
-
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Controller
 @RequestMapping("/c/{slug}")
@@ -32,6 +29,7 @@ public class CommunityLeaderboardController {
     private final LeaderboardService leaderboardService;
     private final PredictionRepository predictionRepository;
     private final MatchRepository matchRepository;
+    private final RoundWindowService roundWindowService;
 
     @GetMapping("/leaderboard")
     public String leaderboard(@PathVariable String slug,
@@ -52,16 +50,16 @@ public class CommunityLeaderboardController {
             phasePoints.computeIfAbsent(userId, k -> new EnumMap<>(MatchStage.class)).put(st, pts);
         });
 
-        // Current user entry for KPI strip
-        LeaderboardEntryDto currentUserEntry = null;
-        if (authentication != null && authentication.isAuthenticated()
-                && authentication.getPrincipal() instanceof CustomOAuth2User customUser) {
-            currentUserEntry = leaderboardService.getEntryForUser(customUser.getUserId(), communityId).orElse(null);
-        }
+        // Current user
+        final Long currentUserId = (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof CustomOAuth2User customUser)
+                ? customUser.getUserId() : null;
+        LeaderboardEntryDto currentUserEntry = currentUserId != null
+                ? leaderboardService.getEntryForUser(currentUserId, communityId).orElse(null) : null;
 
         // Group stage: fetch and sort by kickoff, then group by round label
         List<Match> groupMatchesList = matchRepository.findByStageWithTeams(MatchStage.GROUP);
-        groupMatchesList.sort(java.util.Comparator.comparing(Match::getKickoffTime));
+        groupMatchesList.sort(Comparator.comparing(Match::getKickoffTime));
 
         Map<String, List<Match>> groupRounds = new LinkedHashMap<>();
         for (Match m : groupMatchesList) {
@@ -88,6 +86,38 @@ public class CommunityLeaderboardController {
             roundIdx++;
         }
 
+        // Prediction visibility: closed rounds are visible to all; open rounds only visible to owner
+        LocalDateTime now = LocalDateTime.now();
+        Set<String> closedRoundLabels = new HashSet<>();
+        for (String label : groupRounds.keySet()) {
+            if (!roundWindowService.isRoundOpen(label, now)) {
+                closedRoundLabels.add(label);
+            }
+        }
+
+        // Load predictions for closed rounds (all community members)
+        List<Long> closedMatchIds = groupMatchesList.stream()
+                .filter(m -> closedRoundLabels.contains(m.getRoundLabel()))
+                .map(Match::getId)
+                .toList();
+
+        // userId → matchId → Prediction
+        Map<Long, Map<Long, Prediction>> predsByUserAndMatch = new HashMap<>();
+        if (!closedMatchIds.isEmpty()) {
+            predictionRepository.findByCommunityIdAndMatchIdIn(communityId, closedMatchIds)
+                    .forEach(p -> predsByUserAndMatch
+                            .computeIfAbsent(p.getUser().getId(), k -> new HashMap<>())
+                            .put(p.getMatch().getId(), p));
+        }
+
+        // Also load the current user's own predictions (for open rounds — always visible to self)
+        if (currentUserId != null) {
+            predictionRepository.findByUserIdAndCommunityId(currentUserId, communityId)
+                    .forEach(p -> predsByUserAndMatch
+                            .computeIfAbsent(currentUserId, k -> new HashMap<>())
+                            .putIfAbsent(p.getMatch().getId(), p));
+        }
+
         model.addAttribute("community", community);
         model.addAttribute("slug", slug);
         model.addAttribute("entries", entries);
@@ -95,9 +125,12 @@ public class CommunityLeaderboardController {
         model.addAttribute("totalParticipants", entries.size());
         model.addAttribute("phasePoints", phasePoints);
         model.addAttribute("currentUserEntry", currentUserEntry);
+        model.addAttribute("currentUserId", currentUserId);
         model.addAttribute("groupRounds", groupRounds);
         model.addAttribute("currentRoundLabel", currentRoundLabel);
         model.addAttribute("currentPhaseId", currentPhaseId);
+        model.addAttribute("closedRoundLabels", closedRoundLabels);
+        model.addAttribute("predsByUserAndMatch", predsByUserAndMatch);
         model.addAttribute("pageTitle", community.getName() + " · Leaderboard");
 
         return "community/leaderboard";

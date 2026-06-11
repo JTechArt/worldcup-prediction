@@ -79,7 +79,10 @@ public class PredictionViewService {
                 long predicted = predictionRepository.countByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId);
                 dto.setPredictedCount((int) predicted);
             } else {
-                dto.setStatus("FUTURE");
+                // Window closed but results not in yet — predictions visible, points pending
+                dto.setStatus("CLOSED");
+                long predicted = predictionRepository.countByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId);
+                dto.setPredictedCount((int) predicted);
             }
 
             summaries.add(dto);
@@ -168,11 +171,14 @@ public class PredictionViewService {
     public List<PastRoundDto> getPastRoundsForUser(Long userId, Long communityId) {
         List<String> roundLabels = matchRepository.findDistinctRoundLabels();
         List<PastRoundDto> result = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
 
         for (String label : roundLabels) {
             List<Match> matches = matchRepository.findByRoundLabelWithTeams(label);
+            boolean windowClosed = !roundWindowService.isRoundOpen(label, now);
             boolean allComplete = matches.stream().allMatch(m -> m.getStatus() == MatchStatus.COMPLETED);
-            if (!allComplete) continue;
+            // Show round once window is closed (predictions are now public) or all results are in
+            if (!windowClosed && !allComplete) continue;
 
             List<Long> matchIds = matches.stream().map(Match::getId).toList();
             Map<Long, Prediction> predMap = predictionRepository
@@ -187,16 +193,19 @@ public class PredictionViewService {
                 mr.setAwayTeamName(m.getAwayTeam() != null ? m.getAwayTeam().getName() : "TBD");
                 mr.setAwayTeamCode(m.getAwayTeam() != null ? m.getAwayTeam().getFlagCode() : "xx");
                 mr.setKickoffDisplay(m.getKickoffTime().format(DISPLAY));
-                mr.setActualHome(m.getHomeScore() != null ? m.getHomeScore() : 0);
-                mr.setActualAway(m.getAwayScore() != null ? m.getAwayScore() : 0);
+                boolean matchCompleted = m.getStatus() == MatchStatus.COMPLETED && m.getHomeScore() != null;
+                mr.setResultsAvailable(matchCompleted);
+                mr.setActualHome(matchCompleted ? m.getHomeScore() : 0);
+                mr.setActualAway(matchCompleted ? m.getAwayScore() : 0);
 
                 Prediction pred = predMap.get(m.getId());
                 if (pred != null) {
                     mr.setPredictedHome(pred.getPredictedHome());
                     mr.setPredictedAway(pred.getPredictedAway());
-                    mr.setPointsEarned(pred.getPointsAwarded());
-                    mr.setOutcome(outcomeLabel(m.getHomeScore(), m.getAwayScore(),
-                            pred.getPredictedHome(), pred.getPredictedAway()));
+                    mr.setPointsEarned(matchCompleted ? pred.getPointsAwarded() : 0);
+                    mr.setOutcome(matchCompleted
+                            ? outcomeLabel(m.getHomeScore(), m.getAwayScore(), pred.getPredictedHome(), pred.getPredictedAway())
+                            : "PENDING");
                 } else {
                     mr.setOutcome("NOT_PREDICTED");
                 }

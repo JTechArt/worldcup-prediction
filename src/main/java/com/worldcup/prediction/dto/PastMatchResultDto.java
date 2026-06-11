@@ -14,9 +14,10 @@ public class PastMatchResultDto {
     private Integer predictedHome;
     private Integer predictedAway;
 
-    /** "EXACT", "DRAW", "WINNER", "WRONG", "NOT_PREDICTED" */
+    /** "EXACT", "DRAW", "WINNER", "WRONG", "NOT_PREDICTED", "PENDING" */
     private String outcome;
     private int pointsEarned;
+    private boolean resultsAvailable;
 
     public Long getMatchId() { return matchId; }
     public void setMatchId(Long matchId) { this.matchId = matchId; }
@@ -53,4 +54,7 @@ public class PastMatchResultDto {
 
     public int getPointsEarned() { return pointsEarned; }
     public void setPointsEarned(int pointsEarned) { this.pointsEarned = pointsEarned; }
+
+    public boolean isResultsAvailable() { return resultsAvailable; }
+    public void setResultsAvailable(boolean resultsAvailable) { this.resultsAvailable = resultsAvailable; }
 }

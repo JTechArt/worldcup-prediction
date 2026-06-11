@@ -347,9 +347,24 @@
                              and !#authentication.principal.equals('anonymousUser')
                              and #authentication.principal.userId == entry.userId} ? ' you' : '')"
                style="display:flex">
-            <!-- Empty cell per group match (no predictions shown) -->
+            <!-- Per-match prediction cells: visible when round is closed or viewing own row -->
             <th:block th:each="roundEntry : ${groupRounds}">
-              <div th:each="m : ${roundEntry.value}" class="lb-game-cell">·</div>
+              <div th:each="m : ${roundEntry.value}"
+                   th:with="roundClosed=${closedRoundLabels != null and closedRoundLabels.contains(roundEntry.key)},
+                            isOwnRow=${currentUserId != null and entry.userId == currentUserId},
+                            showPred=${roundClosed or isOwnRow},
+                            userPreds=${predsByUserAndMatch != null ? predsByUserAndMatch.get(entry.userId) : null},
+                            pred=${showPred and userPreds != null ? userPreds.get(m.id) : null}"
+                   th:class="'lb-game-cell '
+                             + (${pred == null} ? '' :
+                               (${pred.scoreResult.name() == 'EXACT'} ? 'cell-exact ' :
+                               (${pred.scoreResult.name() == 'CORRECT_DRAW'} ? 'cell-draw ' :
+                               (${pred.scoreResult.name() == 'CORRECT_WINNER'} ? 'cell-winner ' :
+                               (${pred.scoreResult.name() == 'WRONG'} ? 'cell-zero ' : 'cell-pending ')))))">
+                <span th:if="${pred != null}" th:text="${pred.predictedHome + '–' + pred.predictedAway}">0–0</span>
+                <span th:if="${pred == null and showPred}" class="opacity-30">–</span>
+                <span th:if="${not showPred}">·</span>
+              </div>
             </th:block>
             <!-- Knockout aggregate cells -->
             <div th:each="stage : ${stages}"
