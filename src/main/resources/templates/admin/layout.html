@@ -119,6 +119,15 @@
         DB Backup
       </a>
 
+      <a th:href="@{/admin/schedulers}"
+         th:classappend="${currentUri.startsWith('/admin/schedulers')} ? ' bg-admin-mid text-white' : ' text-green-200 hover:bg-admin-mid hover:text-white'"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Schedulers
+      </a>
+
       <a th:href="@{/admin/communities}"
          th:classappend="${currentUri.startsWith('/admin/communities')} ? ' bg-admin-mid text-white' : ' text-green-200 hover:bg-admin-mid hover:text-white'"
          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150">
