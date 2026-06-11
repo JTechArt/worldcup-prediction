@@ -25,11 +25,11 @@
 .round-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:24px; animation:fUp .5s ease .2s both; }
 .round-tab {
   display:flex; align-items:center; gap:6px; padding:8px 16px;
-  border-radius:99px; border:1px solid rgb(243,244,246);
-  background:white;
+  border-radius:99px; border:1px solid rgba(0,160,70,.2);
+  background:#f0fdf5;
   font-size:12px; font-weight:700; color:var(--green-d);
   cursor:pointer; transition:all .2s; user-select:none;
-  box-shadow:0 1px 3px rgba(0,0,0,.08);
+  box-shadow:0 2px 8px rgba(0,0,0,.12);
 }
 .round-tab:hover { background:white; border-color:rgba(0,200,83,.5); }
 .round-tab.active { background:var(--green-d); border-color:var(--green-d); color:white; box-shadow:0 3px 14px rgba(0,100,42,.4); }
@@ -45,7 +45,7 @@
 .view-btn.active { background:white; color:var(--green-d); box-shadow:0 1px 6px rgba(0,0,0,.1); }
 
 /* ─── Progress Banner ────────────────────────────────── */
-.progress-banner { background:white; border:1px solid rgb(243,244,246); border-radius:16px; padding:16px 20px; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.progress-banner { background:#f0fdf5; border:1px solid rgba(0,160,70,.12); border-radius:16px; padding:16px 20px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.12); }
 .progress-banner-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
 .progress-label { font-size:13px; font-weight:700; color:var(--text); }
 .progress-fraction { font-size:13px; font-weight:800; color:var(--green-d); }
@@ -71,8 +71,8 @@
 .date-group { margin-bottom:28px; }
 .date-header { font-size:11px; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:#fff; margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid var(--border); }
 
-.match-row { background:white; border:1px solid rgb(243,244,246); border-radius:16px; padding:16px 20px; margin-bottom:10px; display:flex; align-items:center; gap:16px; box-shadow:0 1px 3px rgba(0,0,0,.08); transition:all .2s; }
-.match-row:hover { border-color:rgba(0,200,83,.3); box-shadow:0 4px 12px rgba(0,0,0,.12); }
+.match-row { background:#f0fdf5; border:1px solid rgba(0,160,70,.15); border-radius:16px; padding:16px 20px; margin-bottom:10px; display:flex; align-items:center; gap:16px; box-shadow:0 2px 8px rgba(0,0,0,.12); transition:all .2s; }
+.match-row:hover { background:#e8fdf1; border-color:rgba(0,200,83,.35); box-shadow:0 4px 16px rgba(0,0,0,.15); }
 .match-row.filled { border-color:rgba(0,200,83,.3); background:rgba(0,200,83,.02); }
 .match-row.locked { opacity:.7; }
 
@@ -104,7 +104,7 @@
 
 /* ─── Card View ──────────────────────────────────────── */
 .card-carousel { position:relative; }
-.carousel-card { background:white; border-radius:24px; border:1px solid rgb(243,244,246); box-shadow:0 1px 3px rgba(0,0,0,.08); overflow:hidden; animation:cardSlideIn .3s ease; }
+.carousel-card { background:#f0fdf5; border-radius:24px; border:1px solid rgba(0,160,70,.15); box-shadow:0 2px 8px rgba(0,0,0,.12); overflow:hidden; animation:cardSlideIn .3s ease; }
 
 .card-ribbon { background:linear-gradient(135deg,var(--green-d),var(--green-m)); padding:12px 24px; display:flex; align-items:center; justify-content:space-between; color:white; position:relative; overflow:hidden; }
 .ribbon-stage { font-size:10px; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; opacity:.8; }
@@ -148,7 +148,7 @@
 .progress-dot.current { background:var(--green-d); width:22px; border-radius:99px; }
 
 /* ─── Tournament Winner Banner ───────────────────────── */
-.winner-banner { background:rgba(255,255,255,0.95); border:1.5px solid rgba(255,214,0,.5); border-radius:20px; padding:20px 24px; margin-bottom:24px; display:flex; align-items:center; gap:20px; box-shadow:0 4px 24px rgba(200,160,0,.18); animation:fUp .5s ease .15s both; }
+.winner-banner { background:#fffde7; border:1.5px solid rgba(255,214,0,.5); border-radius:20px; padding:20px 24px; margin-bottom:24px; display:flex; align-items:center; gap:20px; box-shadow:0 2px 8px rgba(0,0,0,.12); animation:fUp .5s ease .15s both; }
 .winner-banner-icon { font-size:36px; flex-shrink:0; }
 .winner-banner-body { flex:1; }
 .winner-banner-title { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px; color:#7a5000; margin-bottom:2px; }
@@ -167,7 +167,7 @@
 /* ─── Past Rounds Accordion ──────────────────────────── */
 .past-rounds-section { margin-top:40px; animation:fUp .5s ease .4s both; }
 .past-rounds-title { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:3px; color:var(--green-d); margin-bottom:16px; }
-.past-round { background:white; border:1px solid rgb(243,244,246); border-radius:16px; overflow:hidden; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.past-round { background:#f0fdf5; border:1px solid rgba(0,160,70,.15); border-radius:16px; overflow:hidden; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,.12); }
 .past-round-header { padding:16px 20px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; transition:background .2s; }
 .past-round-header:hover { background:rgba(0,200,83,.04); }
 .prh-left { display:flex; align-items:center; gap:10px; }
