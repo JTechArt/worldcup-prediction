@@ -39,6 +39,7 @@ public class SchedulerRunnerService {
                 if (notificationScheduler == null) return logDisabled(jobType);
                 notificationScheduler.checkLeaderboardDigest();
             }
+            default -> throw new IllegalArgumentException("Unhandled job type: " + jobType);
         }
         return logService.findLatest(jobType.name())
                 .map(l -> l.getStatus() + ": " + (l.getMessage() != null ? l.getMessage() : ""))
