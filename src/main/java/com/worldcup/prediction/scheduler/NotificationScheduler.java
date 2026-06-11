@@ -91,7 +91,7 @@ public class NotificationScheduler {
             logService.complete(entry, SchedulerJobStatus.SUCCESS, sent, sent + " window-open notification(s) sent");
         } catch (Exception e) {
             log.error("NotificationScheduler.checkPredictionWindowOpen error", e);
-            logService.fail(entry, e.getMessage(), stackTraceString(e));
+            logService.fail(entry, e.getMessage(), SchedulerLogService.stackTraceString(e));
         }
     }
 
@@ -132,7 +132,7 @@ public class NotificationScheduler {
             logService.complete(entry, SchedulerJobStatus.SUCCESS, totalSent, totalSent + " reminder(s) sent");
         } catch (Exception e) {
             log.error("NotificationScheduler.checkPredictionDeadline error", e);
-            logService.fail(entry, e.getMessage(), stackTraceString(e));
+            logService.fail(entry, e.getMessage(), SchedulerLogService.stackTraceString(e));
         }
     }
 
@@ -163,9 +163,9 @@ public class NotificationScheduler {
                 if (top10.isEmpty()) continue;
                 List<User> topUsers = new ArrayList<>();
                 List<Map<String, Object>> topEntries = new ArrayList<>();
-                for (LeaderboardEntryDto entry2 : top10) {
-                    userRepository.findById(entry2.getUserId()).ifPresent(topUsers::add);
-                    topEntries.add(Map.of("rank", entry2.getRank(), "name", entry2.getDisplayName(), "points", entry2.getTotalPoints()));
+                for (LeaderboardEntryDto leaderboardEntry : top10) {
+                    userRepository.findById(leaderboardEntry.getUserId()).ifPresent(topUsers::add);
+                    topEntries.add(Map.of("rank", leaderboardEntry.getRank(), "name", leaderboardEntry.getDisplayName(), "points", leaderboardEntry.getTotalPoints()));
                 }
                 List<Map<String, Object>> matchResults = todayMatches.stream()
                         .filter(Match::isCompleted)
@@ -180,15 +180,8 @@ public class NotificationScheduler {
             logService.complete(entry, SchedulerJobStatus.SUCCESS, sent, sent + " digest(s) sent");
         } catch (Exception e) {
             log.error("NotificationScheduler.checkLeaderboardDigest error", e);
-            logService.fail(entry, e.getMessage(), stackTraceString(e));
+            logService.fail(entry, e.getMessage(), SchedulerLogService.stackTraceString(e));
         }
-    }
-
-    private static String stackTraceString(Throwable e) {
-        java.io.StringWriter sw = new java.io.StringWriter();
-        e.printStackTrace(new java.io.PrintWriter(sw));
-        String s = sw.toString();
-        return s.length() > 2000 ? s.substring(0, 2000) : s;
     }
 
     private String matchLabel(Match match) {

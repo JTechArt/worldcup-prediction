@@ -114,6 +114,13 @@ public class SchedulerLogService {
         }
     }
 
+    public static String stackTraceString(Throwable e) {
+        java.io.StringWriter sw = new java.io.StringWriter();
+        e.printStackTrace(new java.io.PrintWriter(sw));
+        String s = sw.toString();
+        return s.length() > 2000 ? s.substring(0, 2000) : s;
+    }
+
     private static String truncate(String s, int maxLen) {
         return s.length() > maxLen ? s.substring(0, maxLen) : s;
     }
