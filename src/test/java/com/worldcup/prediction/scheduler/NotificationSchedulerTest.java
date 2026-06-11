@@ -1,8 +1,10 @@
 package com.worldcup.prediction.scheduler;
 
 import com.worldcup.prediction.domain.Match;
+import com.worldcup.prediction.domain.SchedulerLog;
 import com.worldcup.prediction.domain.enums.MatchStage;
 import com.worldcup.prediction.domain.enums.MatchStatus;
+import com.worldcup.prediction.domain.enums.SchedulerJobStatus;
 import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
@@ -10,6 +12,8 @@ import com.worldcup.prediction.repository.UserRepository;
 import com.worldcup.prediction.service.LeaderboardService;
 import com.worldcup.prediction.service.NotificationService;
 import com.worldcup.prediction.service.RoundWindowService;
+import com.worldcup.prediction.service.SchedulerLogService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,38 +36,48 @@ class NotificationSchedulerTest {
     @Mock LeaderboardService leaderboardService;
     @Mock CommunityRepository communityRepository;
     @Mock RoundWindowService roundWindowService;
-
+    @Mock SchedulerLogService logService;
     @InjectMocks NotificationScheduler scheduler;
 
+    private final SchedulerLog stubLog = SchedulerLog.builder()
+            .id(1L).status(SchedulerJobStatus.IN_PROGRESS).startedAt(LocalDateTime.now()).build();
+
+    @BeforeEach
+    void setUp() {
+        when(logService.start(anyString())).thenReturn(stubLog);
+    }
+
     @Test
-    void checkPredictionWindowOpen_noMatches_skips() {
+    void checkPredictionWindowOpen_noMatches_logsSkipped() {
         when(roundWindowService.findAll()).thenReturn(List.of());
         scheduler.checkPredictionWindowOpen();
         verify(notificationService, never()).sendPredictionWindowOpen(anyList(), any(), anyLong());
+        verify(logService).complete(stubLog, SchedulerJobStatus.SKIPPED, 0, "No newly-open rounds");
     }
 
     @Test
-    void checkPredictionDeadline_noApproachingMatches_skips() {
+    void checkPredictionDeadline_noApproachingMatches_logsSkipped() {
         when(matchRepository.findByKickoffTimeBetween(any(), any())).thenReturn(List.of());
         scheduler.checkPredictionDeadline();
         verify(notificationService, never()).sendPredictionReminders(anyList(), any(), anyLong());
+        verify(logService).complete(stubLog, SchedulerJobStatus.SKIPPED, 0, "No approaching deadlines");
     }
 
     @Test
-    void checkLeaderboardDigest_noMatchesToday_skips() {
+    void checkLeaderboardDigest_noMatchesToday_logsSkipped() {
         when(matchRepository.findByKickoffTimeBetween(any(), any())).thenReturn(List.of());
         scheduler.checkLeaderboardDigest();
         verify(notificationService, never()).sendLeaderboardDigest(anyString(), anyList(), anyList(), anyList(), anyLong());
+        verify(logService).complete(stubLog, SchedulerJobStatus.SKIPPED, 0, "No matches today");
     }
 
     @Test
-    void checkLeaderboardDigest_notAllCompleted_skips() {
-        Match incomplete = Match.builder()
-                .id(1L).status(MatchStatus.SCHEDULED)
-                .kickoffTime(LocalDateTime.now())
-                .stage(MatchStage.GROUP).matchNumber(1).build();
+    void checkLeaderboardDigest_notAllCompleted_logsSkipped() {
+        Match incomplete = Match.builder().id(1L).status(MatchStatus.SCHEDULED)
+                .kickoffTime(LocalDateTime.now()).stage(MatchStage.GROUP).matchNumber(1).build();
         when(matchRepository.findByKickoffTimeBetween(any(), any())).thenReturn(List.of(incomplete));
         scheduler.checkLeaderboardDigest();
         verify(notificationService, never()).sendLeaderboardDigest(anyString(), anyList(), anyList(), anyList(), anyLong());
+        verify(logService).complete(stubLog, SchedulerJobStatus.SKIPPED, 0, "Not all today's matches completed");
     }
 }
