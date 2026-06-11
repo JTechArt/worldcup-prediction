@@ -187,11 +187,19 @@
 
     <!-- Window countdown banner -->
     <div th:if="${windowBanner != null}"
-         x-data="adminCountdown()"
-         th:attr="x-init=|start('${windowBanner.closesAtIso}')|"
          class="w-full bg-amber-500 text-white text-sm font-semibold px-4 py-2 flex items-center justify-center gap-3">
-      <span>⏱ <span th:text="${windowBanner.roundLabel}">Matchday</span> closes in</span>
-      <span class="font-mono bg-black/20 px-2 py-0.5 rounded" x-text="formatted">--:--:--</span>
+      <!-- With scheduled close time: live countdown -->
+      <span th:if="${windowBanner.closesAtIso != null}"
+            x-data="adminCountdown()"
+            th:attr="x-init=|start('${windowBanner.closesAtIso}')|"
+            class="flex items-center gap-3">
+        <span>⏱ <span th:text="${windowBanner.roundLabel}">Matchday</span> closes in</span>
+        <span class="font-mono bg-black/20 px-2 py-0.5 rounded" x-text="formatted">--:--:--</span>
+      </span>
+      <!-- Force-opened with no end time -->
+      <span th:if="${windowBanner.closesAtIso == null}">
+        🔓 <span th:text="${windowBanner.roundLabel}">Matchday</span> window is open
+      </span>
     </div>
 
     <!-- Flash messages -->

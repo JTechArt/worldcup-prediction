@@ -190,26 +190,6 @@
     </div>
   </nav>
 
-  <!-- Window banner: countdown if not submitted, confirmation if submitted -->
-  <div th:if="${windowBanner != null}" class="relative z-40">
-    <!-- Not submitted: show countdown -->
-    <div th:if="${!windowBanner.submitted}"
-         x-data="windowCountdown()"
-         th:attr="x-init=|start('${windowBanner.closesAtIso}')|"
-         class="w-full bg-amber-500 text-white text-sm font-semibold px-4 py-2 flex items-center justify-center gap-3 flex-wrap">
-      <span>⏱ <span th:text="${windowBanner.roundLabel}">Matchday</span> closes in</span>
-      <span class="font-mono bg-black/20 px-2 py-0.5 rounded" x-text="formatted">--:--:--</span>
-      <a th:if="${communityMembership != null}"
-         th:href="@{'/c/' + ${slug} + '/predictions'}"
-         class="underline hover:no-underline">Submit now →</a>
-    </div>
-    <!-- Submitted: show confirmation -->
-    <div th:if="${windowBanner.submitted}"
-         class="w-full bg-green-600 text-white text-sm font-semibold px-4 py-2 flex items-center justify-center gap-2">
-      <span>✅ Predictions submitted for <span th:text="${windowBanner.roundLabel}">Matchday</span></span>
-    </div>
-  </div>
-
   <script>
     function windowCountdown() {
       return {
@@ -234,6 +214,34 @@
 
   <!-- PAGE CONTENT -->
   <main class="flex-1 pt-16">
+    <!-- Window banner: countdown if not submitted, confirmation if submitted -->
+    <div th:if="${windowBanner != null}">
+      <!-- Not submitted: show countdown or open indicator -->
+      <div th:if="${!windowBanner.submitted}"
+           class="w-full bg-amber-500 text-white text-sm font-semibold px-4 py-2 flex items-center justify-center gap-3 flex-wrap">
+        <!-- With scheduled close time: live countdown -->
+        <span th:if="${windowBanner.closesAtIso != null}"
+              x-data="windowCountdown()"
+              th:attr="x-init=|start('${windowBanner.closesAtIso}')|"
+              class="flex items-center gap-2">
+          <span>⏱ <span th:text="${windowBanner.roundLabel}">Matchday</span> closes in</span>
+          <span class="font-mono bg-black/20 px-2 py-0.5 rounded" x-text="formatted">--:--:--</span>
+        </span>
+        <!-- Force-opened with no end time -->
+        <span th:if="${windowBanner.closesAtIso == null}">
+          🔓 <span th:text="${windowBanner.roundLabel}">Matchday</span> window is open
+        </span>
+        <a th:if="${communityMembership != null}"
+           th:href="@{'/c/' + ${slug} + '/predictions'}"
+           class="underline hover:no-underline">Submit now →</a>
+      </div>
+      <!-- Submitted: show confirmation -->
+      <div th:if="${windowBanner.submitted}"
+           class="w-full bg-green-600 text-white text-sm font-semibold px-4 py-2 flex items-center justify-center gap-2">
+        <span>✅ Predictions submitted for <span th:text="${windowBanner.roundLabel}">Matchday</span></span>
+      </div>
+    </div>
+
     <th:block th:replace="${content}" />
   </main>
 
