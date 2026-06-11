@@ -1,18 +1,12 @@
 package com.worldcup.prediction.web;
 
-import com.worldcup.prediction.domain.Community;
 import com.worldcup.prediction.domain.RoundWindow;
 import com.worldcup.prediction.domain.enums.RoundOverrideStatus;
-import com.worldcup.prediction.domain.enums.UserRole;
 import com.worldcup.prediction.dto.WindowBannerDto;
-import com.worldcup.prediction.security.CustomOAuth2User;
-import com.worldcup.prediction.service.RoundSubmissionService;
 import com.worldcup.prediction.service.RoundWindowService;
 import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -20,12 +14,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-@ControllerAdvice(basePackages = "com.worldcup.prediction.controller.community")
+@ControllerAdvice(basePackages = "com.worldcup.prediction.controller.admin")
 @RequiredArgsConstructor
-public class CommunityWindowBannerAdvice {
+public class AdminWindowBannerAdvice {
 
     private final RoundWindowService roundWindowService;
-    private final RoundSubmissionService roundSubmissionService;
 
     @Value("${app.timezone:UTC}")
     private String timezoneId;
@@ -38,13 +31,7 @@ public class CommunityWindowBannerAdvice {
     }
 
     @ModelAttribute("windowBanner")
-    public WindowBannerDto windowBanner(HttpServletRequest request, Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) return null;
-        if (!(authentication.getPrincipal() instanceof CustomOAuth2User user)) return null;
-
-        Community community = (Community) request.getAttribute("community");
-        if (community == null) return null;
-
+    public WindowBannerDto windowBanner() {
         LocalDateTime now = LocalDateTime.now();
         return roundWindowService.findAll().stream()
                 .filter(rw -> isOpen(rw, now))
@@ -53,10 +40,7 @@ public class CommunityWindowBannerAdvice {
                     String closesAtIso = rw.getAutoClosesAt() != null
                             ? rw.getAutoClosesAt().atZone(appZone).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                             : null;
-                    // SUPER_ADMIN has no submission — always show countdown (no submit link)
-                    boolean submitted = user.getRole() != UserRole.SUPER_ADMIN
-                            && roundSubmissionService.hasSubmitted(user.getUserId(), community.getId(), rw.getRoundLabel());
-                    return new WindowBannerDto(rw.getRoundLabel(), closesAtIso, submitted);
+                    return new WindowBannerDto(rw.getRoundLabel(), closesAtIso, false);
                 })
                 .orElse(null);
     }

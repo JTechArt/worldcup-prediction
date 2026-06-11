@@ -199,7 +199,8 @@
          class="w-full bg-amber-500 text-white text-sm font-semibold px-4 py-2 flex items-center justify-center gap-3 flex-wrap">
       <span>⏱ <span th:text="${windowBanner.roundLabel}">Matchday</span> closes in</span>
       <span class="font-mono bg-black/20 px-2 py-0.5 rounded" x-text="formatted">--:--:--</span>
-      <a th:href="@{'/c/' + ${slug} + '/predictions'}"
+      <a th:if="${communityMembership != null}"
+         th:href="@{'/c/' + ${slug} + '/predictions'}"
          class="underline hover:no-underline">Submit now →</a>
     </div>
     <!-- Submitted: show confirmation -->

@@ -105,6 +105,11 @@
 
   /* ── INDIVIDUAL GAME DATA CELL (group stage, no prediction yet) ── */
   .lb-game-cell { width: var(--gc); flex-shrink: 0; height: var(--h-row); display: flex; align-items: center; justify-content: center; border-right: 1px solid rgba(0,160,70,.05); color: rgba(0,0,0,.12); font-size: 13px; }
+  .lb-game-cell .pred-score { font-size: 11px; font-weight: 700; color: #444; font-variant-numeric: tabular-nums; letter-spacing: .3px; }
+  .cell-exact .pred-score   { color: #005a20; }
+  .cell-winner .pred-score  { color: #7a5000; }
+  .cell-draw .pred-score    { color: #1e3fa0; }
+  .cell-zero .pred-score    { color: #888; }
 
   /* ── AGGREGATE PHASE COLUMN (knockout stages) ── */
   .lb-psc-hd  { width: var(--kc); flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 6px; background: rgba(0,160,70,.07); border-right: 1px solid rgba(0,160,70,.1); border-bottom: 2px solid rgba(0,160,70,.2); }
@@ -361,7 +366,7 @@
                                (${pred.scoreResult.name() == 'CORRECT_DRAW'} ? 'cell-draw ' :
                                (${pred.scoreResult.name() == 'CORRECT_WINNER'} ? 'cell-winner ' :
                                (${pred.scoreResult.name() == 'WRONG'} ? 'cell-zero ' : 'cell-pending ')))))">
-                <span th:if="${pred != null}" th:text="${pred.predictedHome + '–' + pred.predictedAway}">0–0</span>
+                <span th:if="${pred != null}" class="pred-score" th:text="${pred.predictedHome + '–' + pred.predictedAway}">0–0</span>
                 <span th:if="${pred == null and showPred}" class="opacity-30">–</span>
                 <span th:if="${not showPred}">·</span>
               </div>

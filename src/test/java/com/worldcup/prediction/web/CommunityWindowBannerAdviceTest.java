@@ -65,13 +65,21 @@ class CommunityWindowBannerAdviceTest {
     }
 
     @Test
-    void returnsNull_forSuperAdmin() {
+    void returnsBannerWithSubmittedFalse_forSuperAdmin_whenWindowOpen() {
         when(principal.getRole()).thenReturn(UserRole.SUPER_ADMIN);
+        LocalDateTime now = LocalDateTime.now();
+        RoundWindow rw = RoundWindow.builder()
+                .roundLabel("Matchday 1")
+                .autoOpensAt(now.minusHours(1))
+                .autoClosesAt(now.plusHours(2))
+                .build();
+        when(roundWindowService.findAll()).thenReturn(List.of(rw));
 
         WindowBannerDto result = advice.windowBanner(request, authentication);
 
-        assertThat(result).isNull();
-        verifyNoInteractions(roundWindowService);
+        assertThat(result).isNotNull();
+        assertThat(result.roundLabel()).isEqualTo("Matchday 1");
+        assertThat(result.submitted()).isFalse();
     }
 
     @Test
