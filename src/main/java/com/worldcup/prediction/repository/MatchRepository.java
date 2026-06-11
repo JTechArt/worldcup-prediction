@@ -88,6 +88,18 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to);
 
+    @Query("""
+            SELECT m FROM Match m
+            LEFT JOIN FETCH m.homeTeam
+            LEFT JOIN FETCH m.awayTeam
+            WHERE m.kickoffTime >= :from
+              AND m.kickoffTime < :to
+            ORDER BY m.kickoffTime ASC
+            """)
+    List<Match> findByKickoffTimeBetweenWithTeams(
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to);
+
     long countByStatus(MatchStatus status);
 
     List<Match> findByStatusAndLineupFetchedFalse(MatchStatus status);

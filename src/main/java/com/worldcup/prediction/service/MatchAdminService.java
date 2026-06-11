@@ -36,7 +36,7 @@ public class MatchAdminService {
     }
 
     public List<Match> findByKickoffDate(LocalDate date) {
-        return matchRepository.findByKickoffTimeBetween(
+        return matchRepository.findByKickoffTimeBetweenWithTeams(
                 date.atStartOfDay(),
                 date.plusDays(1).atStartOfDay());
     }
