@@ -161,8 +161,36 @@ public class AdminSchedulerController {
         // 3. Add to model
         return "admin/schedulers";
     }
+
+    @PostMapping("/run/{jobName}")
+    public String runJob(@PathVariable String jobName, RedirectAttributes ra) {
+        // Resolve SchedulerJobType by name, delegate to SchedulerRunnerService,
+        // redirect back with flash message showing result
+        return "redirect:/admin/schedulers";
+    }
 }
 ```
+
+### 7a. Service — `SchedulerRunnerService`
+
+A new service that holds references to all 5 scheduler beans and exposes a single `run(SchedulerJobType)` method. This avoids putting dispatcher logic in the controller.
+
+```java
+@Service
+public class SchedulerRunnerService {
+    // injected: MatchResultScheduler, LineupSyncScheduler, StandingSyncScheduler,
+    //           ScorersSyncScheduler, NotificationScheduler
+
+    public String run(SchedulerJobType jobType) {
+        // switch on jobType, call the corresponding scheduler method directly
+        // return a human-readable result message
+    }
+}
+```
+
+Calling the scheduler method directly (e.g. `matchResultScheduler.syncAndScore()`) reuses all existing logic including the `SchedulerLogService` instrumentation — the manual run is logged automatically just like a scheduled run. The method is synchronous; the HTTP request blocks until the job finishes (acceptable for an admin action).
+
+**Disabled jobs:** If the job's feature flag is off (e.g. `app.football.api.enabled=false`), the run is still allowed — the underlying service will return a skipped/no-op result as it does for the scheduled run. This lets admins test that the wiring is correct even before enabling the integration.
 
 **Job summary card data** (per job type):
 - `displayName` — from enum
@@ -187,6 +215,7 @@ A responsive grid (2-3 columns) of cards, one per job type. Each card:
 - Schedule description (gray text, e.g. "Every 5 min")
 - Next run time (formatted, or "Disabled" in gray)
 - Last status colored dot: green = SUCCESS, gray = SKIPPED, red = FAILED, no dot if never run
+- **"Run Now" button** — a small POST form button on each card. Triggers `POST /admin/schedulers/run/{jobName}`. Always visible regardless of enabled state. After the run completes, redirects back to the page with a flash message showing the result.
 
 **Section 2: Execution Log Table**
 
@@ -230,6 +259,7 @@ The page is protected by `@PreAuthorize("hasRole('SUPER_ADMIN')")` like other ad
 | `src/main/java/.../scheduler/ScorersSyncScheduler.java` | Add logging calls |
 | `src/main/java/.../scheduler/NotificationScheduler.java` | Add logging calls (3 methods) |
 | `src/main/java/.../scheduler/SchedulerLogCleanupScheduler.java` | New — weekly cleanup |
+| `src/main/java/.../service/SchedulerRunnerService.java` | New — dispatches manual job runs |
 | `src/main/java/.../controller/admin/AdminSchedulerController.java` | New controller |
 | `src/main/resources/templates/admin/schedulers.html` | New template |
 | `src/main/resources/templates/admin/layout.html` | Add sidebar link |
@@ -238,5 +268,6 @@ The page is protected by `@PreAuthorize("hasRole('SUPER_ADMIN')")` like other ad
 
 - `SchedulerLogServiceTest` — unit test: start/complete/fail lifecycle, cleanup deletes old rows
 - `MatchResultSchedulerTest` — update existing test to verify logging calls
-- `AdminSchedulerControllerTest` — mock-mvc test: page loads, filters work
+- `AdminSchedulerControllerTest` — mock-mvc test: page loads, filters work, `POST /run/{jobName}` triggers correct job
+- `SchedulerRunnerServiceTest` — unit test: each job type dispatches to the correct scheduler method
 - All existing scheduler tests updated to mock `SchedulerLogService`
