@@ -8,6 +8,7 @@ import com.worldcup.prediction.domain.enums.MatchStage;
 import com.worldcup.prediction.domain.enums.MatchStatus;
 import com.worldcup.prediction.domain.enums.UserRole;
 import com.worldcup.prediction.domain.enums.UserStatus;
+import com.worldcup.prediction.domain.enums.WindowMode;
 import com.worldcup.prediction.dto.PredictionDto;
 import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.MatchRepository;
@@ -41,6 +42,8 @@ class PredictionServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private CommunityRepository communityRepository;
     @Mock private RoundWindowService roundWindowService;
+    @Mock private TournamentSettingsService tournamentSettingsService;
+    @Mock private PredictionWindowService predictionWindowService;
 
     private PredictionService predictionService;
 
@@ -57,7 +60,8 @@ class PredictionServiceTest {
 
     @BeforeEach
     void setUp() {
-        predictionService = new PredictionService(predictionRepository, matchRepository, userRepository, communityRepository, roundWindowService);
+        predictionService = new PredictionService(predictionRepository, matchRepository, userRepository, communityRepository, roundWindowService, tournamentSettingsService, predictionWindowService);
+        lenient().when(tournamentSettingsService.getEffectiveMode(any())).thenReturn(WindowMode.ROUND);
         testUser = User.builder().id(42L).email("test@example.com")
                 .firstName("Test").lastName("User")
                 .status(UserStatus.ACTIVE).role(UserRole.USER).build();
@@ -68,18 +72,35 @@ class PredictionServiceTest {
     @DisplayName("isWindowOpen")
     class IsWindowOpen {
 
-        @Test @DisplayName("returns true when round is open")
+        @Test @DisplayName("2-arg overload uses round service directly")
         void roundOpen_returnsTrue() {
             Match m = buildMatch(1L, openTime, lockTime);
             when(roundWindowService.isRoundOpen("Group Stage Round 1", nowOpen)).thenReturn(true);
             assertThat(predictionService.isWindowOpen(m, nowOpen)).isTrue();
         }
 
-        @Test @DisplayName("returns false when round is closed")
+        @Test @DisplayName("2-arg overload returns false when round is closed")
         void roundClosed_returnsFalse() {
             Match m = buildMatch(1L, openTime, lockTime);
             when(roundWindowService.isRoundOpen("Group Stage Round 1", nowLocked)).thenReturn(false);
             assertThat(predictionService.isWindowOpen(m, nowLocked)).isFalse();
+        }
+
+        @Test @DisplayName("3-arg ROUND mode delegates to roundWindowService")
+        void threeArg_roundMode_delegatesToRoundService() {
+            Match m = buildMatch(1L, openTime, lockTime);
+            when(tournamentSettingsService.getEffectiveMode(COMMUNITY_ID)).thenReturn(WindowMode.ROUND);
+            when(roundWindowService.isRoundOpen("Group Stage Round 1", nowOpen)).thenReturn(true);
+            assertThat(predictionService.isWindowOpen(m, nowOpen, COMMUNITY_ID)).isTrue();
+        }
+
+        @Test @DisplayName("3-arg DAILY mode delegates to predictionWindowService")
+        void threeArg_dailyMode_delegatesToPredictionWindowService() {
+            Match m = buildMatch(1L, openTime, lockTime);
+            when(tournamentSettingsService.getEffectiveMode(COMMUNITY_ID)).thenReturn(WindowMode.DAILY);
+            when(predictionWindowService.isWindowOpen(m, nowOpen, COMMUNITY_ID)).thenReturn(true);
+            assertThat(predictionService.isWindowOpen(m, nowOpen, COMMUNITY_ID)).isTrue();
+            verify(roundWindowService, never()).isRoundOpen(any(), any());
         }
     }
 

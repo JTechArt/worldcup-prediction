@@ -38,11 +38,21 @@ public class PredictionService {
     private final UserRepository userRepository;
     private final CommunityRepository communityRepository;
     private final RoundWindowService roundWindowService;
+    private final TournamentSettingsService tournamentSettingsService;
+    private final PredictionWindowService predictionWindowService;
 
     // -------------------------------------------------------
     //  Window helpers
     // -------------------------------------------------------
 
+    public boolean isWindowOpen(Match match, LocalDateTime now, Long communityId) {
+        return switch (tournamentSettingsService.getEffectiveMode(communityId)) {
+            case ROUND -> roundWindowService.isRoundOpen(match.getRoundLabel(), now);
+            case DAILY -> predictionWindowService.isWindowOpen(match, now, communityId);
+        };
+    }
+
+    // Backward-compatible overload for callers without a community context (always uses ROUND logic).
     public boolean isWindowOpen(Match match, LocalDateTime now) {
         return roundWindowService.isRoundOpen(match.getRoundLabel(), now);
     }
@@ -84,7 +94,7 @@ public class PredictionService {
 
         // All-or-nothing: validate all windows before persisting any
         for (Long id : matchIds) {
-            if (!isWindowOpen(matchMap.get(id), now)) {
+            if (!isWindowOpen(matchMap.get(id), now, communityId)) {
                 throw new PredictionWindowClosedException(
                         "The prediction window for match " + id + " is not open.");
             }
@@ -127,10 +137,8 @@ public class PredictionService {
      * Non-admin users get an empty list until the window closes; admins always see all.
      */
     public List<Prediction> getPredictionsForMatch(Match match, LocalDateTime now, boolean isAdmin, Long communityId) {
-        boolean roundClosed = !roundWindowService.isRoundOpen(match.getRoundLabel(), now);
-        if (!isAdmin && !roundClosed) {
-            return List.of();
-        }
+        boolean windowClosed = !isWindowOpen(match, now, communityId);
+        if (!isAdmin && !windowClosed) return List.of();
         return predictionRepository.findByMatchIdAndCommunityId(match.getId(), communityId);
     }
 

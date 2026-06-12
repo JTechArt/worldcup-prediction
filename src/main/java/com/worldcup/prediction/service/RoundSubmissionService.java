@@ -40,4 +40,29 @@ public class RoundSubmissionService {
                 .stream()
                 .collect(Collectors.toMap(RoundSubmission::getUserId, rs -> rs));
     }
+
+    @Transactional
+    public void upsertForWindow(Long userId, Long communityId, Long windowId, String windowLabel) {
+        repository.findByUserIdAndCommunityIdAndPredictionWindowId(userId, communityId, windowId)
+                .ifPresentOrElse(
+                        rs -> rs.setSubmittedAt(LocalDateTime.now()),
+                        () -> repository.save(RoundSubmission.builder()
+                                .userId(userId)
+                                .communityId(communityId)
+                                .roundLabel(windowLabel)
+                                .predictionWindowId(windowId)
+                                .submittedAt(LocalDateTime.now())
+                                .build())
+                );
+    }
+
+    public boolean hasSubmittedForWindow(Long userId, Long communityId, Long windowId) {
+        return repository.existsByUserIdAndCommunityIdAndPredictionWindowId(userId, communityId, windowId);
+    }
+
+    public Map<Long, RoundSubmission> findStatusesForCommunityWindow(Long communityId, Long windowId) {
+        return repository.findByCommunityIdAndPredictionWindowId(communityId, windowId)
+                .stream()
+                .collect(Collectors.toMap(RoundSubmission::getUserId, rs -> rs));
+    }
 }

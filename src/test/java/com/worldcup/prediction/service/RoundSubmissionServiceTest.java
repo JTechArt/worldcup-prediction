@@ -86,4 +86,61 @@ class RoundSubmissionServiceTest {
         assertThat(result.get(10L)).isSameAs(rs1);
         assertThat(result.get(20L)).isSameAs(rs2);
     }
+
+    @Test
+    void upsertForWindow_createsNewRow_whenNoneExists() {
+        when(repository.findByUserIdAndCommunityIdAndPredictionWindowId(1L, 2L, 7L))
+                .thenReturn(Optional.empty());
+
+        service.upsertForWindow(1L, 2L, 7L, "June 14 Matches");
+
+        ArgumentCaptor<RoundSubmission> captor = ArgumentCaptor.forClass(RoundSubmission.class);
+        verify(repository).save(captor.capture());
+        RoundSubmission saved = captor.getValue();
+        assertThat(saved.getUserId()).isEqualTo(1L);
+        assertThat(saved.getCommunityId()).isEqualTo(2L);
+        assertThat(saved.getPredictionWindowId()).isEqualTo(7L);
+        assertThat(saved.getRoundLabel()).isEqualTo("June 14 Matches");
+        assertThat(saved.getSubmittedAt()).isNotNull();
+    }
+
+    @Test
+    void upsertForWindow_updatesSubmittedAt_whenRowExists() {
+        LocalDateTime original = LocalDateTime.of(2026, 6, 1, 10, 0);
+        RoundSubmission existing = RoundSubmission.builder()
+                .id(5L).userId(1L).communityId(2L).predictionWindowId(7L)
+                .roundLabel("June 14 Matches").submittedAt(original).build();
+        when(repository.findByUserIdAndCommunityIdAndPredictionWindowId(1L, 2L, 7L))
+                .thenReturn(Optional.of(existing));
+
+        service.upsertForWindow(1L, 2L, 7L, "June 14 Matches");
+
+        verify(repository, never()).save(existing);
+        assertThat(existing.getSubmittedAt()).isAfter(original);
+    }
+
+    @Test
+    void hasSubmittedForWindow_delegatesToRepository() {
+        when(repository.existsByUserIdAndCommunityIdAndPredictionWindowId(1L, 2L, 7L)).thenReturn(true);
+        assertThat(service.hasSubmittedForWindow(1L, 2L, 7L)).isTrue();
+
+        when(repository.existsByUserIdAndCommunityIdAndPredictionWindowId(1L, 2L, 8L)).thenReturn(false);
+        assertThat(service.hasSubmittedForWindow(1L, 2L, 8L)).isFalse();
+    }
+
+    @Test
+    void findStatusesForCommunityWindow_returnsMapKeyedByUserId() {
+        RoundSubmission rs1 = RoundSubmission.builder().id(1L).userId(10L).communityId(5L)
+                .predictionWindowId(7L).roundLabel("June 14 Matches").submittedAt(LocalDateTime.now()).build();
+        RoundSubmission rs2 = RoundSubmission.builder().id(2L).userId(20L).communityId(5L)
+                .predictionWindowId(7L).roundLabel("June 14 Matches").submittedAt(LocalDateTime.now()).build();
+        when(repository.findByCommunityIdAndPredictionWindowId(5L, 7L))
+                .thenReturn(List.of(rs1, rs2));
+
+        Map<Long, RoundSubmission> result = service.findStatusesForCommunityWindow(5L, 7L);
+
+        assertThat(result).containsOnlyKeys(10L, 20L);
+        assertThat(result.get(10L)).isSameAs(rs1);
+        assertThat(result.get(20L)).isSameAs(rs2);
+    }
 }
