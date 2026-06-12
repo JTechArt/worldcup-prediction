@@ -130,6 +130,12 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             @Param("start") java.time.LocalDateTime start,
             @Param("end")   java.time.LocalDateTime end);
 
+    List<Match> findByKickoffTimeBetweenOrderByKickoffTimeAsc(LocalDateTime from, LocalDateTime to);
+
+    Optional<Match> findFirstByKickoffTimeLessThanOrderByKickoffTimeDesc(LocalDateTime before);
+
+    Optional<Match> findFirstByKickoffTimeGreaterThanOrderByKickoffTimeAsc(LocalDateTime after);
+
     @Modifying
     @Query("DELETE FROM Match m")
     void deleteAllMatches();
