@@ -49,6 +49,13 @@ public class LineupSyncService {
             FootballApiMatchDetailDto detail = rateLimiter.call(() -> client.fetchMatchDetail(extId));
             if (detail == null) continue;
 
+            boolean hasLineups = detail.lineups() != null && !detail.lineups().isEmpty();
+            boolean hasGoals   = detail.goals() != null && !detail.goals().isEmpty();
+            if (!hasLineups && !hasGoals) {
+                log.warn("Match id={} externalId={} returned no lineups and no goals — skipping flag update", match.getId(), extId);
+                continue;
+            }
+
             persistLineups(match, detail);
             persistGoals(match, detail);
             match.setLineupFetched(true);
