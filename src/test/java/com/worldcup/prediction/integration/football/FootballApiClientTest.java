@@ -24,7 +24,7 @@ class FootballApiClientTest {
     void setUp() {
         RestTemplate restTemplate = new RestTemplate();
         mockServer = MockRestServiceServer.createServer(restTemplate);
-        client = new FootballApiClient(restTemplate, true, "test-api-key");
+        client = new FootballApiClient(restTemplate, new com.fasterxml.jackson.databind.ObjectMapper(), true, "test-api-key");
     }
 
     @Test
@@ -84,7 +84,7 @@ class FootballApiClientTest {
     @Test
     void fetchMatches_onEmptyApiKey_returnsNull() {
         RestTemplate restTemplate2 = new RestTemplate();
-        FootballApiClient clientNoKey = new FootballApiClient(restTemplate2, true, "");
+        FootballApiClient clientNoKey = new FootballApiClient(restTemplate2, new com.fasterxml.jackson.databind.ObjectMapper(), true, "");
 
         FootballApiResponseDto response = clientNoKey.fetchAllMatches();
 
@@ -94,7 +94,7 @@ class FootballApiClientTest {
     @Test
     void fetchMatches_whenDisabled_returnsNull() {
         RestTemplate restTemplate2 = new RestTemplate();
-        FootballApiClient clientDisabled = new FootballApiClient(restTemplate2, false, "test-api-key");
+        FootballApiClient clientDisabled = new FootballApiClient(restTemplate2, new com.fasterxml.jackson.databind.ObjectMapper(), false, "test-api-key");
 
         FootballApiResponseDto response = clientDisabled.fetchAllMatches();
 

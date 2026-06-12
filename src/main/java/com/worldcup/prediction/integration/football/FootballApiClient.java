@@ -1,5 +1,6 @@
 package com.worldcup.prediction.integration.football;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.worldcup.prediction.integration.football.dto.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,13 +22,16 @@ public class FootballApiClient {
     private static final String SCORERS_URL   = BASE + "/competitions/WC/scorers?limit=20&season=2026";
 
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
     private final String apiKey;
     private final boolean enabled;
 
     public FootballApiClient(RestTemplate restTemplate,
+                             ObjectMapper objectMapper,
                              @Value("${app.football.api.enabled:false}") boolean enabled,
                              @Value("${football.api.key:}") String apiKey) {
         this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
         this.enabled = enabled;
         this.apiKey = apiKey;
         if (!enabled) log.info("FootballApiClient: disabled — live sync off");
@@ -49,10 +53,16 @@ public class FootballApiClient {
         if (!enabled || apiKey.isBlank()) return null;
         HttpEntity<Void> req = new HttpEntity<>(authHeaders());
         try {
-            return restTemplate.exchange(MATCH_URL, HttpMethod.GET, req,
-                    FootballApiMatchDetailDto.class, matchId).getBody();
+            ResponseEntity<String> raw = restTemplate.exchange(MATCH_URL, HttpMethod.GET, req, String.class, matchId);
+            String body = raw.getBody();
+            log.info("Match detail raw [id={}]: {}", matchId, body);
+            if (body == null) return null;
+            return objectMapper.readValue(body, FootballApiMatchDetailDto.class);
         } catch (RestClientException e) {
             log.warn("Failed to fetch match detail id={}: {}", matchId, e.getMessage());
+            return null;
+        } catch (Exception e) {
+            log.warn("Failed to deserialize match detail id={}: {}", matchId, e.getMessage());
             return null;
         }
     }
