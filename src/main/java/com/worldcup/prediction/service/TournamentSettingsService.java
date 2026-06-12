@@ -16,6 +16,7 @@ public class TournamentSettingsService {
     private final TournamentSettingsRepository settingsRepository;
     private final CommunityRepository communityRepository;
 
+    @Transactional
     public TournamentSettings getSettings() {
         return settingsRepository.findById(1L)
                 .orElseGet(() -> settingsRepository.save(
