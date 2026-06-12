@@ -15,4 +15,13 @@ public interface RoundSubmissionRepository extends JpaRepository<RoundSubmission
     Optional<RoundSubmission> findByUserIdAndCommunityIdAndRoundLabel(Long userId, Long communityId, String roundLabel);
 
     List<RoundSubmission> findByCommunityIdAndRoundLabel(Long communityId, String roundLabel);
+
+    Optional<RoundSubmission> findByUserIdAndCommunityIdAndPredictionWindowId(
+            Long userId, Long communityId, Long predictionWindowId);
+
+    boolean existsByUserIdAndCommunityIdAndPredictionWindowId(
+            Long userId, Long communityId, Long predictionWindowId);
+
+    List<RoundSubmission> findByCommunityIdAndPredictionWindowId(
+            Long communityId, Long predictionWindowId);
 }

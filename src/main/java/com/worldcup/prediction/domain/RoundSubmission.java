@@ -34,6 +34,9 @@ public class RoundSubmission {
     @Column(name = "round_label", nullable = false, length = 50)
     private String roundLabel;
 
+    @Column(name = "prediction_window_id")
+    private Long predictionWindowId;
+
     @CreationTimestamp
     @Column(name = "submitted_at", nullable = false)
     private LocalDateTime submittedAt;

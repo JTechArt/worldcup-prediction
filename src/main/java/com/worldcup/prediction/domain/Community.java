@@ -1,5 +1,6 @@
 package com.worldcup.prediction.domain;
 
+import com.worldcup.prediction.domain.enums.WindowMode;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -29,6 +30,10 @@ public class Community {
 
     @Column(length = 500)
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "window_mode_override", length = 10)
+    private WindowMode windowModeOverride;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")
