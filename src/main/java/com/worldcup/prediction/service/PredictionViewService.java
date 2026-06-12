@@ -2,8 +2,10 @@ package com.worldcup.prediction.service;
 
 import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.domain.Prediction;
+import com.worldcup.prediction.domain.PredictionWindow;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.MatchStatus;
+import com.worldcup.prediction.domain.enums.WindowMode;
 import com.worldcup.prediction.dto.*;
 import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.MatchRepository;
@@ -51,6 +53,8 @@ public class PredictionViewService {
     private final CommunityRepository communityRepository;
     private final RoundWindowService roundWindowService;
     private final RoundSubmissionService roundSubmissionService;
+    private final TournamentSettingsService tournamentSettingsService;
+    private final PredictionWindowService predictionWindowService;
 
     public List<RoundSummaryDto> getRoundSummaries(Long userId, Long communityId) {
         List<String> roundLabels = matchRepository.findDistinctRoundLabels();
@@ -90,6 +94,43 @@ public class PredictionViewService {
         return summaries;
     }
 
+    public List<RoundSummaryDto> getWindowSummaries(Long userId, Long communityId) {
+        List<PredictionWindow> windows = predictionWindowService.findAllGlobal();
+        List<RoundSummaryDto> summaries = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (PredictionWindow pw : windows) {
+            List<Match> matches = new ArrayList<>(pw.getMatches());
+            if (matches.isEmpty()) continue;
+
+            List<Long> matchIds = matches.stream().map(Match::getId).toList();
+            boolean allComplete = matches.stream().allMatch(m -> m.getStatus() == MatchStatus.COMPLETED);
+
+            RoundSummaryDto dto = new RoundSummaryDto();
+            dto.setRoundLabel(pw.getLabel());
+            dto.setDisplayLabel(pw.getLabel());
+            dto.setTotalMatches(matches.size());
+
+            if (allComplete) {
+                dto.setStatus("PAST");
+                int pts = (int) predictionRepository
+                        .findByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId)
+                        .stream().mapToInt(Prediction::getPointsAwarded).sum();
+                dto.setPointsEarned(pts);
+            } else if (predictionWindowService.isWindowOpen(matches.get(0), now, communityId)) {
+                dto.setStatus("OPEN");
+                long predicted = predictionRepository.countByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId);
+                dto.setPredictedCount((int) predicted);
+            } else {
+                dto.setStatus("CLOSED");
+                long predicted = predictionRepository.countByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId);
+                dto.setPredictedCount((int) predicted);
+            }
+            summaries.add(dto);
+        }
+        return summaries;
+    }
+
     public List<MatchPredictionDto> getMatchesForRound(Long userId, String roundLabel, Long communityId) {
         List<Match> matches = matchRepository.findByRoundLabelWithTeams(roundLabel);
         List<Long> matchIds = matches.stream().map(Match::getId).toList();
@@ -115,6 +156,11 @@ public class PredictionViewService {
 
     @Transactional
     public int submitPredictionsForRound(Long userId, PredictionSubmitDto dto, Long communityId) {
+        WindowMode mode = tournamentSettingsService.getEffectiveMode(communityId);
+        if (mode == WindowMode.DAILY) {
+            return submitPredictionsForWindow(userId, dto, communityId);
+        }
+
         List<Match> roundMatches = matchRepository.findByRoundLabelWithTeams(dto.getRoundLabel());
         LocalDateTime now = LocalDateTime.now();
 
@@ -166,6 +212,56 @@ public class PredictionViewService {
 
         roundSubmissionService.upsert(userId, communityId, dto.getRoundLabel());
         return roundMatches.size();
+    }
+
+    @Transactional
+    private int submitPredictionsForWindow(Long userId, PredictionSubmitDto dto, Long communityId) {
+        if (dto.getWindowId() == null) {
+            throw new IllegalStateException("windowId required in DAILY mode");
+        }
+        PredictionWindow pw = predictionWindowService.findById(dto.getWindowId());
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Match> windowMatches = new ArrayList<>(pw.getMatches());
+        if (windowMatches.isEmpty() || !predictionWindowService.isWindowOpen(windowMatches.get(0), now, communityId)) {
+            throw new IllegalStateException("The prediction window '" + pw.getLabel() + "' is not open.");
+        }
+
+        Set<Long> openIds = windowMatches.stream().map(Match::getId).collect(Collectors.toSet());
+        Set<Long> submittedIds = dto.getPredictions().stream()
+                .map(PredictionSubmitDto.SinglePrediction::getMatchId).collect(Collectors.toSet());
+        if (!submittedIds.equals(openIds)) {
+            throw new IllegalStateException(
+                    "You must predict all " + openIds.size() + " matches in this window (all-or-nothing).");
+        }
+
+        Map<Long, Match> matchMap = windowMatches.stream().collect(Collectors.toMap(Match::getId, m -> m));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found: " + userId));
+
+        for (PredictionSubmitDto.SinglePrediction sp : dto.getPredictions()) {
+            Match match = matchMap.get(sp.getMatchId());
+            if (match == null) throw new IllegalStateException("Match not found: " + sp.getMatchId());
+            Optional<Prediction> existing = predictionRepository
+                    .findByUserIdAndMatchIdAndCommunityId(userId, sp.getMatchId(), communityId);
+            Prediction prediction;
+            if (existing.isPresent()) {
+                prediction = existing.get();
+                prediction.setPredictedHome(sp.getHomeScore());
+                prediction.setPredictedAway(sp.getAwayScore());
+            } else {
+                prediction = new Prediction();
+                prediction.setUser(user);
+                prediction.setMatch(match);
+                prediction.setCommunity(communityRepository.findById(communityId).orElseThrow());
+                prediction.setPredictedHome(sp.getHomeScore());
+                prediction.setPredictedAway(sp.getAwayScore());
+            }
+            predictionRepository.save(prediction);
+        }
+
+        roundSubmissionService.upsertForWindow(userId, communityId, pw.getId(), pw.getLabel());
+        return windowMatches.size();
     }
 
     public List<PastRoundDto> getPastRoundsForUser(Long userId, Long communityId) {

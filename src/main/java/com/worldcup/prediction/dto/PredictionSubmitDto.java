@@ -15,6 +15,8 @@ public class PredictionSubmitDto {
     @NotBlank
     private String roundLabel;
 
+    private Long windowId;  // non-null in DAILY mode, null in ROUND mode
+
     @NotNull
     @Size(min = 1)
     @Valid
@@ -22,6 +24,9 @@ public class PredictionSubmitDto {
 
     public String getRoundLabel() { return roundLabel; }
     public void setRoundLabel(String roundLabel) { this.roundLabel = roundLabel; }
+
+    public Long getWindowId() { return windowId; }
+    public void setWindowId(Long windowId) { this.windowId = windowId; }
 
     public List<SinglePrediction> getPredictions() { return predictions; }
     public void setPredictions(List<SinglePrediction> predictions) { this.predictions = predictions; }
