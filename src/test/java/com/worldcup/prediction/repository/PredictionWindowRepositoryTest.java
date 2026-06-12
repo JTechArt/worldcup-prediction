@@ -15,6 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -26,9 +27,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class PredictionWindowRepositoryTest {
 
-    @Autowired PredictionWindowRepository windowRepository;
-    @Autowired MatchRepository matchRepository;
-    @Autowired JdbcTemplate jdbcTemplate;
+    @Autowired private PredictionWindowRepository windowRepository;
+    @Autowired private MatchRepository matchRepository;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     private Match match;
 
@@ -52,7 +53,7 @@ class PredictionWindowRepositoryTest {
                 .label("June 14")
                 .openAt(LocalDateTime.now().minusHours(1))
                 .status(PredictionWindowStatus.OPEN)
-                .matches(Set.of(match))
+                .matches(new HashSet<>(Set.of(match)))
                 .build());
 
         Optional<PredictionWindow> found = windowRepository.findOpenGlobalWindowForMatch(match.getId());
@@ -66,7 +67,7 @@ class PredictionWindowRepositoryTest {
                 .label("June 14")
                 .openAt(LocalDateTime.now().minusHours(1))
                 .status(PredictionWindowStatus.DRAFT)
-                .matches(Set.of(match))
+                .matches(new HashSet<>(Set.of(match)))
                 .build());
 
         Optional<PredictionWindow> found = windowRepository.findOpenGlobalWindowForMatch(match.getId());
@@ -110,11 +111,35 @@ class PredictionWindowRepositoryTest {
                 .openAt(LocalDateTime.now().plusHours(2))
                 .status(PredictionWindowStatus.SCHEDULED)
                 .overrideStatus(RoundOverrideStatus.FORCE_OPEN)
-                .matches(Set.of(match))
+                .matches(new HashSet<>(Set.of(match)))
                 .build());
 
         Optional<PredictionWindow> found = windowRepository.findForceOpenGlobalWindowForMatch(match.getId());
         assertThat(found).isPresent();
         assertThat(found.get().getId()).isEqualTo(window.getId());
+    }
+
+    @Test
+    void findExpiredOpenWindows_returnsExpiredButNotForceOpen() {
+        LocalDateTime now = LocalDateTime.now();
+        // Expired OPEN window — should be returned
+        windowRepository.save(PredictionWindow.builder()
+                .label("Expired").openAt(now.minusHours(3))
+                .effectiveCloseAt(now.minusMinutes(10))
+                .status(PredictionWindowStatus.OPEN)
+                .build());
+        // FORCE_OPEN window past its close time — should NOT be returned
+        windowRepository.save(PredictionWindow.builder()
+                .label("ForceOpen").openAt(now.minusHours(3))
+                .effectiveCloseAt(now.minusMinutes(5))
+                .status(PredictionWindowStatus.OPEN)
+                .overrideStatus(RoundOverrideStatus.FORCE_OPEN)
+                .build());
+
+        List<PredictionWindow> expired = windowRepository.findExpiredOpenWindows(
+                PredictionWindowStatus.OPEN, now);
+
+        assertThat(expired).hasSize(1);
+        assertThat(expired.get(0).getLabel()).isEqualTo("Expired");
     }
 }
