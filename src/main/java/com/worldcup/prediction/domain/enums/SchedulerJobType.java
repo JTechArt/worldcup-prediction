@@ -5,9 +5,11 @@ public enum SchedulerJobType {
     LINEUP_SYNC     ("Lineup Sync",         "Every 30 min",   true,  1_800_000L,   null,              "app.football.api.enabled"),
     STANDING_SYNC   ("Standings",           "Every 6 hours",  false, 0L,           "0 0 */6 * * *",   "app.football.api.enabled"),
     SCORERS_SYNC    ("Top Scorers",         "Daily at 02:00", false, 0L,           "0 0 2 * * *",     "app.football.api.enabled"),
-    NOTIF_WINDOW_OPEN("Window Open Notif", "Every 5 min",    true,  300_000L,     null,              "app.notification.enabled"),
-    NOTIF_DEADLINE  ("Deadline Reminder",   "Every 15 min",   true,  900_000L,     null,              "app.notification.enabled"),
-    NOTIF_DIGEST    ("Leaderboard Digest",  "Every 30 min",   true,  1_800_000L,   null,              "app.notification.enabled");
+    NOTIF_WINDOW_OPEN("Window Open Notif",    "Every 5 min",    true,  300_000L,     null,              "app.notification.enabled"),
+    NOTIF_DEADLINE  ("Deadline Reminder",    "Every 15 min",   true,  900_000L,     null,              "app.notification.enabled"),
+    NOTIF_DIGEST    ("Leaderboard Digest",   "Every 30 min",   true,  1_800_000L,   null,              "app.notification.enabled"),
+    PREDICTION_WINDOW_ACTIVATE("Window Activate", "Every 5 min", true, 300_000L,   null,              "app.prediction-window.enabled"),
+    PREDICTION_WINDOW_CLOSE   ("Window Close",    "Every 5 min", true, 300_000L,   null,              "app.prediction-window.enabled");
 
     private final String displayName;
     private final String scheduleDescription;

@@ -64,7 +64,7 @@ class SchedulerRunnerServiceTest {
         SchedulerLog stubLog = SchedulerLog.builder().id(1L).status(SchedulerJobStatus.IN_PROGRESS).startedAt(LocalDateTime.now()).build();
         when(logService.start("NOTIF_WINDOW_OPEN")).thenReturn(stubLog);
         String result = service.run(SchedulerJobType.NOTIF_WINDOW_OPEN);
-        verify(logService).complete(stubLog, SchedulerJobStatus.SKIPPED, 0, "Notification scheduler disabled (app.notification.enabled=false)");
+        verify(logService).complete(stubLog, SchedulerJobStatus.SKIPPED, 0, "Scheduler disabled (app.notification.enabled=false)");
         assertThat(result).contains("SKIPPED");
     }
 

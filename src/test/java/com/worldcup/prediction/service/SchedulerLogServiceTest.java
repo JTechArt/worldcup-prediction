@@ -130,8 +130,8 @@ class SchedulerLogServiceTest {
 
     @Test
     void buildCards_enabledJobShowsNextRun() {
+        when(environment.getProperty(anyString(), eq(Boolean.class), eq(false))).thenReturn(false);
         when(environment.getProperty("app.football.api.enabled", Boolean.class, false)).thenReturn(true);
-        when(environment.getProperty("app.notification.enabled", Boolean.class, false)).thenReturn(false);
         LocalDateTime lastFinished = LocalDateTime.now().minusMinutes(2);
         SchedulerLog recent = SchedulerLog.builder().jobName("MATCH_RESULT")
                 .status(SchedulerJobStatus.SUCCESS).startedAt(lastFinished.minusSeconds(1))

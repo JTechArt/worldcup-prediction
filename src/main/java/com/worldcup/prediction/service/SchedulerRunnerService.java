@@ -21,6 +21,9 @@ public class SchedulerRunnerService {
     @Autowired(required = false)
     private NotificationScheduler notificationScheduler;
 
+    @Autowired(required = false)
+    private PredictionWindowScheduler predictionWindowScheduler;
+
     public String run(SchedulerJobType jobType) {
         switch (jobType) {
             case MATCH_RESULT    -> matchResultScheduler.syncAndScore();
@@ -39,6 +42,14 @@ public class SchedulerRunnerService {
                 if (notificationScheduler == null) return logDisabled(jobType);
                 notificationScheduler.checkLeaderboardDigest();
             }
+            case PREDICTION_WINDOW_ACTIVATE -> {
+                if (predictionWindowScheduler == null) return logDisabled(jobType);
+                predictionWindowScheduler.activateScheduledWindows();
+            }
+            case PREDICTION_WINDOW_CLOSE -> {
+                if (predictionWindowScheduler == null) return logDisabled(jobType);
+                predictionWindowScheduler.closeExpiredWindows();
+            }
             default -> throw new IllegalArgumentException("Unhandled job type: " + jobType);
         }
         return logService.findLatest(jobType.name())
@@ -48,7 +59,8 @@ public class SchedulerRunnerService {
 
     private String logDisabled(SchedulerJobType jobType) {
         SchedulerLog log = logService.start(jobType.name());
-        logService.complete(log, SchedulerJobStatus.SKIPPED, 0, "Notification scheduler disabled (app.notification.enabled=false)");
-        return "SKIPPED: Notification scheduler disabled";
+        String reason = "Scheduler disabled (" + jobType.getEnabledProperty() + "=false)";
+        logService.complete(log, SchedulerJobStatus.SKIPPED, 0, reason);
+        return "SKIPPED: " + reason;
     }
 }
