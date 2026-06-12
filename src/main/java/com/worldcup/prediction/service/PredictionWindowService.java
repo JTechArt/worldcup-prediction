@@ -82,6 +82,10 @@ public class PredictionWindowService {
     @Transactional
     public PredictionWindow activateWindow(Long id) {
         PredictionWindow w = findById(id);
+        if (w.getStatus() != PredictionWindowStatus.SCHEDULED) {
+            throw new IllegalStateException(
+                    "Can only activate SCHEDULED windows — current status: " + w.getStatus());
+        }
         w.setEffectiveCloseAt(computeEffectiveCloseAt(w));
         w.setStatus(PredictionWindowStatus.OPEN);
         return windowRepository.save(w);
@@ -133,6 +137,10 @@ public class PredictionWindowService {
                     windowRepository.findForceOpenCommunityWindowForMatch(match.getId(), communityId);
             if (communityForceOpen.isPresent()) return communityForceOpen.get();
 
+            Optional<PredictionWindow> communityForceClose =
+                    windowRepository.findForceClosedCommunityWindowForMatch(match.getId(), communityId);
+            if (communityForceClose.isPresent()) return communityForceClose.get();
+
             Optional<PredictionWindow> communityOpen =
                     windowRepository.findOpenCommunityWindowForMatch(match.getId(), communityId);
             if (communityOpen.isPresent()) return communityOpen.get();
@@ -141,6 +149,10 @@ public class PredictionWindowService {
         Optional<PredictionWindow> globalForceOpen =
                 windowRepository.findForceOpenGlobalWindowForMatch(match.getId());
         if (globalForceOpen.isPresent()) return globalForceOpen.get();
+
+        Optional<PredictionWindow> globalForceClose =
+                windowRepository.findForceClosedGlobalWindowForMatch(match.getId());
+        if (globalForceClose.isPresent()) return globalForceClose.get();
 
         return windowRepository.findOpenGlobalWindowForMatch(match.getId()).orElse(null);
     }

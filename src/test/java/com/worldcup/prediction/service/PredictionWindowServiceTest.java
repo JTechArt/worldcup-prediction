@@ -133,8 +133,10 @@ class PredictionWindowServiceTest {
                 .effectiveCloseAt(now.plusHours(1))
                 .matches(new HashSet<>(Set.of(m))).build();
         when(windowRepository.findForceOpenCommunityWindowForMatch(any(), any())).thenReturn(Optional.empty());
+        when(windowRepository.findForceClosedCommunityWindowForMatch(any(), any())).thenReturn(Optional.empty());
         when(windowRepository.findOpenCommunityWindowForMatch(any(), any())).thenReturn(Optional.empty());
         when(windowRepository.findForceOpenGlobalWindowForMatch(any())).thenReturn(Optional.empty());
+        when(windowRepository.findForceClosedGlobalWindowForMatch(any())).thenReturn(Optional.empty());
         when(windowRepository.findOpenGlobalWindowForMatch(m.getId())).thenReturn(Optional.of(window));
 
         assertThat(service.isWindowOpen(m, now, 99L)).isTrue();
@@ -144,8 +146,10 @@ class PredictionWindowServiceTest {
     void isWindowOpen_returnsFalseWhenNoWindow() {
         Match m = matchWithKickoff(LocalDateTime.now().plusHours(3));
         when(windowRepository.findForceOpenCommunityWindowForMatch(any(), any())).thenReturn(Optional.empty());
+        when(windowRepository.findForceClosedCommunityWindowForMatch(any(), any())).thenReturn(Optional.empty());
         when(windowRepository.findOpenCommunityWindowForMatch(any(), any())).thenReturn(Optional.empty());
         when(windowRepository.findForceOpenGlobalWindowForMatch(any())).thenReturn(Optional.empty());
+        when(windowRepository.findForceClosedGlobalWindowForMatch(any())).thenReturn(Optional.empty());
         when(windowRepository.findOpenGlobalWindowForMatch(any())).thenReturn(Optional.empty());
 
         assertThat(service.isWindowOpen(m, LocalDateTime.now(), 99L)).isFalse();
@@ -163,6 +167,34 @@ class PredictionWindowServiceTest {
         when(windowRepository.findForceOpenGlobalWindowForMatch(m.getId())).thenReturn(Optional.of(window));
 
         assertThat(service.isWindowOpen(m, LocalDateTime.now(), 99L)).isTrue();
+    }
+
+    @Test
+    void isWindowOpen_returnsFalseForForceClosedWindow() {
+        Match m = matchWithKickoff(LocalDateTime.now().plusHours(2));
+        PredictionWindow window = PredictionWindow.builder()
+                .id(1L).status(PredictionWindowStatus.OPEN)
+                .openAt(LocalDateTime.now().minusHours(1))
+                .effectiveCloseAt(LocalDateTime.now().plusHours(1))
+                .overrideStatus(RoundOverrideStatus.FORCE_CLOSED)
+                .matches(new HashSet<>(Set.of(m))).build();
+        when(windowRepository.findForceOpenCommunityWindowForMatch(any(), any())).thenReturn(Optional.empty());
+        when(windowRepository.findForceClosedCommunityWindowForMatch(any(), any())).thenReturn(Optional.empty());
+        when(windowRepository.findForceOpenGlobalWindowForMatch(any())).thenReturn(Optional.empty());
+        when(windowRepository.findForceClosedGlobalWindowForMatch(m.getId())).thenReturn(Optional.of(window));
+
+        assertThat(service.isWindowOpen(m, LocalDateTime.now(), 99L)).isFalse();
+    }
+
+    @Test
+    void delete_throwsWhenWindowIsOpen() {
+        PredictionWindow window = PredictionWindow.builder()
+                .id(1L).status(PredictionWindowStatus.OPEN).build();
+        when(windowRepository.findById(1L)).thenReturn(Optional.of(window));
+
+        assertThatThrownBy(() -> service.delete(1L))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Cannot delete an OPEN window");
     }
 
     // ---- helpers ----

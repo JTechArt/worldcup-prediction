@@ -38,4 +38,12 @@ public interface PredictionWindowRepository extends JpaRepository<PredictionWind
     @Query("SELECT pw FROM PredictionWindow pw JOIN pw.matches m " +
            "WHERE m.id = :matchId AND pw.communityId = :communityId AND pw.overrideStatus = 'FORCE_OPEN'")
     Optional<PredictionWindow> findForceOpenCommunityWindowForMatch(Long matchId, Long communityId);
+
+    @Query("SELECT pw FROM PredictionWindow pw JOIN pw.matches m " +
+           "WHERE m.id = :matchId AND pw.communityId IS NULL AND pw.overrideStatus = 'FORCE_CLOSED'")
+    Optional<PredictionWindow> findForceClosedGlobalWindowForMatch(Long matchId);
+
+    @Query("SELECT pw FROM PredictionWindow pw JOIN pw.matches m " +
+           "WHERE m.id = :matchId AND pw.communityId = :communityId AND pw.overrideStatus = 'FORCE_CLOSED'")
+    Optional<PredictionWindow> findForceClosedCommunityWindowForMatch(Long matchId, Long communityId);
 }
