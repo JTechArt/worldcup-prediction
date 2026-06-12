@@ -7,16 +7,17 @@ import com.worldcup.prediction.service.PredictionWindowService;
 import com.worldcup.prediction.service.SchedulerLogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class PredictionWindowSchedulerTest {
 
     @Mock private PredictionWindowService windowService;
@@ -25,7 +26,6 @@ class PredictionWindowSchedulerTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         when(logService.start(any())).thenReturn(new SchedulerLog());
     }
 
@@ -73,6 +73,7 @@ class PredictionWindowSchedulerTest {
         scheduler.closeExpiredWindows();
 
         verify(windowService, never()).closeWindow(any());
+        verify(logService).complete(any(), any(), eq(0), any());
     }
 
     @Test
