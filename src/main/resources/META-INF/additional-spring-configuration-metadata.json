@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "app.prediction-window.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the PredictionWindowScheduler for auto-activating and auto-closing prediction windows.",
+      "defaultValue": true
+    }
+  ]
+}
