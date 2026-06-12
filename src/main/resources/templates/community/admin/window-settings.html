@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/community-base :: layout(~{::main-content})}">
+<head><title>Window Settings</title></head>
+<body>
+<th:block th:fragment="main-content">
+
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-8">
+      <h1 class="font-display text-4xl text-white tracking-wider mb-1">WINDOW SETTINGS</h1>
+      <p class="text-white/60 text-sm font-medium" th:text="${community.name} + ' · Admin'">Community Admin</p>
+    </div>
+
+    <div th:if="${successMessage}" class="mb-4 p-3 bg-green-100 border border-green-300 text-green-800 rounded-lg text-sm" th:text="${successMessage}"></div>
+
+    <!-- Mode selector -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+      <h2 class="text-base font-semibold text-gray-700 mb-1">Prediction Window Mode</h2>
+      <p class="text-sm text-gray-500 mb-4">
+        Global default: <strong th:text="${globalSettings.windowMode}"></strong>.
+        Effective for this community: <strong th:text="${effectiveMode}"></strong>.
+      </p>
+      <form th:action="@{/c/{slug}/admin/window-settings/mode(slug=${community.slug})}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="flex flex-wrap gap-6 mb-4">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="windowModeOverride" value=""
+                   th:checked="${community.windowModeOverride == null}"/>
+            <span class="text-sm">Inherit global (<span th:text="${globalSettings.windowMode}"></span>)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="windowModeOverride" value="ROUND"
+                   th:checked="${community.windowModeOverride != null and community.windowModeOverride.name() == 'ROUND'}"/>
+            <span class="text-sm font-medium">Round Mode</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="windowModeOverride" value="DAILY"
+                   th:checked="${community.windowModeOverride != null and community.windowModeOverride.name() == 'DAILY'}"/>
+            <span class="text-sm font-medium">Daily Mode</span>
+          </label>
+        </div>
+        <button type="submit" class="bg-green-dark hover:bg-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+          Save
+        </button>
+      </form>
+    </div>
+
+    <!-- Global windows reference + override controls -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h2 class="text-base font-semibold text-gray-700">Global Prediction Windows</h2>
+        <p class="text-xs text-gray-400 mt-1">Use override controls to temporarily adjust a window for your community.</p>
+      </div>
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+          <tr>
+            <th class="px-5 py-3 text-left">Label</th>
+            <th class="px-5 py-3 text-left">Status</th>
+            <th class="px-5 py-3 text-left">Opens</th>
+            <th class="px-5 py-3 text-left">Closes</th>
+            <th class="px-5 py-3 text-left">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr th:each="pw : ${globalWindows}" class="hover:bg-gray-50">
+            <td class="px-5 py-3 font-medium text-gray-800" th:text="${pw.label}"></td>
+            <td class="px-5 py-3">
+              <span th:text="${pw.overrideStatus != null ? pw.overrideStatus : pw.status}"
+                    class="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600"></span>
+            </td>
+            <td class="px-5 py-3 text-gray-500"
+                th:text="${pw.openAt != null ? #temporals.format(pw.openAt, 'd MMM HH:mm') : '—'}"></td>
+            <td class="px-5 py-3 text-gray-500"
+                th:text="${pw.effectiveCloseAt != null ? #temporals.format(pw.effectiveCloseAt, 'd MMM HH:mm') : 'Auto'}"></td>
+            <td class="px-5 py-3">
+              <div class="flex gap-2" th:with="base=@{/c/{s}/admin/window-settings/windows/{id}(s=${community.slug},id=${pw.id})}">
+                <form th:if="${pw.overrideStatus == null}" th:action="${base + '/force-open'}" method="post">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                  <button class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">Force Open</button>
+                </form>
+                <form th:if="${pw.overrideStatus == null}" th:action="${base + '/force-close'}" method="post">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                  <button class="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600">Force Close</button>
+                </form>
+                <form th:if="${pw.overrideStatus != null}" th:action="${base + '/reset-override'}" method="post">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                  <button class="text-xs bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600">Reset</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <tr th:if="${globalWindows.empty}">
+            <td colspan="5" class="px-5 py-8 text-center text-gray-400 text-sm">No windows configured yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</th:block>
+</body>
+</html>
