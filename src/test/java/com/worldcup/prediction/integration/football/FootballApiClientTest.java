@@ -128,17 +128,15 @@ class FootballApiClientTest {
         String json = """
             { "id": 436780, "status": "FINISHED", "matchday": 1, "stage": "GROUP_STAGE",
               "group": "GROUP_A",
-              "homeTeam": { "id": 773, "name": "Germany", "tla": "GER" },
-              "awayTeam": { "id": 9,   "name": "Australia", "tla": "AUS" },
+              "homeTeam": { "id": 773, "name": "Germany", "tla": "GER", "formation": "4-3-3",
+                "lineup": [{ "id": 3359, "name": "Neuer", "position": "Goalkeeper", "shirtNumber": 1 }],
+                "bench": [] },
+              "awayTeam": { "id": 9, "name": "Australia", "tla": "AUS", "formation": "4-4-2",
+                "lineup": [], "bench": [] },
               "score": { "fullTime": { "home": 2, "away": 1 } },
               "goals": [{ "minute": 23, "type": "REGULAR",
                           "team": { "id": 773, "tla": "GER" },
-                          "scorer": { "id": 3359, "name": "M\\u00fcller" } }],
-              "lineups": [
-                { "team": { "id": 773, "tla": "GER" },
-                  "startXI": [{ "player": { "id": 3359, "name": "Neuer" }, "position": "Goalkeeper", "shirtNumber": 1 }],
-                  "substitutes": [] }
-              ]
+                          "scorer": { "id": 3359, "name": "M\\u00fcller" } }]
             }
             """;
         mockServer.expect(requestTo("https://api.football-data.org/v4/matches/436780"))
@@ -151,7 +149,8 @@ class FootballApiClientTest {
         assertThat(detail).isNotNull();
         assertThat(detail.goals()).hasSize(1);
         assertThat(detail.goals().get(0).scorer().name()).isEqualTo("Müller");
-        assertThat(detail.lineups()).hasSize(1);
-        assertThat(detail.lineups().get(0).startXI()).hasSize(1);
+        assertThat(detail.homeTeam().lineup()).hasSize(1);
+        assertThat(detail.homeTeam().lineup().get(0).name()).isEqualTo("Neuer");
+        assertThat(detail.homeTeam().formation()).isEqualTo("4-3-3");
     }
 }

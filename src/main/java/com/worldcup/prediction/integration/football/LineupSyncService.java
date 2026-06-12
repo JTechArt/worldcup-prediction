@@ -49,7 +49,7 @@ public class LineupSyncService {
             FootballApiMatchDetailDto detail = rateLimiter.call(() -> client.fetchMatchDetail(extId));
             if (detail == null) continue;
 
-            boolean hasLineups = detail.lineups() != null && !detail.lineups().isEmpty();
+            boolean hasLineups = hasTeamLineup(detail.homeTeam()) || hasTeamLineup(detail.awayTeam());
             boolean hasGoals   = detail.goals() != null && !detail.goals().isEmpty();
             if (!hasLineups && !hasGoals) {
                 log.warn("Match id={} externalId={} returned no lineups and no goals — skipping flag update", match.getId(), extId);
@@ -66,38 +66,43 @@ public class LineupSyncService {
         return SyncResult.success(fetched + " match lineups fetched");
     }
 
-    private void persistLineups(Match match, FootballApiMatchDetailDto detail) {
-        if (detail.lineups() == null) return;
-        for (FootballApiLineupDto lineupDto : detail.lineups()) {
-            if (lineupDto.team() == null) continue;
-            Optional<Team> teamOpt = resolveTeam(lineupDto.team());
-            if (teamOpt.isEmpty()) continue;
-            Team team = teamOpt.get();
+    private boolean hasTeamLineup(FootballApiTeamDto team) {
+        return team != null && team.lineup() != null && !team.lineup().isEmpty();
+    }
 
-            if (lineupDto.startXI() != null) {
-                for (FootballApiLineupPlayerDto lp : lineupDto.startXI()) {
-                    saveLineupEntry(match, team, lp, true);
-                }
+    private void persistLineups(Match match, FootballApiMatchDetailDto detail) {
+        persistTeamLineup(match, detail.homeTeam());
+        persistTeamLineup(match, detail.awayTeam());
+    }
+
+    private void persistTeamLineup(Match match, FootballApiTeamDto teamDto) {
+        if (teamDto == null) return;
+        Optional<Team> teamOpt = resolveTeam(teamDto);
+        if (teamOpt.isEmpty()) return;
+        Team team = teamOpt.get();
+
+        if (teamDto.lineup() != null) {
+            for (FootballApiInlinePlayerDto p : teamDto.lineup()) {
+                saveInlineLineupEntry(match, team, p, true);
             }
-            if (lineupDto.substitutes() != null) {
-                for (FootballApiLineupPlayerDto lp : lineupDto.substitutes()) {
-                    saveLineupEntry(match, team, lp, false);
-                }
+        }
+        if (teamDto.bench() != null) {
+            for (FootballApiInlinePlayerDto p : teamDto.bench()) {
+                saveInlineLineupEntry(match, team, p, false);
             }
         }
     }
 
-    private void saveLineupEntry(Match match, Team team, FootballApiLineupPlayerDto lp, boolean starting) {
-        if (lp.player() == null || lp.player().id() == null) return;
-        playerRepository.findByExternalId(lp.player().id()).ifPresent(player -> {
-            MatchLineup entry = MatchLineup.builder()
-                    .match(match).team(team).player(player)
-                    .starting(starting)
-                    .shirtNumber(lp.shirtNumber())
-                    .formationPosition(lp.position())
-                    .build();
-            lineupRepository.save(entry);
-        });
+    private void saveInlineLineupEntry(Match match, Team team, FootballApiInlinePlayerDto p, boolean starting) {
+        if (p == null || p.id() == null) return;
+        playerRepository.findByExternalId(p.id()).ifPresent(player ->
+            lineupRepository.save(MatchLineup.builder()
+                .match(match).team(team).player(player)
+                .starting(starting)
+                .shirtNumber(p.shirtNumber())
+                .formationPosition(p.position())
+                .build())
+        );
     }
 
     private void persistGoals(Match match, FootballApiMatchDetailDto detail) {
