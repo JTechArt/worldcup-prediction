@@ -33,6 +33,38 @@
       </form>
     </div>
 
+    <!-- Prediction Window Mode -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Prediction Window Mode</h2>
+      <form th:action="@{/admin/settings/tournament-mode}" method="post" class="space-y-4">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="flex gap-6">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="windowMode" value="ROUND"
+                   th:checked="${tournamentSettings != null and tournamentSettings.windowMode.name() == 'ROUND'}"/>
+            <span class="font-medium text-sm">Round Mode</span>
+            <span class="text-sm text-gray-500">— one window per matchday</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="windowMode" value="DAILY"
+                   th:checked="${tournamentSettings != null and tournamentSettings.windowMode.name() == 'DAILY'}"/>
+            <span class="font-medium text-sm">Daily Mode</span>
+            <span class="text-sm text-gray-500">— custom windows per batch of matches</span>
+          </label>
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="text-sm text-gray-600">Auto-close offset (minutes before first match):</label>
+          <input type="number" name="dailyWindowCloseOffsetMinutes" min="0" max="180"
+                 th:value="${tournamentSettings != null ? tournamentSettings.dailyWindowCloseOffsetMinutes : 30}"
+                 class="border border-gray-300 rounded px-2 py-1 w-20 text-sm"/>
+        </div>
+        <button type="submit"
+                class="bg-admin-dark hover:bg-admin-mid text-white rounded-lg px-4 py-2 text-sm font-semibold">
+          Save Mode
+        </button>
+      </form>
+    </div>
+
   </div>
 
 </th:block>

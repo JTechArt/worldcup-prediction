@@ -1,6 +1,8 @@
 package com.worldcup.prediction.controller.admin;
 
+import com.worldcup.prediction.domain.enums.WindowMode;
 import com.worldcup.prediction.security.SuperAdminAuthenticationProvider;
+import com.worldcup.prediction.service.TournamentSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,10 +18,23 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AdminSettingsController {
 
     private final PasswordEncoder passwordEncoder;
+    private final TournamentSettingsService tournamentSettingsService;
 
     @GetMapping
     public String settings(Model model) {
+        model.addAttribute("tournamentSettings", tournamentSettingsService.getSettings());
+        model.addAttribute("windowModes", WindowMode.values());
         return "admin/settings";
+    }
+
+    @PostMapping("/tournament-mode")
+    public String updateTournamentMode(@RequestParam WindowMode windowMode,
+                                       @RequestParam int dailyWindowCloseOffsetMinutes,
+                                       RedirectAttributes redirectAttributes) {
+        tournamentSettingsService.updateMode(windowMode);
+        tournamentSettingsService.updateCloseOffset(dailyWindowCloseOffsetMinutes);
+        redirectAttributes.addFlashAttribute("successMessage", "Tournament window mode updated.");
+        return "redirect:/admin/settings";
     }
 
     @PostMapping("/change-password")

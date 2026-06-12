@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout}">
+<head><title>New Prediction Window</title></head>
+<body>
+
+<th:block layout:fragment="page-title">New Prediction Window</th:block>
+
+<th:block layout:fragment="content">
+
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">New Prediction Window</h1>
+
+  <!-- Step 1: date range picker to generate preview -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <h2 class="text-base font-semibold text-gray-700 mb-3">1. Select match range</h2>
+    <form method="get" th:action="@{/admin/prediction-windows/new}" class="flex gap-3 items-end flex-wrap">
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">From</label>
+        <input type="datetime-local" name="from" th:value="${from}" class="border border-gray-300 rounded px-2 py-1 text-sm"/>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">To</label>
+        <input type="datetime-local" name="to" th:value="${to}" class="border border-gray-300 rounded px-2 py-1 text-sm"/>
+      </div>
+      <button type="submit" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded text-sm">Preview Matches</button>
+    </form>
+  </div>
+
+  <!-- Step 2: preview + confirm form -->
+  <div th:if="${preview != null}" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <h2 class="text-base font-semibold text-gray-700 mb-4">2. Review &amp; confirm</h2>
+
+    <!-- Adjacent match context: previous -->
+    <div th:if="${preview.prevMatch().isPresent()}" class="text-xs text-gray-400 mb-2">
+      ← Previous match outside range:
+      <span th:text="${#temporals.format(preview.prevMatch().get().kickoffTime, 'd MMM HH:mm')}"></span>
+    </div>
+
+    <!-- Included matches -->
+    <div class="border border-green-200 bg-green-50 rounded-lg p-3 mb-2">
+      <p class="text-xs font-medium text-green-700 mb-2">
+        Included matches (<span th:text="${preview.includedMatches().size()}"></span>):
+      </p>
+      <div th:each="m : ${preview.includedMatches()}" class="text-sm text-gray-700 py-0.5">
+        <span th:text="${#temporals.format(m.kickoffTime, 'd MMM HH:mm')}"></span> —
+        <span th:text="${m.homeTeam != null ? m.homeTeam.name : (m.homeTeamPlaceholder != null ? m.homeTeamPlaceholder : 'TBD')}"></span>
+        vs
+        <span th:text="${m.awayTeam != null ? m.awayTeam.name : (m.awayTeamPlaceholder != null ? m.awayTeamPlaceholder : 'TBD')}"></span>
+      </div>
+      <p th:if="${preview.includedMatches().empty}" class="text-sm text-gray-400">No matches in this range.</p>
+    </div>
+
+    <!-- Adjacent match context: next -->
+    <div th:if="${preview.nextMatch().isPresent()}" class="text-xs text-gray-400 mb-4">
+      → Next match outside range:
+      <span th:text="${#temporals.format(preview.nextMatch().get().kickoffTime, 'd MMM HH:mm')}"></span>
+    </div>
+
+    <!-- Window config form -->
+    <form th:action="@{/admin/prediction-windows/new}" method="post" class="space-y-4">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <!-- Pass selected match IDs -->
+      <input th:each="m : ${preview.includedMatches()}" type="hidden" name="matchIds" th:value="${m.id}"/>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Window Label</label>
+          <input type="text" name="label" required
+                 th:value="${'Matches ' + #temporals.format(from, 'd MMM')}"
+                 class="w-full border border-gray-300 rounded px-3 py-2 text-sm"/>
+        </div>
+        <div></div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Opens At</label>
+          <input type="datetime-local" name="openAt" required
+                 th:value="${#temporals.format(from, 'yyyy-MM-dd') + 'T' + #temporals.format(from, 'HH:mm')}"
+                 class="w-full border border-gray-300 rounded px-3 py-2 text-sm"/>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Closes At <span class="text-gray-400">(blank = auto from first match)</span></label>
+          <input type="datetime-local" name="closeAt"
+                 class="w-full border border-gray-300 rounded px-3 py-2 text-sm"/>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit"
+                class="bg-admin-dark hover:bg-admin-mid text-white px-5 py-2 rounded-lg text-sm font-medium">
+          Create Window (DRAFT)
+        </button>
+        <a th:href="@{/admin/prediction-windows}" class="text-sm text-gray-500 self-center">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+</th:block>
+</body>
+</html>
