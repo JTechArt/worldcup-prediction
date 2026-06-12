@@ -10,9 +10,11 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "tournament_settings")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class TournamentSettings {
 
     @Id
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Enumerated(EnumType.STRING)
