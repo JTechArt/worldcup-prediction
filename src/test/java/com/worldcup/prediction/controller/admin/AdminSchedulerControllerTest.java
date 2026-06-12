@@ -5,10 +5,12 @@ import com.worldcup.prediction.domain.enums.SchedulerJobType;
 import com.worldcup.prediction.repository.CommunityMembershipRepository;
 import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.UserRepository;
+import com.worldcup.prediction.service.PredictionWindowService;
 import com.worldcup.prediction.service.RoundSubmissionService;
 import com.worldcup.prediction.service.RoundWindowService;
 import com.worldcup.prediction.service.SchedulerLogService;
 import com.worldcup.prediction.service.SchedulerRunnerService;
+import com.worldcup.prediction.service.TournamentSettingsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -34,6 +36,8 @@ class AdminSchedulerControllerTest {
     @MockBean CommunityMembershipRepository communityMembershipRepository;
     @MockBean RoundWindowService roundWindowService;
     @MockBean RoundSubmissionService roundSubmissionService;
+    @MockBean TournamentSettingsService tournamentSettingsService;
+    @MockBean PredictionWindowService predictionWindowService;
 
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")

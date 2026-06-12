@@ -7,8 +7,10 @@ import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.UserRepository;
 import com.worldcup.prediction.service.AuditLogService;
 import com.worldcup.prediction.service.EmailService;
+import com.worldcup.prediction.service.PredictionWindowService;
 import com.worldcup.prediction.service.RoundSubmissionService;
 import com.worldcup.prediction.service.RoundWindowService;
+import com.worldcup.prediction.service.TournamentSettingsService;
 import com.worldcup.prediction.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +40,8 @@ class AdminUserControllerTest {
     @MockBean CommunityMembershipRepository communityMembershipRepository; // required by CommunityInterceptor
     @MockBean RoundWindowService roundWindowService;       // required by CommunityWindowBannerAdvice
     @MockBean RoundSubmissionService roundSubmissionService; // required by CommunityWindowBannerAdvice
+    @MockBean TournamentSettingsService tournamentSettingsService; // required by AdminWindowBannerAdvice
+    @MockBean PredictionWindowService predictionWindowService; // required by AdminWindowBannerAdvice
 
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")

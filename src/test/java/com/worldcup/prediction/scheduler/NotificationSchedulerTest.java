@@ -11,6 +11,7 @@ import com.worldcup.prediction.repository.PredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
 import com.worldcup.prediction.service.LeaderboardService;
 import com.worldcup.prediction.service.NotificationService;
+import com.worldcup.prediction.service.PredictionWindowService;
 import com.worldcup.prediction.service.RoundWindowService;
 import com.worldcup.prediction.service.SchedulerLogService;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +37,7 @@ class NotificationSchedulerTest {
     @Mock LeaderboardService leaderboardService;
     @Mock CommunityRepository communityRepository;
     @Mock RoundWindowService roundWindowService;
+    @Mock PredictionWindowService predictionWindowService;
     @Mock SchedulerLogService logService;
     @InjectMocks NotificationScheduler scheduler;
 
@@ -50,9 +52,10 @@ class NotificationSchedulerTest {
     @Test
     void checkPredictionWindowOpen_noMatches_logsSkipped() {
         when(roundWindowService.findAll()).thenReturn(List.of());
+        when(predictionWindowService.findAllGlobal()).thenReturn(List.of());
         scheduler.checkPredictionWindowOpen();
         verify(notificationService, never()).sendPredictionWindowOpen(anyList(), any(), anyLong());
-        verify(logService).complete(stubLog, SchedulerJobStatus.SKIPPED, 0, "No newly-open rounds");
+        verify(logService).complete(stubLog, SchedulerJobStatus.SKIPPED, 0, "No newly-open rounds or windows");
     }
 
     @Test

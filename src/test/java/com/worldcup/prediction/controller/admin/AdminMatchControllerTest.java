@@ -42,6 +42,8 @@ class AdminMatchControllerTest {
     @MockBean CommunityMembershipRepository communityMembershipRepository; // required by CommunityInterceptor
     @MockBean RoundWindowService roundWindowService;
     @MockBean RoundSubmissionService roundSubmissionService; // required by CommunityWindowBannerAdvice
+    @MockBean TournamentSettingsService tournamentSettingsService; // required by AdminWindowBannerAdvice
+    @MockBean PredictionWindowService predictionWindowService; // required by AdminWindowBannerAdvice
 
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")

@@ -6,8 +6,11 @@ import com.worldcup.prediction.domain.enums.RoundOverrideStatus;
 import com.worldcup.prediction.domain.enums.UserRole;
 import com.worldcup.prediction.dto.WindowBannerDto;
 import com.worldcup.prediction.security.CustomOAuth2User;
+import com.worldcup.prediction.domain.enums.WindowMode;
+import com.worldcup.prediction.service.PredictionWindowService;
 import com.worldcup.prediction.service.RoundSubmissionService;
 import com.worldcup.prediction.service.RoundWindowService;
+import com.worldcup.prediction.service.TournamentSettingsService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +30,8 @@ class CommunityWindowBannerAdviceTest {
 
     @Mock private RoundWindowService roundWindowService;
     @Mock private RoundSubmissionService roundSubmissionService;
+    @Mock private TournamentSettingsService tournamentSettingsService;
+    @Mock private PredictionWindowService predictionWindowService;
     @Mock private HttpServletRequest request;
     @Mock private Authentication authentication;
     @Mock private CustomOAuth2User principal;
@@ -38,7 +43,8 @@ class CommunityWindowBannerAdviceTest {
 
     @BeforeEach
     void setUp() {
-        advice = new CommunityWindowBannerAdvice(roundWindowService, roundSubmissionService);
+        advice = new CommunityWindowBannerAdvice(roundWindowService, roundSubmissionService, tournamentSettingsService, predictionWindowService);
+        lenient().when(tournamentSettingsService.getEffectiveMode(any())).thenReturn(WindowMode.ROUND);
         try {
             var f = CommunityWindowBannerAdvice.class.getDeclaredField("timezoneId");
             f.setAccessible(true);

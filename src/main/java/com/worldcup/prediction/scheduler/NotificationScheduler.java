@@ -2,10 +2,12 @@ package com.worldcup.prediction.scheduler;
 
 import com.worldcup.prediction.domain.Community;
 import com.worldcup.prediction.domain.Match;
+import com.worldcup.prediction.domain.PredictionWindow;
 import com.worldcup.prediction.domain.RoundWindow;
 import com.worldcup.prediction.domain.SchedulerLog;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.MatchStatus;
+import com.worldcup.prediction.domain.enums.PredictionWindowStatus;
 import com.worldcup.prediction.domain.enums.SchedulerJobStatus;
 import com.worldcup.prediction.domain.enums.SchedulerJobType;
 import com.worldcup.prediction.domain.enums.UserStatus;
@@ -16,6 +18,7 @@ import com.worldcup.prediction.repository.PredictionRepository;
 import com.worldcup.prediction.repository.UserRepository;
 import com.worldcup.prediction.service.LeaderboardService;
 import com.worldcup.prediction.service.NotificationService;
+import com.worldcup.prediction.service.PredictionWindowService;
 import com.worldcup.prediction.service.RoundWindowService;
 import com.worldcup.prediction.service.SchedulerLogService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,6 +51,7 @@ public class NotificationScheduler {
     private final LeaderboardService leaderboardService;
     private final CommunityRepository communityRepository;
     private final RoundWindowService roundWindowService;
+    private final PredictionWindowService predictionWindowService;
     private final SchedulerLogService logService;
 
     @Value("${app.notification.reminder-hours-before:3}")
@@ -59,23 +64,30 @@ public class NotificationScheduler {
         SchedulerLog entry = logService.start(SchedulerJobType.NOTIF_WINDOW_OPEN.name());
         try {
             LocalDateTime now = LocalDateTime.now();
-            List<RoundWindow> allRounds = roundWindowService.findAll();
-            List<RoundWindow> openRounds = allRounds.stream()
+            List<RoundWindow> openRounds = roundWindowService.findAll().stream()
                     .filter(rw -> roundWindowService.isRoundOpen(rw.getRoundLabel(), now))
                     .filter(rw -> rw.getAutoOpensAt() != null
                             && !now.isBefore(rw.getAutoOpensAt())
                             && now.isBefore(rw.getAutoOpensAt().plusMinutes(10)))
                     .toList();
 
-            if (openRounds.isEmpty()) {
-                log.debug("NotificationScheduler: no newly-open rounds — skipping");
-                logService.complete(entry, SchedulerJobStatus.SKIPPED, 0, "No newly-open rounds");
+            List<PredictionWindow> newlyOpenWindows = predictionWindowService.findAllGlobal().stream()
+                    .filter(pw -> pw.getStatus() == PredictionWindowStatus.OPEN
+                            && pw.getOpenAt() != null
+                            && !now.isBefore(pw.getOpenAt())
+                            && now.isBefore(pw.getOpenAt().plusMinutes(10)))
+                    .toList();
+
+            if (openRounds.isEmpty() && newlyOpenWindows.isEmpty()) {
+                log.debug("NotificationScheduler: no newly-open rounds or windows — skipping");
+                logService.complete(entry, SchedulerJobStatus.SKIPPED, 0, "No newly-open rounds or windows");
                 return;
             }
 
             List<User> activeUsers = userRepository.findByStatus(UserStatus.ACTIVE);
             List<Community> communities = communityRepository.findAll();
             int sent = 0;
+
             for (RoundWindow rw : openRounds) {
                 List<Match> matches = matchRepository.findByRoundLabelWithTeams(rw.getRoundLabel());
                 if (matches.isEmpty()) continue;
@@ -88,6 +100,21 @@ public class NotificationScheduler {
                     }
                 }
             }
+
+            for (PredictionWindow pw : newlyOpenWindows) {
+                List<Match> matches = new ArrayList<>(pw.getMatches());
+                if (matches.isEmpty()) continue;
+                Match firstMatch = matches.stream()
+                        .min(Comparator.comparing(Match::getKickoffTime)).orElse(matches.get(0));
+                for (Community community : communities) {
+                    boolean ok = notificationService.sendPredictionWindowOpen(activeUsers, firstMatch, community.getId());
+                    if (ok) {
+                        log.info("Sent prediction-window-open notification for window {} in community {}", pw.getLabel(), community.getId());
+                        sent++;
+                    }
+                }
+            }
+
             logService.complete(entry, SchedulerJobStatus.SUCCESS, sent, sent + " window-open notification(s) sent");
         } catch (Exception e) {
             log.error("NotificationScheduler.checkPredictionWindowOpen error", e);
