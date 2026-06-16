@@ -60,6 +60,8 @@ public class DailyExactPredictorService {
                                 .awayTeamName(m.getAwayTeam() != null ? m.getAwayTeam().getName() : m.getAwayTeamPlaceholder())
                                 .homeTeamFlagCode(m.getHomeTeam() != null ? m.getHomeTeam().getFlagCode() : null)
                                 .awayTeamFlagCode(m.getAwayTeam() != null ? m.getAwayTeam().getFlagCode() : null)
+                                .homeTeamFifaCode(m.getHomeTeam() != null ? m.getHomeTeam().getFifaCode() : null)
+                                .awayTeamFifaCode(m.getAwayTeam() != null ? m.getAwayTeam().getFifaCode() : null)
                                 .homeScore(homeScore)
                                 .awayScore(awayScore)
                                 .build();

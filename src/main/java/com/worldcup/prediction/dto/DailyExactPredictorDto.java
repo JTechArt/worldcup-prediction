@@ -34,6 +34,8 @@ public class DailyExactPredictorDto {
         private String awayTeamName;
         private String homeTeamFlagCode;
         private String awayTeamFlagCode;
+        private String homeTeamFifaCode;
+        private String awayTeamFifaCode;
         private int homeScore;
         private int awayScore;
     }
