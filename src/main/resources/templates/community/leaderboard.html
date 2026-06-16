@@ -244,11 +244,6 @@
     box-shadow: 0 24px 64px rgba(0,0,0,.25);
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    animation: ucCardIn .22s ease;
-  }
-  @keyframes ucCardIn {
-    from { opacity: 0; transform: translate(-50%, -47%); }
-    to   { opacity: 1; transform: translate(-50%, -50%); }
   }
   .uc-close {
     position: absolute; top: 14px; right: 16px;
@@ -287,11 +282,6 @@
       width: 100%; transform: none;
       border-radius: 20px 20px 0 0;
       padding-bottom: max(24px, env(safe-area-inset-bottom));
-      animation: ucCardInMobile .25s ease;
-    }
-    @keyframes ucCardInMobile {
-      from { opacity: 0; transform: translateY(30px); }
-      to   { opacity: 1; transform: translateY(0); }
     }
   }
 </style>
@@ -463,7 +453,7 @@
               </div>
 
               <div class="lb-av-wrap"
-                   onclick="(function(el){var d=el.closest('.lb-row-data').dataset;window.dispatchEvent(new CustomEvent('show-user-card',{detail:{name:d.ucName,rank:parseInt(d.ucRank),points:parseInt(d.ucPoints),exact:parseInt(d.ucExact),winner:parseInt(d.ucWinner),draw:parseInt(d.ucDraw),avatarUrl:d.ucAvatar||null,initials:d.ucInitials}}));})(this)">
+                   onclick="lbShowUserCard(this)">
                 <div class="lb-av-photo">
                   <img th:if="${entry.avatarUrl != null}" th:src="${entry.avatarUrl}"
                        th:alt="${entry.displayName}"
@@ -479,7 +469,7 @@
               <div>
                 <div class="lb-pn"
                      style="cursor:pointer"
-                     onclick="(function(el){var d=el.closest('.lb-row-data').dataset;window.dispatchEvent(new CustomEvent('show-user-card',{detail:{name:d.ucName,rank:parseInt(d.ucRank),points:parseInt(d.ucPoints),exact:parseInt(d.ucExact),winner:parseInt(d.ucWinner),draw:parseInt(d.ucDraw),avatarUrl:d.ucAvatar||null,initials:d.ucInitials}}));})(this)">
+                     onclick="lbShowUserCard(this)">
                   <span th:text="${entry.displayName}">Player</span>
                   <span class="lb-ytag" sec:authorize="isAuthenticated()"
                         th:if="${#authentication.principal.userId == entry.userId}">YOU</span>
@@ -561,29 +551,29 @@
        @show-user-card.window="entry = $event.detail; open = true">
 
     <!-- Backdrop -->
-    <div x-show="open" x-transition class="uc-backdrop" @click="open = false"></div>
+    <div x-show="open" x-transition x-cloak class="uc-backdrop" @click="open = false"></div>
 
     <!-- Card -->
-    <div x-show="open" class="uc-card" @click.stop x-cloak>
+    <div x-show="open" x-transition class="uc-card" @click.stop x-cloak>
       <button class="uc-close" @click="open = false">✕</button>
 
       <!-- Header: avatar + name + rank/pts -->
       <div class="uc-header" x-show="entry">
-        <div class="uc-avatar">
-          <img x-show="entry && entry.avatarUrl"
-               :src="entry ? entry.avatarUrl : ''"
-               :alt="entry ? entry.name : ''"
-               onerror="this.style.display='none'">
+        <div class="uc-avatar" x-data="{ imgError: false }" x-effect="imgError = false">
+          <img x-show="entry && entry.avatarUrl && !imgError"
+               :src="entry.avatarUrl"
+               :alt="entry.name"
+               @error="imgError = true">
           <span class="uc-avatar-initials"
-                x-show="!entry || !entry.avatarUrl"
+                x-show="!entry || !entry.avatarUrl || imgError"
                 x-text="entry ? entry.initials : ''"></span>
         </div>
         <div>
-          <div class="uc-name" x-text="entry ? entry.name : ''"></div>
+          <div class="uc-name" x-text="entry.name"></div>
           <div class="uc-rank">
-            <span class="uc-rank-hi" x-text="entry ? '#' + entry.rank : ''"></span>
+            <span class="uc-rank-hi" x-text="'#' + entry.rank"></span>
             &nbsp;·&nbsp;
-            <span x-text="entry ? entry.points + ' pts' : ''"></span>
+            <span x-text="entry.points + ' pts'"></span>
           </div>
         </div>
       </div>
@@ -593,15 +583,15 @@
       <!-- Stats row -->
       <div class="uc-stats" x-show="entry">
         <div class="uc-stat">
-          <div class="uc-stat-v" x-text="entry ? entry.exact : 0"></div>
+          <div class="uc-stat-v" x-text="entry.exact"></div>
           <div class="uc-stat-l">✦ Exact</div>
         </div>
         <div class="uc-stat">
-          <div class="uc-stat-v" x-text="entry ? entry.winner : 0"></div>
+          <div class="uc-stat-v" x-text="entry.winner"></div>
           <div class="uc-stat-l">Win</div>
         </div>
         <div class="uc-stat">
-          <div class="uc-stat-v" x-text="entry ? entry.draw : 0"></div>
+          <div class="uc-stat-v" x-text="entry.draw"></div>
           <div class="uc-stat-l">Draw</div>
         </div>
       </div>
@@ -612,6 +602,15 @@
 </div>
 
 <script th:inline="javascript">
+  function lbShowUserCard(el) {
+    var d = el.closest('.lb-row-data').dataset;
+    window.dispatchEvent(new CustomEvent('show-user-card', { detail: {
+      name: d.ucName, rank: parseInt(d.ucRank), points: parseInt(d.ucPoints),
+      exact: parseInt(d.ucExact), winner: parseInt(d.ucWinner), draw: parseInt(d.ucDraw),
+      avatarUrl: d.ucAvatar || null, initials: d.ucInitials
+    }}));
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     const mid    = document.getElementById('lb-mid');
     const midHdr = document.getElementById('lb-mid-hdr');
