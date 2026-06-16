@@ -219,8 +219,9 @@
     .lb-av-initials { font-size: 11px; }
     .lb-flag-badge { width: 18px; height: 18px; bottom: -4px; right: -4px; }
     .lb-rank-delta { width: 10px; font-size: 8px; }
-    .lb-pn { font-size: 11px; max-width: 60px; }
-    .lb-pm { font-size: 9px; }
+    .lb-pn  { display: none; }
+    .lb-pm  { display: none; }
+    .lb-av-wrap { cursor: pointer; }
     .lb-tv { font-size: 13px; } .lb-tl { font-size: 7px; }
     .lb-hero-title { font-size: 32px; }
     .lb-kpi { padding: 8px 10px; } .lb-kpi-v { font-size: 18px; }
@@ -374,7 +375,15 @@
                          + (${#authentication != null
                              and !#authentication.principal.equals('anonymousUser')
                              and #authentication.principal.userId == entry.userId} ? ' you' : '')"
-               th:style="'animation: lbFUp .4s ease ' + (${iter.index} * 0.04) + 's both'">
+               th:style="'animation: lbFUp .4s ease ' + (${iter.index} * 0.04) + 's both'"
+               th:data-uc-name="${entry.displayName}"
+               th:data-uc-rank="${entry.rank}"
+               th:data-uc-points="${entry.totalPoints}"
+               th:data-uc-exact="${entry.exactCount}"
+               th:data-uc-winner="${entry.correctWinnerCount}"
+               th:data-uc-draw="${entry.drawCount}"
+               th:data-uc-avatar="${entry.avatarUrl != null ? entry.avatarUrl : ''}"
+               th:data-uc-initials="${entry.initials}">
             <div class="lb-pc">
               <div th:class="'lb-rk ' + (${entry.rank == 1} ? 'lb-rk-1' : (${entry.rank == 2} ? 'lb-rk-2' : (${entry.rank == 3} ? 'lb-rk-3' : 'lb-rk-n')))"
                    th:text="${entry.rank}">1</div>
@@ -385,7 +394,8 @@
                 <span th:if="${entry.rankChange == 0}">—</span>
               </div>
 
-              <div class="lb-av-wrap">
+              <div class="lb-av-wrap"
+                   onclick="(function(el){var d=el.closest('.lb-row-data').dataset;window.dispatchEvent(new CustomEvent('show-user-card',{detail:{name:d.ucName,rank:parseInt(d.ucRank),points:parseInt(d.ucPoints),exact:parseInt(d.ucExact),winner:parseInt(d.ucWinner),draw:parseInt(d.ucDraw),avatarUrl:d.ucAvatar||null,initials:d.ucInitials}}));})(this)">
                 <div class="lb-av-photo">
                   <img th:if="${entry.avatarUrl != null}" th:src="${entry.avatarUrl}"
                        th:alt="${entry.displayName}"
@@ -399,7 +409,9 @@
               </div>
 
               <div>
-                <div class="lb-pn">
+                <div class="lb-pn"
+                     style="cursor:pointer"
+                     onclick="(function(el){var d=el.closest('.lb-row-data').dataset;window.dispatchEvent(new CustomEvent('show-user-card',{detail:{name:d.ucName,rank:parseInt(d.ucRank),points:parseInt(d.ucPoints),exact:parseInt(d.ucExact),winner:parseInt(d.ucWinner),draw:parseInt(d.ucDraw),avatarUrl:d.ucAvatar||null,initials:d.ucInitials}}));})(this)">
                   <span th:text="${entry.displayName}">Player</span>
                   <span class="lb-ytag" sec:authorize="isAuthenticated()"
                         th:if="${#authentication.principal.userId == entry.userId}">YOU</span>
