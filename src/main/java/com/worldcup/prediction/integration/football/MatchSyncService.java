@@ -151,9 +151,12 @@ public class MatchSyncService {
     }
 
     /**
-     * Non-destructive update: fetches all matches from the API and updates
-     * only kickoff times for existing matches (matched by externalId).
-     * Predictions and all other data are untouched.
+     * Non-destructive update: fetches all matches from the API and updates kickoff
+     * times for existing matches (matched by externalId). Predictions are untouched.
+     *
+     * Comparison is done in UTC (epoch ms) to avoid ambiguity from SQLite storing
+     * kickoff_time as epoch-millisecond integers that Hibernate may read without
+     * applying the configured timezone offset.
      */
     public SyncResult syncMatchDatesOnly() {
         FootballApiResponseDto response = rateLimiter.call(client::fetchAllMatches);
@@ -163,6 +166,8 @@ public class MatchSyncService {
 
         int updated = 0;
         int skipped = 0;
+        ZoneId zone = ZoneId.of(timezoneId);
+
         for (FootballApiMatchDto apiMatch : response.matches()) {
             if (apiMatch.id() == null || apiMatch.utcDate() == null) {
                 skipped++;
@@ -173,22 +178,35 @@ public class MatchSyncService {
                 skipped++;
                 continue;
             }
+
+            OffsetDateTime apiUtc;
+            try {
+                apiUtc = OffsetDateTime.parse(apiMatch.utcDate());
+            } catch (Exception e) {
+                log.warn("Cannot parse utcDate '{}' for match id={}", apiMatch.utcDate(), apiMatch.id());
+                skipped++;
+                continue;
+            }
+
             Match match = matchOpt.get();
-            LocalDateTime newKickoff = parseUtc(apiMatch.utcDate());
-            if (!newKickoff.equals(match.getKickoffTime())) {
+
+            // Compare in UTC: the DB may store epoch ms integers that Hibernate reads back
+            // without timezone conversion, so LocalDateTime.equals() is unreliable here.
+            long apiEpochMs = apiUtc.toInstant().toEpochMilli();
+            long dbEpochMs  = match.getKickoffTime().atZone(zone).toInstant().toEpochMilli();
+
+            if (apiEpochMs != dbEpochMs) {
+                LocalDateTime newKickoff = apiUtc.atZoneSameInstant(zone).toLocalDateTime();
+                log.info("Updating match {} (ext={}) kickoff: {} → {} (UTC was {})",
+                        match.getId(), apiMatch.id(), match.getKickoffTime(), newKickoff, apiUtc);
                 match.setKickoffTime(newKickoff);
                 matchRepository.save(match);
-                log.info("Updated kickoff for match {} ({} vs {}) → {}",
-                        match.getId(),
-                        match.getHomeTeam() != null ? match.getHomeTeam().getName() : "?",
-                        match.getAwayTeam() != null ? match.getAwayTeam().getName() : "?",
-                        newKickoff);
                 updated++;
             }
         }
 
         return SyncResult.success(updated + " kickoff time(s) updated" +
-                (skipped > 0 ? ", " + skipped + " skipped (no matching match)" : ""));
+                (skipped > 0 ? ", " + skipped + " skipped" : ""));
     }
 
     /**
