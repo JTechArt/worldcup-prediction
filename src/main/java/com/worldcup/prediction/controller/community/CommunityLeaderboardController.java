@@ -131,6 +131,7 @@ public class CommunityLeaderboardController {
         model.addAttribute("currentPhaseId", currentPhaseId);
         model.addAttribute("closedRoundLabels", closedRoundLabels);
         model.addAttribute("predsByUserAndMatch", predsByUserAndMatch);
+        model.addAttribute("today", java.time.LocalDate.now().toString());
         model.addAttribute("pageTitle", community.getName() + " · Leaderboard");
 
         return "community/leaderboard";
