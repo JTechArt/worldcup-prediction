@@ -610,7 +610,7 @@
     <div class="lb-yb-pts" th:text="${currentUserEntry.totalPoints} + ' pts'">0 pts</div>
     <button onclick="document.querySelector('.lb-row-data.you')?.scrollIntoView({behavior:'smooth',block:'center'})"
             style="margin-left:auto;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:5px 10px;color:white;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
-      ↑ Find me
+      ⊙ Find me
     </button>
   </div>
 
@@ -770,7 +770,7 @@
       document.querySelectorAll('.lb-game-col-hd[data-date="' + today + '"]').forEach(col => {
         col.classList.add('today');
         const ghd = col.querySelector('.lb-ghd');
-        if (ghd) ghd.innerHTML = '<span class="lb-today-pill">TODAY</span>' + ghd.textContent;
+        if (ghd) ghd.insertAdjacentHTML('afterbegin', '<span class="lb-today-pill">TODAY</span>');
       });
     }
 
@@ -778,7 +778,6 @@
     const youBar = document.getElementById('lb-you-bar');
     const youRow = document.querySelector('.lb-left .lb-row-data.you');
     const lbOuter = document.querySelector('.lb-outer');
-    const stickyHdr = document.querySelector('.lb-sticky-hdr');
     if (youBar && youRow && lbOuter) {
       let youRowHidden = false;
 
