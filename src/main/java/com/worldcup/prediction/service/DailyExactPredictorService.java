@@ -52,15 +52,19 @@ public class DailyExactPredictorService {
             List<DailyExactPredictorDto.ExactMatchDto> exactMatches = userPredictions.stream()
                     .map(p -> {
                         Match m = p.getMatch();
+                        Integer homeScore = m.getEffectiveHomeScore();
+                        Integer awayScore = m.getEffectiveAwayScore();
+                        if (homeScore == null || awayScore == null) return null;
                         return DailyExactPredictorDto.ExactMatchDto.builder()
                                 .homeTeamName(m.getHomeTeam() != null ? m.getHomeTeam().getName() : m.getHomeTeamPlaceholder())
                                 .awayTeamName(m.getAwayTeam() != null ? m.getAwayTeam().getName() : m.getAwayTeamPlaceholder())
                                 .homeTeamFlagCode(m.getHomeTeam() != null ? m.getHomeTeam().getFlagCode() : null)
                                 .awayTeamFlagCode(m.getAwayTeam() != null ? m.getAwayTeam().getFlagCode() : null)
-                                .homeScore(m.getEffectiveHomeScore())
-                                .awayScore(m.getEffectiveAwayScore())
+                                .homeScore(homeScore)
+                                .awayScore(awayScore)
                                 .build();
                     })
+                    .filter(Objects::nonNull)
                     .toList();
 
             result.add(DailyExactPredictorDto.builder()
@@ -79,35 +83,44 @@ public class DailyExactPredictorService {
     }
 
     /**
-     * Returns the date label of the last completed matchday (for display).
+     * Returns the earliest kickoff date of the last completed round (for display).
      */
     public LocalDate getLastMatchdayDate(LocalDateTime now) {
         List<Match> matches = findLastMatchday(now);
         if (matches.isEmpty()) return null;
-        return matches.get(0).getKickoffTime().toLocalDate();
+        return matches.stream()
+                .map(m -> m.getKickoffTime().toLocalDate())
+                .min(Comparator.naturalOrder())
+                .orElse(null);
     }
 
+    /**
+     * Returns all completed matches belonging to the most recently completed round.
+     * Groups by roundLabel so that users who predicted correctly across multiple days
+     * within the same round are all included together.
+     */
     private List<Match> findLastMatchday(LocalDateTime now) {
-        // Get ALL completed matches, regardless of time
         List<Match> allCompleted = matchRepository.findByStatusWithTeams(
             com.worldcup.prediction.domain.enums.MatchStatus.COMPLETED);
-        
-        if (allCompleted.isEmpty()) {
-            return List.of();
-        }
 
-        // Filter to only matches before now
+        if (allCompleted.isEmpty()) return List.of();
+
         List<Match> completedBeforeNow = allCompleted.stream()
                 .filter(m -> m.getKickoffTime().isBefore(now))
-                .sorted((a, b) -> b.getKickoffTime().compareTo(a.getKickoffTime())) // descending
+                .sorted(Comparator.comparing(Match::getKickoffTime).reversed())
                 .toList();
-        
-        if (completedBeforeNow.isEmpty()) {
-            return List.of();
+
+        if (completedBeforeNow.isEmpty()) return List.of();
+
+        String latestRoundLabel = completedBeforeNow.get(0).getRoundLabel();
+        if (latestRoundLabel != null) {
+            return completedBeforeNow.stream()
+                    .filter(m -> latestRoundLabel.equals(m.getRoundLabel()))
+                    .toList();
         }
 
+        // Fallback to date-based grouping if round label is not set
         LocalDate latestDate = completedBeforeNow.get(0).getKickoffTime().toLocalDate();
-
         return completedBeforeNow.stream()
                 .filter(m -> m.getKickoffTime().toLocalDate().equals(latestDate))
                 .toList();

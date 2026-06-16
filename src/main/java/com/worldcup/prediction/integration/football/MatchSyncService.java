@@ -151,6 +151,47 @@ public class MatchSyncService {
     }
 
     /**
+     * Non-destructive update: fetches all matches from the API and updates
+     * only kickoff times for existing matches (matched by externalId).
+     * Predictions and all other data are untouched.
+     */
+    public SyncResult syncMatchDatesOnly() {
+        FootballApiResponseDto response = rateLimiter.call(client::fetchAllMatches);
+        if (response == null || response.matches() == null) {
+            return SyncResult.skipped("No API response");
+        }
+
+        int updated = 0;
+        int skipped = 0;
+        for (FootballApiMatchDto apiMatch : response.matches()) {
+            if (apiMatch.id() == null || apiMatch.utcDate() == null) {
+                skipped++;
+                continue;
+            }
+            Optional<Match> matchOpt = matchRepository.findByExternalId(String.valueOf(apiMatch.id()));
+            if (matchOpt.isEmpty()) {
+                skipped++;
+                continue;
+            }
+            Match match = matchOpt.get();
+            LocalDateTime newKickoff = parseUtc(apiMatch.utcDate());
+            if (!newKickoff.equals(match.getKickoffTime())) {
+                match.setKickoffTime(newKickoff);
+                matchRepository.save(match);
+                log.info("Updated kickoff for match {} ({} vs {}) → {}",
+                        match.getId(),
+                        match.getHomeTeam() != null ? match.getHomeTeam().getName() : "?",
+                        match.getAwayTeam() != null ? match.getAwayTeam().getName() : "?",
+                        newKickoff);
+                updated++;
+            }
+        }
+
+        return SyncResult.success(updated + " kickoff time(s) updated" +
+                (skipped > 0 ? ", " + skipped + " skipped (no matching match)" : ""));
+    }
+
+    /**
      * Resolves a team from the API DTO, trying externalId → TLA → name in order.
      * When found via TLA or name, also stamps the externalId so future lookups
      * hit the fast externalId path.

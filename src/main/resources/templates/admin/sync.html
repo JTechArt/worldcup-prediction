@@ -37,6 +37,17 @@
 
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
       <div>
+        <p class="font-semibold text-gray-800">Match Kickoff Dates</p>
+        <p class="text-xs text-gray-400 mt-0.5">Update kickoff times only from API (matches by externalId). Predictions are <span class="text-green-600 font-medium">preserved</span>. 1 API call.</p>
+      </div>
+      <form th:action="@{/admin/sync/match-dates}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit" class="px-4 py-2 text-sm font-semibold bg-admin-dark text-white rounded-lg hover:bg-admin-mid transition-colors">Run</button>
+      </form>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
+      <div>
         <p class="font-semibold text-gray-800">Group Stage Matches</p>
         <p class="text-xs text-gray-400 mt-0.5">Clear and reload 72 group stage matches from API with correct groups + kickoff times. 1 API call. <span class="text-orange-500 font-medium">Deletes all predictions.</span></p>
       </div>

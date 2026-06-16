@@ -49,6 +49,13 @@ public class AdminSyncController {
         return "redirect:/admin/sync";
     }
 
+    @PostMapping("/match-dates")
+    public String syncMatchDates(RedirectAttributes ra) {
+        SyncResult r = matchSyncService.syncMatchDatesOnly();
+        ra.addFlashAttribute("successMessage", "Match Dates: " + r.message());
+        return "redirect:/admin/sync";
+    }
+
     @PostMapping("/standings")
     public String syncStandings(RedirectAttributes ra) {
         SyncResult r = standingSyncService.syncStandings();

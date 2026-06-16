@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -87,6 +88,10 @@ public class DatabaseBackupService {
             Files.copy(tempRestore, dbFile, StandardCopyOption.REPLACE_EXISTING);
             log.info("Database restored from uploaded file to {}", dbFile);
 
+            // Remove stale WAL/SHM files so the new db isn't corrupted by the old WAL
+            Files.deleteIfExists(dbFile.resolveSibling(dbFile.getFileName() + "-wal"));
+            Files.deleteIfExists(dbFile.resolveSibling(dbFile.getFileName() + "-shm"));
+
             // Evict pooled connections so they reconnect to the new file
             if (dataSource instanceof HikariDataSource hikari) {
                 hikari.getHikariPoolMXBean().softEvictConnections();
@@ -106,12 +111,15 @@ public class DatabaseBackupService {
     }
 
     private void validateSqliteFile(Path file) throws IOException {
-        byte[] header = Files.readAllBytes(file);
-        if (header.length < 16) {
-            throw new IOException("Uploaded file is too small to be a valid SQLite database");
+        byte[] header = new byte[16];
+        try (InputStream is = Files.newInputStream(file)) {
+            int read = is.read(header, 0, 16);
+            if (read < 16) {
+                throw new IOException("Uploaded file is too small to be a valid SQLite database");
+            }
         }
-        String magic = new String(header, 0, 16);
-        if (!magic.startsWith("SQLite format 3")) {
+        String magic = new String(header, 0, 15, StandardCharsets.US_ASCII);
+        if (!magic.equals("SQLite format 3")) {
             throw new IOException("Uploaded file is not a valid SQLite database");
         }
     }

@@ -41,8 +41,10 @@
   .lb-legend { display: flex; gap: 12px; flex-wrap: wrap; }
   .lb-leg { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,.75); }
   .lb-ld { width: 11px; height: 11px; border-radius: 3px; }
-  .l-ex .lb-ld { background: rgba(0,200,83,.65); } .l-wi .lb-ld { background: rgba(255,195,0,.75); }
-  .l-dr .lb-ld { background: rgba(60,120,255,.55); } .l-wr .lb-ld { background: rgba(239,68,68,.5); }
+  .l-ex .lb-ld { background: rgba(0,200,83,.85); }
+  .l-wi .lb-ld { background: rgba(134,239,172,.9); }
+  .l-dr .lb-ld { background: rgba(255,214,0,.85); } .l-wr .lb-ld { background: rgba(239,68,68,.75); }
+  .l-yo .lb-ld { background: rgba(14,165,233,.6); box-shadow: 0 0 0 2px rgba(14,165,233,.4); }
   .l-no .lb-ld { background: rgba(255,255,255,.2); }
 
   .lb-phase-nav { display: flex; gap: 5px; flex-wrap: wrap; }
@@ -53,9 +55,20 @@
   /* ═══════════════════════════════════════════
      THREE-PANEL LEADERBOARD
   ═══════════════════════════════════════════ */
-  .lb-outer { display: flex; align-items: stretch; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 28px rgba(0,0,0,.12); background: var(--card); overflow: hidden; animation: lbFUp .6s ease .35s both; }
+  /* ── OUTER: vertical flex so sticky header sits above data rows ── */
+  .lb-outer { display: flex; flex-direction: column; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 28px rgba(0,0,0,.12); background: var(--card); overflow: clip; animation: lbFUp .6s ease .35s both; }
+
+  /* ── STICKY HEADER STRIP (phase label row + game header row) ── */
+  .lb-sticky-hdr { position: sticky; top: 64px; z-index: 30; display: flex; align-items: stretch; background: var(--card); flex-shrink: 0; border-radius: 16px 16px 0 0; }
+
+  /* ── DATA BODY (all user rows) ── */
+  .lb-body { display: flex; align-items: stretch; }
 
   .lb-left  { flex-shrink: 0; width: var(--pw); min-width: var(--pw); box-shadow: 4px 0 12px rgba(0,0,0,.08); z-index: 2; background: var(--card); }
+  /* mid in sticky header: no scrollbar, scroll is driven by the body mid via JS */
+  .lb-mid-hdr { flex: 1; overflow: hidden; scrollbar-width: none; }
+  .lb-mid-hdr::-webkit-scrollbar { display: none; }
+  /* mid in data body: user-scrollable horizontally */
   .lb-mid   { flex: 1; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: rgba(0,160,70,.25) rgba(0,160,70,.04); }
   .lb-mid::-webkit-scrollbar { height: 6px; } .lb-mid::-webkit-scrollbar-track { background: rgba(0,160,70,.04); } .lb-mid::-webkit-scrollbar-thumb { background: rgba(0,160,70,.25); border-radius: 3px; }
   .lb-mid-inner { display: inline-flex; flex-direction: column; min-width: 100%; }
@@ -64,11 +77,24 @@
   /* ── ROW PRIMITIVES ── */
   .lb-row-phase { height: var(--h-phase); display: flex; align-items: stretch; }
   .lb-row-game  { height: var(--h-game);  display: flex; align-items: stretch; }
-  .lb-row-data  { height: var(--h-row); display: flex; align-items: center; border-bottom: 1px solid rgba(0,160,70,.07); transition: background .12s; }
+  .lb-row-data  { height: var(--h-row); display: flex; align-items: center; border-bottom: 1px solid rgba(0,160,70,.07); transition: background .12s; position: relative; }
   .lb-row-data:last-child { border-bottom: none; }
   .lb-row-data:nth-child(even) { background: #f8fefb; }
-  .lb-row-data.you { background: #e8fdf1 !important; }
-  .lb-row-data:hover { background: #edfff6 !important; }
+  .lb-row-data.you {
+    --h-row: 78px;
+    height: 78px;
+    background: rgba(14,165,233,.12) !important;
+    border-top: 2px solid rgba(14,165,233,.65) !important;
+    border-bottom: 2px solid rgba(14,165,233,.65) !important;
+    box-shadow:
+      inset 5px 0 0 #0ea5e9,
+      0 8px 28px rgba(14,165,233,.28),
+      0 -8px 28px rgba(14,165,233,.18),
+      0 2px 6px rgba(0,0,0,.08);
+    z-index: 4;
+  }
+  .lb-row-data.you:hover { background: rgba(14,165,233,.18) !important; }
+  .lb-row-data:not(.you):hover { background: #edfff6 !important; }
 
   /* ── PHASE HEADER ── */
   .lb-phase-hd-cell { display: flex; align-items: center; gap: 6px; padding: 0 12px; font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: white; white-space: nowrap; position: relative; overflow: hidden; flex-shrink: 0; }
@@ -107,19 +133,39 @@
   .lb-game-cell { width: var(--gc); flex-shrink: 0; height: var(--h-row); display: flex; align-items: center; justify-content: center; border-right: 1px solid rgba(0,160,70,.05); color: rgba(0,0,0,.12); font-size: 13px; }
   .lb-game-cell .pred-score { font-size: 11px; font-weight: 700; color: #444; font-variant-numeric: tabular-nums; letter-spacing: .3px; }
   .cell-exact .pred-score   { color: #005a20; }
-  .cell-winner .pred-score  { color: #7a5000; }
-  .cell-draw .pred-score    { color: #1e3fa0; }
-  .cell-zero .pred-score    { color: #888; }
+  .cell-winner .pred-score  { color: #15803d; }
+  .cell-draw .pred-score    { color: #92400e; }
+  .cell-zero .pred-score    { color: #991b1b; }
 
   /* ── AGGREGATE PHASE COLUMN (knockout stages) ── */
   .lb-psc-hd  { width: var(--kc); flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 6px; background: rgba(0,160,70,.07); border-right: 1px solid rgba(0,160,70,.1); border-bottom: 2px solid rgba(0,160,70,.2); }
   .lb-psc-hd-label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; }
   .lb-psc-cell { width: var(--kc); flex-shrink: 0; height: var(--h-row); display: flex; align-items: center; justify-content: center; border-right: 1px solid rgba(0,160,70,.06); font-size: 15px; font-weight: 700; }
   .lb-psc-cell:last-child { border-right: none; }
-  .cell-exact   { background: rgba(0,200,83,.14);  color: #005a20; }
-  .cell-winner  { background: rgba(255,195,0,.2);  color: #7a5000; }
-  .cell-draw    { background: rgba(60,120,255,.12); color: #1e3fa0; }
-  .cell-zero    { background: transparent; color: var(--muted); }
+  .cell-exact {
+    background: rgba(0,200,83,.22);
+    color: #005a20;
+    position: relative;
+    overflow: hidden;
+  }
+  /* twinkling star in corner */
+  .cell-exact::after {
+    content: '✦';
+    position: absolute;
+    top: 3px; right: 4px;
+    font-size: 8px;
+    color: rgba(0,160,60,.7);
+    animation: starTwinkle 2s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .cell-exact .pred-score { position: relative; z-index: 1; font-weight: 800; }
+  @keyframes starTwinkle {
+    0%, 100% { opacity: .15; transform: scale(.7) rotate(0deg); }
+    50%       { opacity: .9;  transform: scale(1.4) rotate(180deg); }
+  }
+  .cell-winner  { background: rgba(134,239,172,.3); color: #15803d; }
+  .cell-draw    { background: rgba(255,214,0,.2);   color: #92400e; }
+  .cell-zero    { background: rgba(239,68,68,.12);  color: #991b1b; }
   .cell-pending { background: transparent; color: rgba(0,0,0,.15); }
 
   /* ── PLAYER CELL ── */
@@ -218,6 +264,7 @@
       <div class="lb-leg l-dr"><div class="lb-ld"></div>Draw +2</div>
       <div class="lb-leg l-wr"><div class="lb-ld"></div>Wrong 0</div>
       <div class="lb-leg l-no"><div class="lb-ld"></div>Pending</div>
+      <div class="lb-leg l-yo" sec:authorize="isAuthenticated()"><div class="lb-ld"></div>You</div>
     </div>
     <div class="lb-phase-nav">
       <!-- One button per group stage round -->
@@ -238,168 +285,184 @@
   <!-- THREE-PANEL LEADERBOARD -->
   <div class="lb-outer" th:unless="${#lists.isEmpty(entries)}">
 
-    <!-- ══ LEFT: player column ══ -->
-    <div class="lb-left">
-      <div class="lb-ph-spacer"></div>
-      <div class="lb-left-game-hd">
-        <img src="https://upload.wikimedia.org/wikipedia/en/thumb/9/9c/2026_FIFA_World_Cup_official_emblem.svg/120px-2026_FIFA_World_Cup_official_emblem.svg.png"
-             style="height:22px;width:auto;object-fit:contain" alt=""
-             onerror="this.style.display='none'"/>
-        <div class="lb-fifa-lbl">FIFA 2026</div>
-        <div class="lb-fifa-sub">World Cup</div>
+    <!-- ══ STICKY HEADER STRIP: phase row + game header row ══ -->
+    <div class="lb-sticky-hdr">
+
+      <!-- Left: FIFA logo header -->
+      <div class="lb-left">
+        <div class="lb-ph-spacer"></div>
+        <div class="lb-left-game-hd">
+          <img src="https://upload.wikimedia.org/wikipedia/en/thumb/9/9c/2026_FIFA_World_Cup_official_emblem.svg/120px-2026_FIFA_World_Cup_official_emblem.svg.png"
+               style="height:22px;width:auto;object-fit:contain" alt=""
+               onerror="this.style.display='none'"/>
+          <div class="lb-fifa-lbl">FIFA 2026</div>
+          <div class="lb-fifa-sub">World Cup</div>
+        </div>
       </div>
-      <th:block th:each="entry, iter : ${entries}">
-        <div th:class="'lb-row-data ' + ${entry.rankCssClass}
-                       + (${#authentication != null
-                           and !#authentication.principal.equals('anonymousUser')
-                           and #authentication.principal.userId == entry.userId} ? ' you' : '')"
-             th:style="'animation: lbFUp .4s ease ' + (${iter.index} * 0.04) + 's both'">
-          <div class="lb-pc">
-            <div th:class="'lb-rk ' + (${entry.rank == 1} ? 'lb-rk-1' : (${entry.rank == 2} ? 'lb-rk-2' : (${entry.rank == 3} ? 'lb-rk-3' : 'lb-rk-n')))"
-                 th:text="${entry.rank}">1</div>
 
-            <div th:class="'lb-rank-delta ' + (${entry.rankChange > 0} ? 'up' : (${entry.rankChange < 0} ? 'dn' : 'eq'))">
-              <span th:if="${entry.rankChange > 0}">▲</span>
-              <span th:if="${entry.rankChange < 0}">▼</span>
-              <span th:if="${entry.rankChange == 0}">—</span>
-            </div>
+      <!-- Mid: phase label + match columns header (scroll synced with body via JS) -->
+      <div class="lb-mid-hdr" id="lb-mid-hdr">
+        <div class="lb-mid-inner">
 
-            <div class="lb-av-wrap">
-              <div class="lb-av-photo">
-                <img th:if="${entry.avatarUrl != null}" th:src="${entry.avatarUrl}"
-                     th:alt="${entry.displayName}"
-                     th:data-fallback="'https://ui-avatars.com/api/?name=' + ${entry.displayName} + '&background=006b2a&color=fff&size=80'"
-                     onerror="this.src=this.dataset.fallback;this.onerror=null"/>
-                <span class="lb-av-initials" th:if="${entry.avatarUrl == null}" th:text="${entry.initials}">AB</span>
-              </div>
-              <div class="lb-flag-badge" th:if="${entry.predictedWinnerFlagCode != null}">
-                <img th:src="${entry.flagUrl}" th:alt="${entry.predictedWinnerFlagCode}"/>
-              </div>
+          <!-- Phase header row -->
+          <div class="lb-row-phase">
+            <div th:each="entry, iter : ${groupRounds}"
+                 th:id="'ph-gs-r' + ${iter.count}"
+                 class="lb-phase-hd-cell phase-gs"
+                 th:classappend="${entry.key == currentRoundLabel} ? ' lb-phase-current' : ''"
+                 th:style="'width:' + (${entry.value.size()} * 76) + 'px'">
+              <span th:text="'⚽ GS · Round ' + ${iter.count}">⚽ GS · Round 1</span>
             </div>
-
-            <div>
-              <div class="lb-pn">
-                <span th:text="${entry.displayName}">Player</span>
-                <span class="lb-ytag" sec:authorize="isAuthenticated()"
-                      th:if="${#authentication.principal.userId == entry.userId}">YOU</span>
-              </div>
-              <div class="lb-pm" th:text="${entry.exactCount} + ' exact · ' + ${entry.correctWinnerCount} + ' winner'">0 exact</div>
-            </div>
+            <div th:each="stage : ${stages}"
+                 th:if="${stage.name() != 'GROUP'}"
+                 th:id="'ph-' + ${stage.name().toLowerCase()}"
+                 th:class="'lb-phase-hd-cell ' + ${stage.cssClass}"
+                 style="width:var(--kc)"
+                 th:text="${stage.shortLabel}">R32</div>
           </div>
-        </div>
-      </th:block>
-    </div>
 
-    <!-- ══ MID: scrollable columns ══ -->
-    <div class="lb-mid" id="lb-mid">
-      <div class="lb-mid-inner">
-
-        <!-- ── Phase header row ── -->
-        <div class="lb-row-phase">
-          <!-- One cell per group stage ROUND, spanning that round's match columns -->
-          <div th:each="entry, iter : ${groupRounds}"
-               th:id="'ph-gs-r' + ${iter.count}"
-               class="lb-phase-hd-cell phase-gs"
-               th:classappend="${entry.key == currentRoundLabel} ? ' lb-phase-current' : ''"
-               th:style="'width:' + (${entry.value.size()} * 76) + 'px'">
-            <span th:text="'⚽ GS · Round ' + ${iter.count}">⚽ GS · Round 1</span>
-          </div>
-          <!-- Knockout stages: one fixed-width cell each -->
-          <div th:each="stage : ${stages}"
-               th:if="${stage.name() != 'GROUP'}"
-               th:id="'ph-' + ${stage.name().toLowerCase()}"
-               th:class="'lb-phase-hd-cell ' + ${stage.cssClass}"
-               style="width:var(--kc)"
-               th:text="${stage.shortLabel}">R32</div>
-        </div>
-
-        <!-- ── Game header row ── -->
-        <div class="lb-row-game" style="display:flex">
-          <!-- Individual match columns per round -->
-          <th:block th:each="entry : ${groupRounds}">
-            <div th:each="m : ${entry.value}" class="lb-game-col-hd">
-              <div class="lb-ghd" th:text="${#temporals.format(m.kickoffTime, 'MMM d')}">Jun 12</div>
-              <div class="lb-ghf">
-                <div class="lb-ghflag">
-                  <img th:if="${m.homeTeam != null}"
-                       th:src="@{'/images/flags/' + ${m.homeTeam.flagCode} + '.svg'}"
-                       onerror="this.style.display='none'"/>
+          <!-- Game header row: dates, flags, scores -->
+          <div class="lb-row-game" style="display:flex">
+            <th:block th:each="entry : ${groupRounds}">
+              <div th:each="m : ${entry.value}" class="lb-game-col-hd">
+                <div class="lb-ghd" th:text="${#temporals.format(m.kickoffTime, 'MMM d')}">Jun 12</div>
+                <div class="lb-ghf">
+                  <div class="lb-ghflag">
+                    <img th:if="${m.homeTeam != null}"
+                         th:src="@{'/images/flags/' + ${m.homeTeam.flagCode} + '.svg'}"
+                         onerror="this.style.display='none'"/>
+                  </div>
+                  <span class="lb-ghv">v</span>
+                  <div class="lb-ghflag">
+                    <img th:if="${m.awayTeam != null}"
+                         th:src="@{'/images/flags/' + ${m.awayTeam.flagCode} + '.svg'}"
+                         onerror="this.style.display='none'"/>
+                  </div>
                 </div>
-                <span class="lb-ghv">v</span>
-                <div class="lb-ghflag">
-                  <img th:if="${m.awayTeam != null}"
-                       th:src="@{'/images/flags/' + ${m.awayTeam.flagCode} + '.svg'}"
-                       onerror="this.style.display='none'"/>
+                <div th:if="${m.homeScore != null}" class="lb-ghs"
+                     th:text="${m.homeScore} + '–' + ${m.awayScore}">0–0</div>
+                <div th:unless="${m.homeScore != null}" class="lb-ghs-tbd">
+                  <div class="lb-pd"></div><div class="lb-pd"></div><div class="lb-pd"></div>
                 </div>
               </div>
-              <div th:if="${m.homeScore != null}" class="lb-ghs"
-                   th:text="${m.homeScore} + '–' + ${m.awayScore}">0–0</div>
-              <div th:unless="${m.homeScore != null}" class="lb-ghs-tbd">
-                <div class="lb-pd"></div><div class="lb-pd"></div><div class="lb-pd"></div>
-              </div>
+            </th:block>
+            <div th:each="stage : ${stages}" th:if="${stage.name() != 'GROUP'}" class="lb-psc-hd">
+              <div class="lb-psc-hd-label" th:text="${stage.shortLabel}">R32</div>
             </div>
-          </th:block>
-          <!-- Aggregate knockout stage headers -->
-          <div th:each="stage : ${stages}" th:if="${stage.name() != 'GROUP'}" class="lb-psc-hd">
-            <div class="lb-psc-hd-label" th:text="${stage.shortLabel}">R32</div>
           </div>
-        </div>
 
-        <!-- ── Data rows ── -->
-        <th:block th:each="entry : ${entries}">
+        </div>
+      </div>
+
+      <!-- Right: "Total" header -->
+      <div class="lb-right">
+        <div class="lb-ph-spacer"></div>
+        <div class="lb-right-game-hd">Total</div>
+      </div>
+
+    </div><!-- /.lb-sticky-hdr -->
+
+    <!-- ══ DATA BODY: one row per participant ══ -->
+    <div class="lb-body">
+
+      <!-- Left: player names + avatars -->
+      <div class="lb-left">
+        <th:block th:each="entry, iter : ${entries}">
           <div th:class="'lb-row-data ' + ${entry.rankCssClass}
                          + (${#authentication != null
                              and !#authentication.principal.equals('anonymousUser')
                              and #authentication.principal.userId == entry.userId} ? ' you' : '')"
-               style="display:flex">
-            <!-- Per-match prediction cells: visible when round is closed or viewing own row -->
-            <th:block th:each="roundEntry : ${groupRounds}">
-              <div th:each="m : ${roundEntry.value}"
-                   th:with="roundClosed=${closedRoundLabels != null and closedRoundLabels.contains(roundEntry.key)},
-                            isOwnRow=${currentUserId != null and entry.userId == currentUserId},
-                            showPred=${roundClosed or isOwnRow},
-                            userPreds=${predsByUserAndMatch != null ? predsByUserAndMatch.get(entry.userId) : null},
-                            pred=${showPred and userPreds != null ? userPreds.get(m.id) : null}"
-                   th:class="'lb-game-cell '
-                             + (${pred == null} ? '' :
-                               (${pred.scoreResult.name() == 'EXACT'} ? 'cell-exact ' :
-                               (${pred.scoreResult.name() == 'CORRECT_DRAW'} ? 'cell-draw ' :
-                               (${pred.scoreResult.name() == 'CORRECT_WINNER'} ? 'cell-winner ' :
-                               (${pred.scoreResult.name() == 'WRONG'} ? 'cell-zero ' : 'cell-pending ')))))">
-                <span th:if="${pred != null}" class="pred-score" th:text="${pred.predictedHome + '–' + pred.predictedAway}">0–0</span>
-                <span th:if="${pred == null and showPred}" class="opacity-30">–</span>
-                <span th:if="${not showPred}">·</span>
+               th:style="'animation: lbFUp .4s ease ' + (${iter.index} * 0.04) + 's both'">
+            <div class="lb-pc">
+              <div th:class="'lb-rk ' + (${entry.rank == 1} ? 'lb-rk-1' : (${entry.rank == 2} ? 'lb-rk-2' : (${entry.rank == 3} ? 'lb-rk-3' : 'lb-rk-n')))"
+                   th:text="${entry.rank}">1</div>
+
+              <div th:class="'lb-rank-delta ' + (${entry.rankChange > 0} ? 'up' : (${entry.rankChange < 0} ? 'dn' : 'eq'))">
+                <span th:if="${entry.rankChange > 0}">▲</span>
+                <span th:if="${entry.rankChange < 0}">▼</span>
+                <span th:if="${entry.rankChange == 0}">—</span>
               </div>
-            </th:block>
-            <!-- Knockout aggregate cells -->
-            <div th:each="stage : ${stages}"
-                 th:if="${stage.name() != 'GROUP'}"
-                 th:with="pts=${phasePoints != null ? phasePoints.get(entry.userId)?.get(stage) : null}"
-                 th:class="'lb-psc-cell ' + (${pts == null} ? 'cell-pending' : (${pts >= 3} ? 'cell-exact' : (${pts == 2} ? 'cell-draw' : (${pts == 1} ? 'cell-winner' : 'cell-zero'))))">
-              <span th:text="${pts != null ? pts : '·'}">·</span>
+
+              <div class="lb-av-wrap">
+                <div class="lb-av-photo">
+                  <img th:if="${entry.avatarUrl != null}" th:src="${entry.avatarUrl}"
+                       th:alt="${entry.displayName}"
+                       th:data-fallback="'https://ui-avatars.com/api/?name=' + ${entry.displayName} + '&background=006b2a&color=fff&size=80'"
+                       onerror="this.src=this.dataset.fallback;this.onerror=null"/>
+                  <span class="lb-av-initials" th:if="${entry.avatarUrl == null}" th:text="${entry.initials}">AB</span>
+                </div>
+                <div class="lb-flag-badge" th:if="${entry.predictedWinnerFlagCode != null}">
+                  <img th:src="${entry.flagUrl}" th:alt="${entry.predictedWinnerFlagCode}"/>
+                </div>
+              </div>
+
+              <div>
+                <div class="lb-pn">
+                  <span th:text="${entry.displayName}">Player</span>
+                  <span class="lb-ytag" sec:authorize="isAuthenticated()"
+                        th:if="${#authentication.principal.userId == entry.userId}">YOU</span>
+                </div>
+                <div class="lb-pm" th:text="${entry.exactCount} + ' exact · ' + ${entry.correctWinnerCount} + ' winner'">0 exact</div>
+              </div>
             </div>
           </div>
         </th:block>
-
       </div>
-    </div>
 
-    <!-- ══ RIGHT: totals column ══ -->
-    <div class="lb-right">
-      <div class="lb-ph-spacer"></div>
-      <div class="lb-right-game-hd">Total</div>
-      <th:block th:each="entry : ${entries}">
-        <div th:class="'lb-row-data ' + ${entry.rankCssClass}
-                       + (${#authentication != null
-                           and !#authentication.principal.equals('anonymousUser')
-                           and #authentication.principal.userId == entry.userId} ? ' you' : '')">
-          <div class="lb-total-cell">
-            <div class="lb-tv" th:text="${entry.totalPoints}">0</div>
-            <div class="lb-tl">pts</div>
-          </div>
+      <!-- Mid: scrollable prediction cells -->
+      <div class="lb-mid" id="lb-mid">
+        <div class="lb-mid-inner">
+          <th:block th:each="entry : ${entries}">
+            <div th:class="'lb-row-data ' + ${entry.rankCssClass}
+                           + (${#authentication != null
+                               and !#authentication.principal.equals('anonymousUser')
+                               and #authentication.principal.userId == entry.userId} ? ' you' : '')"
+                 style="display:flex">
+              <th:block th:each="roundEntry : ${groupRounds}">
+                <div th:each="m : ${roundEntry.value}"
+                     th:with="roundClosed=${closedRoundLabels != null and closedRoundLabels.contains(roundEntry.key)},
+                              isOwnRow=${currentUserId != null and entry.userId == currentUserId},
+                              showPred=${roundClosed or isOwnRow},
+                              userPreds=${predsByUserAndMatch != null ? predsByUserAndMatch.get(entry.userId) : null},
+                              pred=${showPred and userPreds != null ? userPreds.get(m.id) : null}"
+                     th:class="'lb-game-cell '
+                               + (${pred == null} ? '' :
+                                 (${pred.scoreResult.name() == 'EXACT'} ? 'cell-exact ' :
+                                 (${pred.scoreResult.name() == 'CORRECT_DRAW'} ? 'cell-draw ' :
+                                 (${pred.scoreResult.name() == 'CORRECT_WINNER'} ? 'cell-winner ' :
+                                 (${pred.scoreResult.name() == 'WRONG'} ? 'cell-zero ' : 'cell-pending ')))))">
+                  <span th:if="${pred != null}" class="pred-score" th:text="${pred.predictedHome + '–' + pred.predictedAway}">0–0</span>
+                  <span th:if="${pred == null and showPred}" class="opacity-30">–</span>
+                  <span th:if="${not showPred}">·</span>
+                </div>
+              </th:block>
+              <div th:each="stage : ${stages}"
+                   th:if="${stage.name() != 'GROUP'}"
+                   th:with="pts=${phasePoints != null ? phasePoints.get(entry.userId)?.get(stage) : null}"
+                   th:class="'lb-psc-cell ' + (${pts == null} ? 'cell-pending' : (${pts >= 3} ? 'cell-exact' : (${pts == 2} ? 'cell-draw' : (${pts == 1} ? 'cell-winner' : 'cell-zero'))))">
+                <span th:text="${pts != null ? pts : '·'}">·</span>
+              </div>
+            </div>
+          </th:block>
         </div>
-      </th:block>
-    </div>
+      </div>
+
+      <!-- Right: total points -->
+      <div class="lb-right">
+        <th:block th:each="entry : ${entries}">
+          <div th:class="'lb-row-data ' + ${entry.rankCssClass}
+                         + (${#authentication != null
+                             and !#authentication.principal.equals('anonymousUser')
+                             and #authentication.principal.userId == entry.userId} ? ' you' : '')">
+            <div class="lb-total-cell">
+              <div class="lb-tv" th:text="${entry.totalPoints}">0</div>
+              <div class="lb-tl">pts</div>
+            </div>
+          </div>
+        </th:block>
+      </div>
+
+    </div><!-- /.lb-body -->
 
   </div><!-- /.lb-outer -->
 
@@ -415,15 +478,24 @@
 
 <script th:inline="javascript">
   document.addEventListener('DOMContentLoaded', () => {
-    const mid  = document.getElementById('lb-mid');
-    const btns = document.querySelectorAll('.lb-phase-btn');
+    const mid    = document.getElementById('lb-mid');
+    const midHdr = document.getElementById('lb-mid-hdr');
+    const btns   = document.querySelectorAll('.lb-phase-btn');
+
+    // Keep sticky header horizontally in sync with scrollable body
+    if (mid && midHdr) {
+      mid.addEventListener('scroll', () => { midHdr.scrollLeft = mid.scrollLeft; });
+    }
 
     function scrollToPhase(id, animate) {
+      // Phase elements live in the sticky header mid (lb-mid-hdr)
       const target = document.getElementById(id);
-      if (!target || !mid) return;
-      const midR = mid.getBoundingClientRect();
+      if (!target || !mid || !midHdr) return;
+      const hdrR = midHdr.getBoundingClientRect();
       const tR   = target.getBoundingClientRect();
-      mid.scrollTo({ left: mid.scrollLeft + tR.left - midR.left, behavior: animate ? 'smooth' : 'instant' });
+      const newLeft = mid.scrollLeft + (tR.left - hdrR.left);
+      mid.scrollTo({ left: newLeft, behavior: animate ? 'smooth' : 'instant' });
+      midHdr.scrollLeft = newLeft;
     }
 
     btns.forEach(btn => {
@@ -434,11 +506,10 @@
       });
     });
 
-    // Auto-scroll to current phase on load (no animation, instant position)
+    // Auto-scroll to current phase on load (instant)
     const currentId = /*[[${currentPhaseId}]]*/ 'ph-gs-r1';
     scrollToPhase(currentId, false);
 
-    // Mark the matching nav button active
     btns.forEach(b => {
       b.classList.toggle('active', b.dataset.phase === currentId);
     });
