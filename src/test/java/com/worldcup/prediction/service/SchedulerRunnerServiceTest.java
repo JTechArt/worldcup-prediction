@@ -22,7 +22,6 @@ import static org.mockito.Mockito.*;
 class SchedulerRunnerServiceTest {
 
     @Mock MatchResultScheduler matchResultScheduler;
-    @Mock LineupSyncScheduler lineupSyncScheduler;
     @Mock StandingSyncScheduler standingSyncScheduler;
     @Mock ScorersSyncScheduler scorersSyncScheduler;
     @Mock SchedulerLogService logService;
@@ -39,9 +38,12 @@ class SchedulerRunnerServiceTest {
 
     @Test
     void run_lineupSync_callsSyncLineups() {
-        when(logService.findLatest("LINEUP_SYNC")).thenReturn(Optional.empty());
+        LineupSyncScheduler mockLineup = mock(LineupSyncScheduler.class);
+        ReflectionTestUtils.setField(service, "lineupSyncScheduler", mockLineup);
+        SchedulerLog log = SchedulerLog.builder().status(SchedulerJobStatus.SUCCESS).message("Lineups synced").build();
+        when(logService.findLatest("LINEUP_SYNC")).thenReturn(Optional.of(log));
         service.run(SchedulerJobType.LINEUP_SYNC);
-        verify(lineupSyncScheduler).syncLineups();
+        verify(mockLineup).syncLineups();
     }
 
     @Test

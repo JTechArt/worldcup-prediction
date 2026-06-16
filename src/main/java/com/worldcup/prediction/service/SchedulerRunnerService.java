@@ -13,10 +13,12 @@ import org.springframework.stereotype.Service;
 public class SchedulerRunnerService {
 
     private final MatchResultScheduler matchResultScheduler;
-    private final LineupSyncScheduler lineupSyncScheduler;
     private final StandingSyncScheduler standingSyncScheduler;
     private final ScorersSyncScheduler scorersSyncScheduler;
     private final SchedulerLogService logService;
+
+    @Autowired(required = false)
+    private LineupSyncScheduler lineupSyncScheduler;
 
     @Autowired(required = false)
     private NotificationScheduler notificationScheduler;
@@ -27,7 +29,10 @@ public class SchedulerRunnerService {
     public String run(SchedulerJobType jobType) {
         switch (jobType) {
             case MATCH_RESULT    -> matchResultScheduler.syncAndScore();
-            case LINEUP_SYNC     -> lineupSyncScheduler.syncLineups();
+            case LINEUP_SYNC     -> {
+                if (lineupSyncScheduler == null) return logDisabled(jobType);
+                lineupSyncScheduler.syncLineups();
+            }
             case STANDING_SYNC   -> standingSyncScheduler.syncStandings();
             case SCORERS_SYNC    -> scorersSyncScheduler.syncScorers();
             case NOTIF_WINDOW_OPEN -> {
