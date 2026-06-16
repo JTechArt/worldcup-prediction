@@ -1,6 +1,7 @@
 package com.worldcup.prediction.service;
 
 import com.worldcup.prediction.domain.*;
+import com.worldcup.prediction.domain.enums.MatchStage;
 import com.worldcup.prediction.domain.enums.MatchStatus;
 import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
@@ -14,7 +15,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -36,6 +36,7 @@ class DailyExactPredictorServiceTest {
         match.setAwayTeam(away);
         match.setHomeScore(2);
         match.setAwayScore(1);
+        match.setStage(MatchStage.GROUP);
         match.setStatus(MatchStatus.COMPLETED);
         match.setKickoffTime(LocalDateTime.now().minusHours(2));
         match.setRoundLabel("Group Stage");
