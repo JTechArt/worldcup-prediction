@@ -100,9 +100,12 @@
             <div th:each="match : ${predictor.exactMatches}" class="hero-match">
               <div class="hero-match-teams">
                 <div class="hero-match-team">
-                  <img th:if="${match.homeTeamFlagCode != null}"
-                       th:src="'/images/flags/' + ${match.homeTeamFlagCode} + '.svg'"
-                       class="hero-match-flag" th:alt="${match.homeTeamName}"/>
+                  <div class="hero-flag-wrap">
+                    <img th:if="${match.homeTeamFlagCode != null}"
+                         th:src="'/images/flags/' + ${match.homeTeamFlagCode} + '.svg'"
+                         class="hero-match-flag" th:alt="${match.homeTeamName}"/>
+                    <span class="hero-match-tla" th:if="${match.homeTeamFifaCode != null}" th:text="${match.homeTeamFifaCode}"></span>
+                  </div>
                   <span class="hero-match-name" th:text="${match.homeTeamName}">Home Team</span>
                 </div>
                 <div class="hero-match-score">
@@ -112,9 +115,12 @@
                 </div>
                 <div class="hero-match-team hero-match-team-away">
                   <span class="hero-match-name" th:text="${match.awayTeamName}">Away Team</span>
-                  <img th:if="${match.awayTeamFlagCode != null}"
-                       th:src="'/images/flags/' + ${match.awayTeamFlagCode} + '.svg'"
-                       class="hero-match-flag" th:alt="${match.awayTeamName}"/>
+                  <div class="hero-flag-wrap">
+                    <img th:if="${match.awayTeamFlagCode != null}"
+                         th:src="'/images/flags/' + ${match.awayTeamFlagCode} + '.svg'"
+                         class="hero-match-flag" th:alt="${match.awayTeamName}"/>
+                    <span class="hero-match-tla" th:if="${match.awayTeamFifaCode != null}" th:text="${match.awayTeamFifaCode}"></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -385,6 +391,7 @@
           display: flex;
           align-items: center;
           gap: 8px;
+          min-width: 0;
         }
         .hero-match-team-away {
           justify-content: flex-end;
@@ -419,6 +426,29 @@
         .hero-match-sep {
           color: rgba(255,255,255,0.4);
           font-weight: 400;
+        }
+        .hero-match-tla {
+          display: none;
+          font-size: 10px;
+          font-weight: 700;
+          color: #006b2a;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .hero-flag-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 3px;
+        }
+
+        @media (max-width: 768px) {
+          .hero-match-name {
+            display: none;
+          }
+          .hero-match-tla {
+            display: block;
+          }
         }
       </style>
     </div>
