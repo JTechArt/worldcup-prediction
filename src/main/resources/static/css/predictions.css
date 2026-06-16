@@ -119,7 +119,18 @@
 .card-flag img { width:100%; height:100%; object-fit:cover; animation:flagBright 3s ease-in-out infinite; }
 .card-flag-b { animation-delay:-1.5s !important; }
 .card-flag-b img { animation-delay:-1.5s !important; }
-.card-team-name { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:3px; text-align:center; }
+.card-team-name {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:20px;
+  letter-spacing:2px;
+  text-align:center;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  max-width:100px;
+  line-height:1.15;
+}
 .card-vs { display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0; }
 .card-vs-text { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:4px; color:var(--muted); }
 .card-vs-date { font-size:10px; font-weight:700; color:var(--muted); text-align:center; }
@@ -230,7 +241,7 @@
 
   .card-teams { padding:20px 16px 16px; gap:8px; }
   .card-flag  { width:64px; height:64px; }
-  .card-team-name { font-size:18px; }
+  .card-team-name { font-size:14px; letter-spacing:1px; max-width:80px; }
   .card-score-row { gap:10px; }
   .card-score-btn { width:38px; height:50px; }
   .card-score-val { width:52px; height:50px; font-size:34px; }
