@@ -132,9 +132,9 @@
                 <img th:src="@{'/images/flags/' + ${match.homeTeamCode} + '.svg'}"
                      th:alt="${match.homeTeamName}" />
               </div>
-              <span class="pm-name" th:text="${match.homeTeamName}">France</span>
+              <span class="pm-name" th:text="${match.homeTeamName}" th:title="${match.homeTeamName}">France</span>
               <span class="pm-vs">vs</span>
-              <span class="pm-name" th:text="${match.awayTeamName}">Germany</span>
+              <span class="pm-name" th:text="${match.awayTeamName}" th:title="${match.awayTeamName}">Germany</span>
               <div class="pm-flag">
                 <img th:src="@{'/images/flags/' + ${match.awayTeamCode} + '.svg'}"
                      th:alt="${match.awayTeamName}" />

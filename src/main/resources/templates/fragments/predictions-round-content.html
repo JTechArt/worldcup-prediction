@@ -69,7 +69,7 @@
                          :onerror="'this.src=\\'/images/flags/' + match.homeTeamCode + '.png\\''">
                   </div>
                   <div>
-                    <div class="mr-name" x-text="match.homeTeamName"></div>
+                    <div class="mr-name" x-text="match.homeTeamName" :title="match.homeTeamName"></div>
                     <div class="mr-venue" x-text="match.venue"></div>
                   </div>
                 </div>
@@ -101,7 +101,7 @@
                 <!-- Away team -->
                 <div class="mr-team" style="justify-content:flex-end;text-align:right;">
                   <div>
-                    <div class="mr-name" x-text="match.awayTeamName"></div>
+                    <div class="mr-name" x-text="match.awayTeamName" :title="match.awayTeamName"></div>
                   </div>
                   <div class="mr-flag mr-flag-b">
                     <img :src="'/images/flags/' + match.awayTeamCode + '.svg'"
