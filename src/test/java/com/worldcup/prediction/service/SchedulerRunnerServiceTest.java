@@ -47,6 +47,16 @@ class SchedulerRunnerServiceTest {
     }
 
     @Test
+    void run_lineupSync_whenLineupSyncSchedulerNull_logsDisabled() {
+        // lineupSyncScheduler field is null (not injected — @ConditionalOnProperty disabled)
+        SchedulerLog stubLog = SchedulerLog.builder().id(1L).status(SchedulerJobStatus.IN_PROGRESS).startedAt(LocalDateTime.now()).build();
+        when(logService.start("LINEUP_SYNC")).thenReturn(stubLog);
+        String result = service.run(SchedulerJobType.LINEUP_SYNC);
+        verify(logService).complete(stubLog, SchedulerJobStatus.SKIPPED, 0, "Scheduler disabled (app.lineup-sync.enabled=false)");
+        assertThat(result).contains("SKIPPED");
+    }
+
+    @Test
     void run_standingSync_callsSyncStandings() {
         when(logService.findLatest("STANDING_SYNC")).thenReturn(Optional.empty());
         service.run(SchedulerJobType.STANDING_SYNC);
