@@ -310,20 +310,23 @@
   [x-cloak] { display: none !important; }
 
 
-  /* ── YOU-BAR: fixed mini-bar shown when your row scrolls out of view ── */
+  /* ── YOU-BAR: fixed bottom dock shown when your row scrolls out of view ── */
   #lb-you-bar {
     display: none;
     position: fixed;
+    bottom: 0;
     left: 0; right: 0;
-    height: 50px;
-    background: rgba(14,165,233,.92);
-    backdrop-filter: blur(6px);
+    height: auto;
+    min-height: 54px;
+    background: rgba(14,165,233,.94);
+    backdrop-filter: blur(8px);
     z-index: 50;
     align-items: center;
-    padding: 0 16px;
+    padding: 10px 16px max(12px, env(safe-area-inset-bottom));
     gap: 10px;
-    box-shadow: 0 4px 16px rgba(14,165,233,.35);
-    border-bottom: 2px solid rgba(14,165,233,.8);
+    box-shadow: 0 -4px 20px rgba(14,165,233,.4);
+    border-top: 2px solid rgba(14,165,233,.7);
+    border-radius: 16px 16px 0 0;
     animation: lbFUp .25s ease both;
   }
   #lb-you-bar.visible { display: flex; }
@@ -605,6 +608,10 @@
     <div class="lb-yb-name" th:text="${currentUserEntry.displayName}">Your Name</div>
     <div class="lb-yb-rank" th:text="'#' + ${currentUserEntry.rank}">–</div>
     <div class="lb-yb-pts" th:text="${currentUserEntry.totalPoints} + ' pts'">0 pts</div>
+    <button onclick="document.querySelector('.lb-row-data.you')?.scrollIntoView({behavior:'smooth',block:'center'})"
+            style="margin-left:auto;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:5px 10px;color:white;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
+      ↑ Find me
+    </button>
   </div>
 
   <!-- Empty state -->
@@ -783,12 +790,8 @@
 
       function refreshYouBar() {
         const outerRect = lbOuter.getBoundingClientRect();
-        const hdrH = stickyHdr ? stickyHdr.offsetHeight : 100;
-        // Bar sits just below the sticky table header
-        const barTop = Math.max(outerRect.top + hdrH, 64 + hdrH);
-        // Hide if table has scrolled out of view entirely
-        const tableInView = outerRect.bottom > barTop + 40;
-        youBar.style.top = barTop + 'px';
+        // Hide bar if the entire table has scrolled out of view
+        const tableInView = outerRect.bottom > 100;
         youBar.classList.toggle('visible', youRowHidden && tableInView);
       }
 
