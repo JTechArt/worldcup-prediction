@@ -5,6 +5,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable the PredictionWindowScheduler for auto-activating and auto-closing prediction windows.",
       "defaultValue": true
+    },
+    {
+      "name": "app.lineup-sync.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the LineupSyncScheduler. Requires a paid football-data.org plan that returns lineup and goal detail.",
+      "defaultValue": false
     }
   ]
 }

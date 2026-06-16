@@ -2,7 +2,7 @@ package com.worldcup.prediction.domain.enums;
 
 public enum SchedulerJobType {
     MATCH_RESULT    ("Match Results",       "Every 5 min",    true,  300_000L,     null,              "app.football.api.enabled"),
-    LINEUP_SYNC     ("Lineup Sync",         "Every 30 min",   true,  1_800_000L,   null,              "app.football.api.enabled"),
+    LINEUP_SYNC     ("Lineup Sync",         "Every 30 min",   true,  1_800_000L,   null,              "app.lineup-sync.enabled"),
     STANDING_SYNC   ("Standings",           "Every 6 hours",  false, 0L,           "0 0 */6 * * *",   "app.football.api.enabled"),
     SCORERS_SYNC    ("Top Scorers",         "Daily at 02:00", false, 0L,           "0 0 2 * * *",     "app.football.api.enabled"),
     NOTIF_WINDOW_OPEN("Window Open Notif",    "Every 5 min",    true,  300_000L,     null,              "app.notification.enabled"),

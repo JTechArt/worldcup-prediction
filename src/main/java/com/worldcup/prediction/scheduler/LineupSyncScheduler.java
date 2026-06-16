@@ -8,12 +8,14 @@ import com.worldcup.prediction.integration.football.SyncResult;
 import com.worldcup.prediction.service.SchedulerLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "app.lineup-sync.enabled", havingValue = "true")
 public class LineupSyncScheduler {
 
     private final LineupSyncService syncService;

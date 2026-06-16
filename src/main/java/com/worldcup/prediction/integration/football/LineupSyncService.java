@@ -47,8 +47,10 @@ public class LineupSyncService {
 
             boolean hasLineups = hasTeamLineup(detail.homeTeam()) || hasTeamLineup(detail.awayTeam());
             boolean hasGoals   = detail.goals() != null && !detail.goals().isEmpty();
-            if (!hasLineups && !hasGoals) {
-                log.warn("Match id={} externalId={} returned no lineups and no goals — skipping flag update", match.getId(), extId);
+            boolean hasScore   = detail.score() != null && detail.score().fullTime() != null
+                    && (detail.score().fullTime().home() != null || detail.score().fullTime().away() != null);
+            if (!hasLineups && !hasGoals && !hasScore) {
+                log.warn("Match id={} externalId={} returned no lineups, goals, or score — skipping flag update", match.getId(), extId);
                 continue;
             }
 
