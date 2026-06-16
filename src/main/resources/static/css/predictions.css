@@ -258,4 +258,17 @@
   .submit-btn { height:48px; font-size:14px; }
 
   .date-header { font-size:10px; }
+
+  /* Kill expensive animations on mobile to prevent CPU/thermal drain */
+  .mr-flag, .mr-flag img,
+  .card-flag, .card-flag img { animation: none !important; }
+  .score-colon, .pill-dot, .lock-dot { animation: none !important; opacity: 1; }
+  .submit-btn { animation: none !important; box-shadow: 0 6px 24px rgba(200,160,0,.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mr-flag, .mr-flag img,
+  .card-flag, .card-flag img { animation: none !important; }
+  .score-colon, .pill-dot, .lock-dot { animation: none !important; opacity: 1; }
+  .submit-btn { animation: none !important; box-shadow: 0 6px 24px rgba(200,160,0,.35); }
 }

@@ -265,7 +265,7 @@
       isFilled(m) { return m.predHome >= 0 && m.predAway >= 0; },
       isUrgent(m) {
         if (!m.lockTimeIso) return false;
-        const diff = new Date(m.lockTimeIso) - new Date();
+        const diff = new Date(m.lockTimeIso) - this.now;
         return diff < 3 * 3600 * 1000 && diff > 0;
       },
 
@@ -300,7 +300,7 @@
 
       countdown(iso) {
         if (!iso) return '--:--:--';
-        const diff = Math.max(0, new Date(iso) - new Date());
+        const diff = Math.max(0, new Date(iso) - this.now);
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
         const s = Math.floor((diff % 60000) / 1000);
@@ -320,7 +320,8 @@
         return new Date(iso).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',timeZone:APP_TZ});
       },
 
-      init() { setInterval(() => { this.matches = [...this.matches]; }, 1000); }
+      now: Date.now(),
+      init() { setInterval(() => { this.now = Date.now(); }, 1000); }
     };
   }
   </script>
