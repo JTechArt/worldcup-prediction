@@ -83,8 +83,6 @@
   .lb-row-data.you {
     --h-row: 78px;
     height: 78px;
-    position: sticky;
-    top: calc(64px + var(--h-phase) + var(--h-game));
     background: rgba(14,165,233,.12) !important;
     border-top: 2px solid rgba(14,165,233,.65) !important;
     border-bottom: 2px solid rgba(14,165,233,.65) !important;
@@ -93,7 +91,6 @@
       0 8px 28px rgba(14,165,233,.28),
       0 -8px 28px rgba(14,165,233,.18),
       0 2px 6px rgba(0,0,0,.08);
-    z-index: 20;
   }
   .lb-row-data.you:hover { background: rgba(14,165,233,.18) !important; }
   .lb-row-data:not(.you):hover { background: #edfff6 !important; }
@@ -199,9 +196,10 @@
   @keyframes lbFlagWave { 0%,100%{transform:perspective(80px) rotateY(0deg)} 25%{transform:perspective(80px) rotateY(-18deg)} 75%{transform:perspective(80px) rotateY(18deg)} }
   @keyframes lbFlagFilter { 0%,50%,100%{filter:brightness(1)} 25%,75%{filter:brightness(.82)} }
 
-  .lb-pn { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 108px; color: var(--text); display: flex; align-items: center; gap: 4px; }
+  .lb-pn { font-size: 12px; font-weight: 700; overflow: hidden; max-width: 108px; color: var(--text); display: flex; flex-direction: column; align-items: flex-start; gap: 1px; cursor: pointer; }
+  .lb-fn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: flex; align-items: center; gap: 4px; }
+  .lb-ln { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-size: 10px; font-weight: 600; color: var(--muted); }
   .lb-ytag { display: inline-block; background: var(--green); color: white; font-size: 7px; font-weight: 800; padding: 1px 3px; border-radius: 3px; }
-  .lb-pm { font-size: 10px; color: var(--muted); margin-top: 1px; }
 
   /* ── TOTAL CELL ── */
   .lb-total-cell { height: var(--h-row); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 8px; }
@@ -220,7 +218,6 @@
     .lb-flag-badge { width: 18px; height: 18px; bottom: -4px; right: -4px; }
     .lb-rank-delta { width: 10px; font-size: 8px; }
     .lb-pn  { display: none; }
-    .lb-pm  { display: none; }
     .lb-av-wrap { cursor: pointer; }
     .lb-tv { font-size: 13px; } .lb-tl { font-size: 7px; }
     .lb-hero-title { font-size: 32px; }
@@ -238,12 +235,11 @@
     position: fixed;
     z-index: 99;
     background: white;
-    border-radius: 20px;
     padding: 28px 24px 24px;
-    width: 320px;
     box-shadow: 0 24px 64px rgba(0,0,0,.25);
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
+    bottom: 0; left: 0; right: 0; width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
   }
   .uc-close {
     position: absolute; top: 14px; right: 16px;
@@ -262,6 +258,8 @@
   }
   .uc-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .uc-avatar-initials { font-size: 18px; font-weight: 900; color: white; }
+  .uc-flag-badge { position: absolute; bottom: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; overflow: hidden; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+  .uc-flag-badge img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .uc-name {
     font-size: 15px; font-weight: 800; color: #0d1a10;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;
@@ -273,17 +271,44 @@
   .uc-stat { flex: 1; text-align: center; padding: 10px 4px; border-right: 1px solid rgba(0,160,70,.1); }
   .uc-stat:last-child { border-right: none; }
   .uc-stat-v { font-size: 22px; font-weight: 900; color: #0d1a10; line-height: 1; }
+  .uc-stat-v.uc-stat-v-exact  {
+    font-size: 30px;
+    background: linear-gradient(135deg, #ffe066, #ffd600, #ffb300, #ffd600, #ffe066);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 6px rgba(255,214,0,.55));
+  }
+  .uc-stat-v.uc-stat-v-winner { color: #00a845; }
+  .uc-stat-v.uc-stat-v-draw   { color: #92400e; }
+  .uc-stat-v.uc-stat-v-lost   { color: #dc2626; }
   .uc-stat-l { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #667c70; margin-top: 3px; }
   [x-cloak] { display: none !important; }
 
-  @media (max-width: 639px) {
-    .uc-card {
-      top: auto; bottom: 0; left: 0; right: 0;
-      width: 100%; transform: none;
-      border-radius: 20px 20px 0 0;
-      padding-bottom: max(24px, env(safe-area-inset-bottom));
-    }
+
+  /* ── YOU-BAR: fixed mini-bar shown when your row scrolls out of view ── */
+  #lb-you-bar {
+    display: none;
+    position: fixed;
+    left: 0; right: 0;
+    height: 50px;
+    background: rgba(14,165,233,.92);
+    backdrop-filter: blur(6px);
+    z-index: 50;
+    align-items: center;
+    padding: 0 16px;
+    gap: 10px;
+    box-shadow: 0 4px 16px rgba(14,165,233,.35);
+    border-bottom: 2px solid rgba(14,165,233,.8);
+    animation: lbFUp .25s ease both;
   }
+  #lb-you-bar.visible { display: flex; }
+  .lb-yb-av { width: 32px; height: 32px; border-radius: 8px; overflow: hidden; background: linear-gradient(135deg,#00a845,#006b2a); display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,.5); flex-shrink: 0; }
+  .lb-yb-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .lb-yb-av-init { font-size: 11px; font-weight: 900; color: white; }
+  .lb-yb-name { font-size: 13px; font-weight: 800; color: white; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lb-yb-rank { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.85); white-space: nowrap; }
+  .lb-yb-pts { font-size: 15px; font-weight: 900; color: white; white-space: nowrap; }
 </style>
 
 <div class="w-full px-4 sm:px-6 lg:px-8 py-6">
@@ -440,8 +465,10 @@
                th:data-uc-exact="${entry.exactCount}"
                th:data-uc-winner="${entry.correctWinnerCount}"
                th:data-uc-draw="${entry.drawCount}"
+               th:data-uc-lost="${entry.wrongCount}"
                th:data-uc-avatar="${entry.avatarUrl != null ? entry.avatarUrl : ''}"
-               th:data-uc-initials="${entry.initials}">
+               th:data-uc-initials="${entry.initials}"
+               th:data-uc-flag="${entry.flagUrl}">
             <div class="lb-pc">
               <div th:class="'lb-rk ' + (${entry.rank == 1} ? 'lb-rk-1' : (${entry.rank == 2} ? 'lb-rk-2' : (${entry.rank == 3} ? 'lb-rk-3' : 'lb-rk-n')))"
                    th:text="${entry.rank}">1</div>
@@ -466,15 +493,13 @@
                 </div>
               </div>
 
-              <div>
-                <div class="lb-pn"
-                     style="cursor:pointer"
-                     onclick="lbShowUserCard(this)">
-                  <span th:text="${entry.displayName}">Player</span>
+              <div class="lb-pn" onclick="lbShowUserCard(this)">
+                <div class="lb-fn">
+                  <span th:text="${entry.firstName}">First</span>
                   <span class="lb-ytag" sec:authorize="isAuthenticated()"
                         th:if="${#authentication.principal.userId == entry.userId}">YOU</span>
                 </div>
-                <div class="lb-pm" th:text="${entry.exactCount} + ' exact · ' + ${entry.correctWinnerCount} + ' winner'">0 exact</div>
+                <span class="lb-ln" th:text="${entry.lastName}">Last</span>
               </div>
             </div>
           </div>
@@ -538,6 +563,24 @@
 
   </div><!-- /.lb-outer -->
 
+  <!-- YOU-BAR: fixed mini-bar shown when current user's row is off-screen -->
+  <div id="lb-you-bar"
+       sec:authorize="isAuthenticated()"
+       th:if="${currentUserEntry != null}">
+    <div class="lb-yb-av">
+      <img th:if="${currentUserEntry.avatarUrl != null}"
+           th:src="${currentUserEntry.avatarUrl}"
+           th:alt="${currentUserEntry.displayName}"
+           onerror="this.style.display='none'"/>
+      <span class="lb-yb-av-init"
+            th:if="${currentUserEntry.avatarUrl == null}"
+            th:text="${currentUserEntry.initials}">AB</span>
+    </div>
+    <div class="lb-yb-name" th:text="${currentUserEntry.displayName}">Your Name</div>
+    <div class="lb-yb-rank" th:text="'#' + ${currentUserEntry.rank}">–</div>
+    <div class="lb-yb-pts" th:text="${currentUserEntry.totalPoints} + ' pts'">0 pts</div>
+  </div>
+
   <!-- Empty state -->
   <div th:if="${#lists.isEmpty(entries)}"
        class="bg-white/10 backdrop-blur rounded-2xl border border-white/20 p-12 text-center">
@@ -547,26 +590,47 @@
   </div>
 
   <!-- ── USER CARD MODAL ── -->
-  <div x-data="{ open: false, entry: null }"
-       @show-user-card.window="entry = $event.detail; open = true">
+  <div x-data="{
+    open: false,
+    entry: null,
+    get cardStyle() {
+      if (!this.entry || window.innerWidth < 640) return '';
+      const cardW = 300, cardH = 220, gap = 10, pad = 8;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      let left = this.entry.anchorRight + gap;
+      if (left + cardW > vw - pad) left = this.entry.anchorLeft - cardW - gap;
+      if (left < pad) left = pad;
+      let top = this.entry.anchorTop;
+      if (top + cardH > vh - pad) top = vh - cardH - pad;
+      if (top < pad) top = pad;
+      return 'top:' + top + 'px;left:' + left + 'px;bottom:auto;right:auto;width:300px;border-radius:20px;padding-bottom:24px;';
+    }
+  }"
+       @show-user-card.window="entry = $event.detail; open = true"
+       @keydown.escape.window="open = false">
 
     <!-- Backdrop -->
     <div x-show="open" x-transition x-cloak class="uc-backdrop" @click="open = false"></div>
 
     <!-- Card -->
-    <div x-show="open" x-transition class="uc-card" @click.stop x-cloak>
+    <div x-show="open" x-transition class="uc-card" :style="cardStyle" @click.stop x-cloak>
       <button class="uc-close" @click="open = false">✕</button>
 
       <!-- Header: avatar + name + rank/pts -->
       <div class="uc-header" x-show="entry">
-        <div class="uc-avatar" x-data="{ imgError: false }" x-effect="imgError = false">
-          <img x-show="entry && entry.avatarUrl && !imgError"
-               :src="entry.avatarUrl"
-               :alt="entry.name"
-               @error="imgError = true">
-          <span class="uc-avatar-initials"
-                x-show="!entry || !entry.avatarUrl || imgError"
-                x-text="entry ? entry.initials : ''"></span>
+        <div style="position:relative;flex-shrink:0">
+          <div class="uc-avatar" x-data="{ imgError: false }" x-effect="imgError = false">
+            <img x-show="entry && entry.avatarUrl && !imgError"
+                 :src="entry.avatarUrl"
+                 :alt="entry.name"
+                 @error="imgError = true">
+            <span class="uc-avatar-initials"
+                  x-show="!entry || !entry.avatarUrl || imgError"
+                  x-text="entry ? entry.initials : ''"></span>
+          </div>
+          <div class="uc-flag-badge" x-show="entry && entry.flagUrl">
+            <img :src="entry && entry.flagUrl ? entry.flagUrl : ''" alt="">
+          </div>
         </div>
         <div>
           <div class="uc-name" x-text="entry.name"></div>
@@ -583,16 +647,20 @@
       <!-- Stats row -->
       <div class="uc-stats" x-show="entry">
         <div class="uc-stat">
-          <div class="uc-stat-v" x-text="entry.exact"></div>
+          <div class="uc-stat-v uc-stat-v-exact" x-text="entry.exact"></div>
           <div class="uc-stat-l">✦ Exact</div>
         </div>
         <div class="uc-stat">
-          <div class="uc-stat-v" x-text="entry.winner"></div>
+          <div class="uc-stat-v uc-stat-v-winner" x-text="entry.winner"></div>
           <div class="uc-stat-l">Win</div>
         </div>
         <div class="uc-stat">
-          <div class="uc-stat-v" x-text="entry.draw"></div>
+          <div class="uc-stat-v uc-stat-v-draw" x-text="entry.draw"></div>
           <div class="uc-stat-l">Draw</div>
+        </div>
+        <div class="uc-stat">
+          <div class="uc-stat-v uc-stat-v-lost" x-text="entry.lost"></div>
+          <div class="uc-stat-l">Lost</div>
         </div>
       </div>
     </div>
@@ -604,10 +672,14 @@
 <script th:inline="javascript">
   function lbShowUserCard(el) {
     var d = el.closest('.lb-row-data').dataset;
+    var av = el.closest('.lb-av-wrap') || el.closest('.lb-row-data').querySelector('.lb-av-wrap') || el;
+    var rect = av.getBoundingClientRect();
     window.dispatchEvent(new CustomEvent('show-user-card', { detail: {
       name: d.ucName, rank: parseInt(d.ucRank), points: parseInt(d.ucPoints),
       exact: parseInt(d.ucExact), winner: parseInt(d.ucWinner), draw: parseInt(d.ucDraw),
-      avatarUrl: d.ucAvatar || null, initials: d.ucInitials
+      lost: parseInt(d.ucLost || '0'),
+      avatarUrl: d.ucAvatar || null, initials: d.ucInitials, flagUrl: d.ucFlag || null,
+      anchorRight: rect.right, anchorLeft: rect.left, anchorTop: rect.top
     }}));
   }
 
@@ -647,6 +719,34 @@
     btns.forEach(b => {
       b.classList.toggle('active', b.dataset.phase === currentId);
     });
+
+    // Show you-bar anchored to the table top when your row scrolls out of view
+    const youBar = document.getElementById('lb-you-bar');
+    const youRow = document.querySelector('.lb-left .lb-row-data.you');
+    const lbOuter = document.querySelector('.lb-outer');
+    const stickyHdr = document.querySelector('.lb-sticky-hdr');
+    if (youBar && youRow && lbOuter) {
+      let youRowHidden = false;
+
+      const rowObs = new IntersectionObserver(entries => {
+        youRowHidden = !entries[0].isIntersecting;
+        refreshYouBar();
+      }, { threshold: 0.1 });
+      rowObs.observe(youRow);
+
+      function refreshYouBar() {
+        const outerRect = lbOuter.getBoundingClientRect();
+        const hdrH = stickyHdr ? stickyHdr.offsetHeight : 100;
+        // Bar sits just below the sticky table header
+        const barTop = Math.max(outerRect.top + hdrH, 64 + hdrH);
+        // Hide if table has scrolled out of view entirely
+        const tableInView = outerRect.bottom > barTop + 40;
+        youBar.style.top = barTop + 'px';
+        youBar.classList.toggle('visible', youRowHidden && tableInView);
+      }
+
+      window.addEventListener('scroll', refreshYouBar, { passive: true });
+    }
   });
 </script>
 

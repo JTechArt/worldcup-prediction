@@ -54,7 +54,8 @@ public class LeaderboardService {
                 0, user.getId(), user.getFullName(), user.getAvatarUrl(),
                 predictedWinnerFlagCode, membership.getTotalPoints(),
                 membership.getExactScoreCount(), membership.getCorrectWinnerCount(),
-                membership.getCorrectDrawCount(), tournamentWinnerCorrect, 0);
+                membership.getCorrectDrawCount(), membership.getWrongCount(),
+                tournamentWinnerCorrect, 0);
     }
 
     private Comparator<LeaderboardEntryDto> leaderboardComparator() {
@@ -72,8 +73,8 @@ public class LeaderboardService {
             ranked.add(new LeaderboardEntryDto(
                     i + 1, e.getUserId(), e.getDisplayName(), e.getAvatarUrl(),
                     e.getPredictedWinnerFlagCode(), e.getTotalPoints(), e.getExactCount(),
-                    e.getCorrectWinnerCount(), e.getDrawCount(), e.isTournamentWinnerCorrect(),
-                    e.getRankChange()));
+                    e.getCorrectWinnerCount(), e.getDrawCount(), e.getWrongCount(),
+                    e.isTournamentWinnerCorrect(), e.getRankChange()));
         }
         return ranked;
     }

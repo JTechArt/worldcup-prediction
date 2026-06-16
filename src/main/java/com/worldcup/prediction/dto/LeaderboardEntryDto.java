@@ -21,6 +21,7 @@ public class LeaderboardEntryDto {
     private final int exactCount;
     private final int correctWinnerCount;
     private final int drawCount;
+    private final int wrongCount;
 
     /** True if the user's tournament winner prediction was scored (+10 awarded). */
     private final boolean tournamentWinnerCorrect;
@@ -41,6 +42,7 @@ public class LeaderboardEntryDto {
             int exactCount,
             int correctWinnerCount,
             int drawCount,
+            int wrongCount,
             boolean tournamentWinnerCorrect,
             int rankChange) {
         this.rank = rank;
@@ -52,6 +54,7 @@ public class LeaderboardEntryDto {
         this.exactCount = exactCount;
         this.correctWinnerCount = correctWinnerCount;
         this.drawCount = drawCount;
+        this.wrongCount = wrongCount;
         this.tournamentWinnerCorrect = tournamentWinnerCorrect;
         this.rankChange = rankChange;
     }
@@ -65,8 +68,21 @@ public class LeaderboardEntryDto {
     public int getExactCount() { return exactCount; }
     public int getCorrectWinnerCount() { return correctWinnerCount; }
     public int getDrawCount() { return drawCount; }
+    public int getWrongCount() { return wrongCount; }
     public boolean isTournamentWinnerCorrect() { return tournamentWinnerCorrect; }
     public int getRankChange() { return rankChange; }
+
+    public String getFirstName() {
+        if (displayName == null || displayName.isBlank()) return displayName;
+        return displayName.trim().split("\\s+")[0];
+    }
+
+    public String getLastName() {
+        if (displayName == null || displayName.isBlank()) return "";
+        String[] parts = displayName.trim().split("\\s+");
+        if (parts.length == 1) return "";
+        return String.join(" ", java.util.Arrays.copyOfRange(parts, 1, parts.length));
+    }
 
     /** Initials for avatar fallback (max 2 chars). */
     public String getInitials() {

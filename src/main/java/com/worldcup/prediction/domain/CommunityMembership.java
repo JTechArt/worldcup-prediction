@@ -58,6 +58,10 @@ public class CommunityMembership {
     @Builder.Default
     private int correctDrawCount = 0;
 
+    @Column(name = "wrong_count", nullable = false)
+    @Builder.Default
+    private int wrongCount = 0;
+
     @CreationTimestamp
     @Column(name = "joined_at", nullable = false, updatable = false)
     private LocalDateTime joinedAt;

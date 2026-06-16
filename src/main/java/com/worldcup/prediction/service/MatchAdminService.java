@@ -126,6 +126,8 @@ public class MatchAdminService {
                     .filter(p -> p.getScoreResult() == PredictionScore.CORRECT_WINNER).count());
             m.setCorrectDrawCount((int) userPreds.stream()
                     .filter(p -> p.getScoreResult() == PredictionScore.CORRECT_DRAW).count());
+            m.setWrongCount((int) userPreds.stream()
+                    .filter(p -> p.getScoreResult() == PredictionScore.WRONG).count());
             membershipRepository.save(m);
         });
     }
