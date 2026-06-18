@@ -60,6 +60,17 @@
 
     .mlb-see-all { display:block;text-align:center;margin-top:16px;padding:12px;border-radius:12px;border:1px solid rgba(0,200,83,0.18);background:rgba(0,200,83,0.05);color:#00c853;font-size:13px;font-weight:700;text-decoration:none;transition:all 0.2s; }
     .mlb-see-all:hover { background:rgba(0,200,83,0.1);border-color:rgba(0,200,83,0.35); }
+
+    @media (max-width:640px) {
+      .mlb-av-ring { animation: none !important; }
+      .mlb-flag-badge, .mlb-flag-badge img { animation: none !important; }
+      .mlb-delta.up, .mlb-delta.dn { animation: none !important; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .mlb-av-ring { animation: none !important; }
+      .mlb-flag-badge, .mlb-flag-badge img { animation: none !important; }
+      .mlb-delta.up, .mlb-delta.dn { animation: none !important; }
+    }
   </style>
 
   <div class="mlb-grid">

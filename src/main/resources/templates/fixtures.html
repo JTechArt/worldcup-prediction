@@ -35,6 +35,28 @@
 
   </div>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var d = new Date();
+      var today = d.getFullYear() + '-' +
+                  String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                  String(d.getDate()).padStart(2, '0');
+      var el = document.querySelector('[data-fixture-date="' + today + '"]');
+      if (!el) {
+        var all = document.querySelectorAll('[data-fixture-date]');
+        for (var i = 0; i < all.length; i++) {
+          if (all[i].getAttribute('data-fixture-date') >= today) { el = all[i]; break; }
+        }
+      }
+      if (el) {
+        setTimeout(function() {
+          var y = el.getBoundingClientRect().top + window.scrollY - 100;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }, 300);
+      }
+    });
+  </script>
+
 </th:block>
 </body>
 </html>

@@ -16,10 +16,10 @@
     <div class="flex items-center justify-center gap-6 mt-3">
       <!-- Home team -->
       <a th:if="${match.homeTeam != null}" th:href="@{'/teams/' + ${match.homeTeam.id}}"
-         class="flex flex-col items-center gap-2 w-36 hover:opacity-80 transition-opacity">
+         class="flex flex-col items-center gap-2 w-24 sm:w-36 hover:opacity-80 transition-opacity">
         <img th:src="@{'/images/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
-             class="w-16 h-16 rounded-full shadow" th:alt="${match.homeTeam.name}"/>
-        <span class="font-bold text-gray-800 text-sm text-center" th:text="${match.homeTeam.name}">Home</span>
+             class="w-12 h-12 sm:w-16 sm:h-16 rounded-full shadow" th:alt="${match.homeTeam.name}"/>
+        <span class="font-bold text-gray-800 text-[10px] sm:text-sm text-center leading-tight" th:text="${match.homeTeam.name}">Home</span>
       </a>
       <div th:unless="${match.homeTeam != null}" class="flex flex-col items-center gap-2 w-36">
         <div class="w-16 h-16 rounded-full shadow bg-gray-100"></div>
@@ -40,10 +40,10 @@
 
       <!-- Away team -->
       <a th:if="${match.awayTeam != null}" th:href="@{'/teams/' + ${match.awayTeam.id}}"
-         class="flex flex-col items-center gap-2 w-36 hover:opacity-80 transition-opacity">
+         class="flex flex-col items-center gap-2 w-24 sm:w-36 hover:opacity-80 transition-opacity">
         <img th:src="@{'/images/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
-             class="w-16 h-16 rounded-full shadow" th:alt="${match.awayTeam.name}"/>
-        <span class="font-bold text-gray-800 text-sm text-center" th:text="${match.awayTeam.name}">Away</span>
+             class="w-12 h-12 sm:w-16 sm:h-16 rounded-full shadow" th:alt="${match.awayTeam.name}"/>
+        <span class="font-bold text-gray-800 text-[10px] sm:text-sm text-center leading-tight" th:text="${match.awayTeam.name}">Away</span>
       </a>
       <div th:unless="${match.awayTeam != null}" class="flex flex-col items-center gap-2 w-36">
         <div class="w-16 h-16 rounded-full shadow bg-gray-100"></div>

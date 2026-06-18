@@ -246,6 +246,21 @@
     .lb-tv { font-size: 13px; } .lb-tl { font-size: 7px; }
     .lb-hero-title { font-size: 32px; }
     .lb-kpi { padding: 8px 10px; } .lb-kpi-v { font-size: 18px; }
+
+    /* Kill expensive animations on mobile to prevent CPU/thermal drain */
+    .lb-flag-badge, .lb-flag-badge img { animation: none !important; }
+    .lb-rank-delta.up, .lb-rank-delta.dn { animation: none !important; }
+    .lb-phase-hd-cell::before { animation: none !important; }
+    .lb-pd { animation: none !important; opacity: 1; }
+    .cell-exact::after { animation: none !important; opacity: .5; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lb-flag-badge, .lb-flag-badge img { animation: none !important; }
+    .lb-rank-delta.up, .lb-rank-delta.dn { animation: none !important; }
+    .lb-phase-hd-cell::before { animation: none !important; }
+    .lb-pd { animation: none !important; opacity: 1; }
+    .cell-exact::after { animation: none !important; opacity: .5; }
   }
 
   /* ── USER CARD MODAL ── */
@@ -652,7 +667,7 @@
       <!-- Header: avatar + name + rank/pts -->
       <div class="uc-header" x-show="entry">
         <div style="position:relative;flex-shrink:0">
-          <div class="uc-avatar" x-data="{ imgError: false }" x-effect="imgError = false">
+          <div class="uc-avatar" x-data="{ imgError: false, _effectCount: 0 }" x-effect="imgError = false; _effectCount++; if(_effectCount > 2) console.error('[PERF] x-effect loop detected! count=' + _effectCount)">
             <img x-show="entry && entry.avatarUrl && !imgError"
                  :src="entry.avatarUrl"
                  :alt="entry.name"

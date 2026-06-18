@@ -39,6 +39,11 @@
 
     .flag-sm { width:26px; height:26px; border-radius:50%; object-fit:cover; border:1.5px solid #e2f5ea; flex-shrink:0; }
     .team-name { flex:1; font-size:0.83rem; font-weight:600; color:#1a3a2a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    @media (max-width:640px) {
+      .team-name { font-size:0.65rem; }
+      .match-card { min-width:140px; padding:8px 10px; }
+      .flag-sm { width:20px; height:20px; }
+    }
     .team-name.tbd { color:#94a3b8; font-style:italic; font-weight:400; }
 
     .score { font-family:'Bebas Neue',sans-serif; font-size:1.15rem; color:#006b2a; min-width:18px; text-align:right; }
@@ -53,6 +58,15 @@
     .round-col.final .match-card { border-color:#FFD600; box-shadow:0 4px 20px rgba(255,214,0,0.25); }
     .round-col.final .round-header { background:linear-gradient(135deg,#FFD600,#FF8F00); color:#1a1a1a; }
     .round-col.third .round-header { background:linear-gradient(135deg,#90a4ae,#546e7a); }
+
+    @media (max-width:640px) {
+      .tbd-dot { animation: none !important; opacity: .7; }
+      .round-header::after { animation: none !important; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .tbd-dot { animation: none !important; opacity: .7; }
+      .round-header::after { animation: none !important; }
+    }
   </style>
 
   <div class="max-w-full px-6 py-8">

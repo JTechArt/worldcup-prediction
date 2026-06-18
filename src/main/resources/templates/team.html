@@ -90,7 +90,7 @@
           <img th:if="${opponent != null}"
                th:src="@{'/images/flags/' + ${opponent.flagCode} + '.svg'}"
                class="flag-circle-sm" />
-          <span class="font-medium truncate"
+          <span class="font-medium truncate text-xs sm:text-sm"
                 th:text="${opponent != null ? opponent.name : 'TBD'}">Opponent</span>
           <span class="text-xs text-gray-400"
                 th:text="${m.homeTeam != null and m.homeTeam.id == team.id ? '(H)' : '(A)'}"></span>
@@ -120,7 +120,7 @@
           <img th:if="${opponent != null}"
                th:src="@{'/images/flags/' + ${opponent.flagCode} + '.svg'}"
                class="flag-circle-sm" />
-          <span class="font-medium truncate"
+          <span class="font-medium truncate text-xs sm:text-sm"
                 th:text="${opponent != null ? opponent.name : (m.homeTeamPlaceholder != null ? m.homeTeamPlaceholder : m.awayTeamPlaceholder)}">Opponent</span>
           <span class="text-xs text-gray-400"
                 th:text="${m.homeTeam != null and m.homeTeam.id == team.id ? '(H)' : '(A)'}"></span>

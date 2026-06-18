@@ -25,7 +25,8 @@
     <div th:each="dateEntry : ${phaseEntry.value}" class="mb-6">
 
       <div class="text-xs font-bold text-white uppercase tracking-widest mb-3 pl-1"
-           th:text="${#temporals.format(dateEntry.key, 'EEEE, d MMMM yyyy')}">
+           th:text="${#temporals.format(dateEntry.key, 'EEEE, d MMMM yyyy')}"
+           th:attr="data-fixture-date=${#temporals.format(dateEntry.key, 'yyyy-MM-dd')}">
         Monday, 15 June 2026
       </div>
 
@@ -45,13 +46,21 @@
 
             <!-- Home team -->
             <a th:if="${fixture.homeTeamId != null}" th:href="@{'/teams/' + ${fixture.homeTeamId}}"
-               class="flex items-center gap-1.5 sm:gap-2 flex-1 justify-end min-w-0 hover:text-green-dark transition-colors"
-               onclick="event.stopPropagation();">
-              <span class="text-xs sm:text-sm font-semibold text-right truncate" th:text="${fixture.homeTeamName}">Brazil</span>
+               class="flex items-center gap-1.5 sm:gap-2 flex-1 justify-end min-w-0 hover:text-green-dark transition-colors sm:flex-row"
+               onclick="event.stopPropagation();"
+               style="flex-direction:row;">
+              <span class="hidden sm:inline text-sm font-semibold text-right truncate" th:text="${fixture.homeTeamName}">Brazil</span>
+              <span class="sm:hidden flex flex-col items-center gap-0.5">
+                <img th:if="${fixture.homeTeamCode != null}"
+                     th:src="@{'/images/flags/' + ${fixture.homeTeamCode} + '.svg'}"
+                     th:alt="${fixture.homeTeamName}"
+                     class="flag-circle w-6 h-6 flex-shrink-0" />
+                <span class="text-[10px] font-semibold text-gray-700 text-center leading-tight max-w-[60px] truncate" th:text="${fixture.homeTeamName}">Brazil</span>
+              </span>
               <img th:if="${fixture.homeTeamCode != null}"
                    th:src="@{'/images/flags/' + ${fixture.homeTeamCode} + '.svg'}"
                    th:alt="${fixture.homeTeamName}"
-                   class="flag-circle w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
+                   class="hidden sm:inline flag-circle w-7 h-7 flex-shrink-0" />
             </a>
             <div th:unless="${fixture.homeTeamId != null}" class="flex items-center gap-1.5 sm:gap-2 flex-1 justify-end min-w-0">
               <span class="text-xs sm:text-sm font-semibold text-gray-800 text-right truncate" th:text="${fixture.homeTeamName}">TBD</span>
@@ -77,8 +86,15 @@
               <img th:if="${fixture.awayTeamCode != null}"
                    th:src="@{'/images/flags/' + ${fixture.awayTeamCode} + '.svg'}"
                    th:alt="${fixture.awayTeamName}"
-                   class="flag-circle w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
-              <span class="text-xs sm:text-sm font-semibold truncate" th:text="${fixture.awayTeamName}">Germany</span>
+                   class="hidden sm:inline flag-circle w-7 h-7 flex-shrink-0" />
+              <span class="hidden sm:inline text-sm font-semibold truncate" th:text="${fixture.awayTeamName}">Germany</span>
+              <span class="sm:hidden flex flex-col items-center gap-0.5">
+                <img th:if="${fixture.awayTeamCode != null}"
+                     th:src="@{'/images/flags/' + ${fixture.awayTeamCode} + '.svg'}"
+                     th:alt="${fixture.awayTeamName}"
+                     class="flag-circle w-6 h-6 flex-shrink-0" />
+                <span class="text-[10px] font-semibold text-gray-700 text-center leading-tight max-w-[60px] truncate" th:text="${fixture.awayTeamName}">Germany</span>
+              </span>
             </a>
             <div th:unless="${fixture.awayTeamId != null}" class="flex items-center gap-1.5 sm:gap-2 flex-1 justify-start min-w-0">
               <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-400 flex-shrink-0">?</span>

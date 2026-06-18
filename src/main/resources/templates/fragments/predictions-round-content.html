@@ -66,7 +66,7 @@
                   <div class="mr-flag">
                     <img :src="'/images/flags/' + match.homeTeamCode + '.svg'"
                          :alt="match.homeTeamName"
-                         :onerror="'this.src=\\'/images/flags/' + match.homeTeamCode + '.png\\''">
+                         @error.once="$el.onerror=null;$el.src='/images/flags/'+match.homeTeamCode+'.png'">
                   </div>
                   <div>
                     <div class="mr-name" x-text="match.homeTeamName" :title="match.homeTeamName"></div>
@@ -106,7 +106,7 @@
                   <div class="mr-flag mr-flag-b">
                     <img :src="'/images/flags/' + match.awayTeamCode + '.svg'"
                          :alt="match.awayTeamName"
-                         :onerror="'this.src=\\'/images/flags/' + match.awayTeamCode + '.png\\''">
+                         @error.once="$el.onerror=null;$el.src='/images/flags/'+match.awayTeamCode+'.png'">
                   </div>
                 </div>
 
@@ -321,7 +321,31 @@
       },
 
       now: Date.now(),
-      init() { setInterval(() => { this.now = Date.now(); }, 1000); }
+      _timerSlow: null,
+      _timerFast: null,
+      init() {
+        var self = this;
+        // Fast timer: update countdown text via direct DOM (no Alpine re-render)
+        this._timerFast = setInterval(function() {
+          var el = self.$el ? self.$el.querySelector('.lock-time') : null;
+          if (el) {
+            var m = self.matches[self.cardIdx];
+            if (m && m.lockTimeIso) {
+              var diff = Math.max(0, new Date(m.lockTimeIso) - Date.now());
+              var h = Math.floor(diff / 3600000);
+              var mn = Math.floor((diff % 3600000) / 60000);
+              var s = Math.floor((diff % 60000) / 1000);
+              el.textContent = String(h).padStart(2,'0') + ':' + String(mn).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+            }
+          }
+        }, 1000);
+        // Slow timer: update reactive now every 60s for isUrgent threshold
+        this._timerSlow = setInterval(function() { self.now = Date.now(); }, 60000);
+      },
+      destroy() {
+        if (this._timerFast) { clearInterval(this._timerFast); this._timerFast = null; }
+        if (this._timerSlow) { clearInterval(this._timerSlow); this._timerSlow = null; }
+      }
     };
   }
   </script>

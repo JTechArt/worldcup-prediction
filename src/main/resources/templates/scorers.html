@@ -35,7 +35,7 @@
               <img th:if="${p.team != null}"
                    th:src="@{'/images/flags/' + ${p.team.flagCode} + '.svg'}"
                    class="w-5 h-5 rounded-full flex-shrink-0" th:alt="${p.team.name}"/>
-              <span th:text="${p.team?.name}">Country</span>
+              <span class="text-[10px] sm:text-sm" th:text="${p.team?.name}">Country</span>
             </div>
           </td>
           <td class="px-4 py-3 text-right font-bold text-green-700" th:text="${p.tournamentGoals}">5</td>

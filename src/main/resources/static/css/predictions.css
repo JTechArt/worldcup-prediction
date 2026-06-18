@@ -227,7 +227,7 @@
 @media (max-width:640px) {
   .match-row { flex-wrap:wrap; padding:12px 14px; gap:10px; }
   .mr-team { flex:1 1 40%; min-width:0; }
-  .mr-name { font-size:12px; }
+  .mr-name { font-size:10px; max-width:70px; }
   .mr-flag { width:26px; height:26px; }
   .mr-venue { font-size:9px; }
   .mr-stepper { width:100%; justify-content:center; gap:6px; order:10; }
@@ -236,12 +236,14 @@
   .score-btn { width:32px; height:42px; font-size:16px; }
   .score-val { width:42px; height:42px; font-size:26px; }
   .score-colon { font-size:22px; }
-  .mr-status { position:absolute; top:12px; right:14px; }
+  .mr-status { width:100%; order:11; display:flex; justify-content:center; margin-top:-2px; }
   .match-row { position:relative; }
+  .status-pill { font-size:8px; padding:2px 6px; }
+  .pill-dot { width:4px; height:4px; }
 
   .card-teams { padding:20px 16px 16px; gap:8px; }
   .card-flag  { width:64px; height:64px; }
-  .card-team-name { font-size:14px; letter-spacing:1px; max-width:80px; }
+  .card-team-name { font-size:12px; letter-spacing:1px; max-width:80px; line-height:1.15; }
   .card-score-row { gap:10px; }
   .card-score-btn { width:38px; height:50px; }
   .card-score-val { width:52px; height:50px; font-size:34px; }
@@ -261,7 +263,7 @@
   .past-match-row { flex-wrap:wrap; padding:10px 14px; gap:6px; }
   .pm-teams { flex:1 1 100%; }
   .pm-scores { flex:1; }
-  .pm-name { font-size:11px; }
+  .pm-name { font-size:10px; max-width:65px; }
   .pm-actual { font-size:16px; }
   .pm-predicted { font-size:16px; }
 

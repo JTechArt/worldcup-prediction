@@ -13,6 +13,26 @@
         rel="stylesheet"/>
   <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Performance diagnostic: remove after debugging -->
+  <script>
+  (function() {
+    if (typeof window.__perfDiag !== 'undefined') return;
+    window.__perfDiag = true;
+    var mutCount = 0;
+    var obs = new MutationObserver(function(m) { mutCount += m.length; });
+    obs.observe(document.documentElement, { childList:true, subtree:true, attributes:true, characterData:true });
+    setInterval(function() {
+      if (mutCount > 50) console.warn('[PERF] DOM mutations/sec: ' + mutCount + ' (HIGH!)');
+      else if (mutCount > 10) console.log('[PERF] DOM mutations/sec: ' + mutCount);
+      mutCount = 0;
+    }, 1000);
+    var fc = 0, lt = performance.now();
+    function fl(now) { fc++; if (now - lt >= 2000) { var fps = Math.round(fc*1000/(now-lt)); if(fps<30) console.error('[PERF] FPS: '+fps+' (CRITICAL!)'); else if(fps<50) console.warn('[PERF] FPS: '+fps+' (low)'); fc=0; lt=now; } requestAnimationFrame(fl); }
+    requestAnimationFrame(fl);
+  })();
+  </script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -30,7 +50,7 @@
 
     /* BG */
     .bg-wrap { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-    .bg-ph   { position: absolute; inset: 0; background: url('/images/leaderboard-bg.webp') center/cover; filter: brightness(1.05) saturate(1.1); animation: bgK 20s ease-in-out infinite alternate; }
+    .bg-ph   { position: absolute; inset: 0; background: url('/images/leaderboard-bg.webp') center/cover; filter: brightness(1.05) saturate(1.1); animation: bgK 20s ease-in-out infinite alternate; will-change: transform; transform: translateZ(0); }
     @keyframes bgK { from { transform: scale(1); } to { transform: scale(1.06) translateX(-15px); } }
     .bg-ov   { position: absolute; inset: 0; background: linear-gradient(rgba(240,253,245,.87), rgba(240,253,245,.83)); }
     .bg-st   { position: absolute; inset: 0; background-image: repeating-linear-gradient(180deg, rgba(0,180,60,.025) 0, rgba(0,180,60,.025) 60px, transparent 60px, transparent 120px); }
@@ -249,6 +269,25 @@
       .kpi-v { font-size: 18px; }
       .controls { flex-direction: column; align-items: flex-start; }
       .hero-sub { font-size: 13px; }
+
+      /* Kill expensive animations on mobile to prevent CPU/thermal drain */
+      .bg-ph { animation: none !important; }
+      .av-ring { animation: none !important; }
+      .flag-badge, .flag-badge img { animation: none !important; }
+      .rank-delta.up, .rank-delta.dn { animation: none !important; }
+      .phase-hd-cell::before { animation: none !important; }
+      .logo-ball { animation: none !important; }
+      .predict-btn { animation: none !important; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .bg-ph { animation: none !important; }
+      .av-ring { animation: none !important; }
+      .flag-badge, .flag-badge img { animation: none !important; }
+      .rank-delta.up, .rank-delta.dn { animation: none !important; }
+      .phase-hd-cell::before { animation: none !important; }
+      .logo-ball { animation: none !important; }
+      .predict-btn { animation: none !important; }
     }
 
     /* DELTA */

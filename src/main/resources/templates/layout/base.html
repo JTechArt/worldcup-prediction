@@ -34,6 +34,7 @@
     };
   </script>
 
+  <script src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js" defer></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
 
@@ -45,6 +46,109 @@
       var h = document.querySelector('meta[name="_csrf_header"]');
       if (t && h) evt.detail.headers[h.content] = t.content;
     });
+  </script>
+
+  <!-- Performance diagnostic: remove after debugging -->
+  <script>
+  (function() {
+    if (typeof window.__perfDiag !== 'undefined') return;
+    window.__perfDiag = true;
+
+    var activeIntervals = {};
+    var origSetInterval = window.setInterval;
+    var origClearInterval = window.clearInterval;
+
+    window.setInterval = function(fn, ms) {
+      var id = origSetInterval.apply(window, arguments);
+      var src = (new Error()).stack.split('\n').slice(1, 3).join(' | ').trim();
+      activeIntervals[id] = { ms: ms, src: src, created: Date.now() };
+      console.warn('[PERF] setInterval created #' + id + ' (' + ms + 'ms) total active: ' + Object.keys(activeIntervals).length, src);
+      return id;
+    };
+    window.clearInterval = function(id) {
+      if (activeIntervals[id]) {
+        console.log('[PERF] clearInterval #' + id + ' cleared');
+        delete activeIntervals[id];
+      }
+      return origClearInterval.apply(window, arguments);
+    };
+
+    var mutByType = { childList: 0, attributes: 0, characterData: 0 };
+    var mutTargets = {};
+    var mutAttrs = {};
+    var mutTotal = 0;
+    var mutObserver = new MutationObserver(function(mutations) {
+      mutTotal += mutations.length;
+      for (var i = 0; i < mutations.length; i++) {
+        var m = mutations[i];
+        mutByType[m.type] = (mutByType[m.type] || 0) + 1;
+        var tag = m.target.tagName || m.target.nodeName || '?';
+        var id = m.target.id ? '#' + m.target.id : '';
+        var cls = m.target.className && typeof m.target.className === 'string'
+                  ? '.' + m.target.className.split(' ').slice(0, 2).join('.') : '';
+        var key = tag + id + cls;
+        mutTargets[key] = (mutTargets[key] || 0) + 1;
+        if (m.type === 'attributes' && m.attributeName) {
+          mutAttrs[m.attributeName] = (mutAttrs[m.attributeName] || 0) + 1;
+        }
+      }
+    });
+    mutObserver.observe(document.documentElement, {
+      childList: true, subtree: true, attributes: true, characterData: true
+    });
+
+    origSetInterval(function() {
+      if (mutTotal > 20) {
+        console.warn('[PERF] DOM mutations/sec: ' + mutTotal +
+          ' (childList=' + mutByType.childList +
+          ' attrs=' + mutByType.attributes +
+          ' charData=' + mutByType.characterData + ')');
+        var sorted = Object.entries(mutTargets).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+        if (sorted.length) console.warn('[PERF] Top mutated elements:', sorted.map(function(e){return e[0]+'('+e[1]+'x)';}).join(', '));
+        var sortedA = Object.entries(mutAttrs).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+        if (sortedA.length) console.warn('[PERF] Top mutated attrs:', sortedA.map(function(e){return e[0]+'('+e[1]+'x)';}).join(', '));
+      } else if (mutTotal > 5) {
+        console.log('[PERF] DOM mutations/sec: ' + mutTotal);
+      }
+      mutByType = { childList: 0, attributes: 0, characterData: 0 };
+      mutTargets = {};
+      mutAttrs = {};
+      mutTotal = 0;
+    }, 1000);
+
+    var frameCount = 0;
+    var lastFpsTime = performance.now();
+    function fpsLoop(now) {
+      frameCount++;
+      if (now - lastFpsTime >= 2000) {
+        var fps = Math.round(frameCount * 1000 / (now - lastFpsTime));
+        if (fps < 30) {
+          console.error('[PERF] FPS: ' + fps + ' (CRITICAL DROP!)');
+        } else if (fps < 50) {
+          console.warn('[PERF] FPS: ' + fps + ' (low)');
+        }
+        frameCount = 0;
+        lastFpsTime = now;
+      }
+      requestAnimationFrame(fpsLoop);
+    }
+    requestAnimationFrame(fpsLoop);
+
+    origSetInterval(function() {
+      var keys = Object.keys(activeIntervals);
+      if (keys.length > 1) {
+        console.warn('[PERF] Active setInterval count: ' + keys.length);
+        keys.forEach(function(id) {
+          var info = activeIntervals[id];
+          var age = Math.round((Date.now() - info.created) / 1000);
+          console.warn('  #' + id + ' every ' + info.ms + 'ms, age ' + age + 's');
+        });
+      }
+    }, 5000);
+
+    document.addEventListener('alpine:init', function() { console.log('[PERF] Alpine:init'); });
+    document.addEventListener('alpine:initialized', function() { console.log('[PERF] Alpine:initialized'); });
+  })();
   </script>
 
   <style>
@@ -87,13 +191,25 @@
     ::-webkit-scrollbar { width:6px; height:6px; }
     ::-webkit-scrollbar-track { background:#001a08; }
     ::-webkit-scrollbar-thumb { background:#00c853; border-radius:99px; }
+
+    /* Kill expensive animations on mobile to prevent CPU/thermal drain */
+    @media (max-width:639px) {
+      .animate-pulse-glow, .animate-spin-slow, .animate-green-pulse { animation: none !important; }
+      .phase-badge { animation: none !important; }
+      .flag-circle, .flag-circle-sm { animation: none !important; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .animate-pulse-glow, .animate-spin-slow, .animate-green-pulse { animation: none !important; }
+      .phase-badge { animation: none !important; }
+      .flag-circle, .flag-circle-sm { animation: none !important; }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
   <!-- Stadium background -->
   <div class="fixed inset-0 pointer-events-none" style="z-index:-1" aria-hidden="true">
-    <div style="position:absolute;inset:0;background:url('/images/leaderboard-bg.webp') center/cover no-repeat;filter:brightness(1.05) saturate(1.0)"></div>
+    <div style="position:absolute;inset:0;background:url('/images/leaderboard-bg.webp') center/cover no-repeat;filter:brightness(1.05) saturate(1.0);will-change:transform;transform:translateZ(0)"></div>
     <div style="position:absolute;inset:0;background:rgba(0,40,15,0.05)"></div>
   </div>
 

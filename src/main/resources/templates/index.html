@@ -12,6 +12,25 @@
 
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+  <!-- Performance diagnostic: remove after debugging -->
+  <script>
+  (function() {
+    if (typeof window.__perfDiag !== 'undefined') return;
+    window.__perfDiag = true;
+    var mutCount = 0;
+    var obs = new MutationObserver(function(m) { mutCount += m.length; });
+    obs.observe(document.documentElement, { childList:true, subtree:true, attributes:true, characterData:true });
+    setInterval(function() {
+      if (mutCount > 50) console.warn('[PERF-INDEX] DOM mutations/sec: ' + mutCount + ' (HIGH!)');
+      else if (mutCount > 10) console.log('[PERF-INDEX] DOM mutations/sec: ' + mutCount);
+      mutCount = 0;
+    }, 1000);
+    var fc = 0, lt = performance.now();
+    function fl(now) { fc++; if (now - lt >= 2000) { var fps = Math.round(fc*1000/(now-lt)); if(fps<30) console.error('[PERF-INDEX] FPS: '+fps+' (CRITICAL!)'); else if(fps<50) console.warn('[PERF-INDEX] FPS: '+fps+' (low)'); fc=0; lt=now; } requestAnimationFrame(fl); }
+    requestAnimationFrame(fl);
+  })();
+  </script>
+
   <style>
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     body { font-family:'Inter',sans-serif; min-height:100vh; overflow-x:hidden; background:#000; color:white; }
