@@ -255,6 +255,9 @@
           <a th:if="${communityMembership != null && communityMembership.role.name() == 'ADMIN'}"
              th:href="@{'/c/' + ${slug} + '/admin/window-settings'}"
              class="px-4 py-2 rounded-lg text-sm font-semibold text-amber-300 hover:text-white hover:bg-white/10 transition-all duration-200">🪟 Windows</a>
+          <a th:if="${communityMembership != null && communityMembership.role.name() == 'ADMIN'}"
+             th:href="@{'/c/' + ${slug} + '/admin/reopen-predictions'}"
+             class="px-4 py-2 rounded-lg text-sm font-semibold text-amber-300 hover:text-white hover:bg-white/10 transition-all duration-200">🔓 Reopen</a>
         </div>
 
         <div class="flex items-center gap-3">
@@ -286,6 +289,9 @@
                 <a th:if="${communityMembership != null && communityMembership.role.name() == 'ADMIN'}"
                    th:href="@{'/c/' + ${slug} + '/admin/window-settings'}"
                    class="flex items-center gap-2 px-4 py-2.5 text-sm text-amber-700 hover:bg-amber-50 transition-colors">🪟 Windows</a>
+                <a th:if="${communityMembership != null && communityMembership.role.name() == 'ADMIN'}"
+                   th:href="@{'/c/' + ${slug} + '/admin/reopen-predictions'}"
+                   class="flex items-center gap-2 px-4 py-2.5 text-sm text-amber-700 hover:bg-amber-50 transition-colors">🔓 Reopen</a>
                 <div class="border-t border-gray-100 my-1"></div>
                 <form th:action="@{/logout}" method="post">
                   <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
@@ -323,6 +329,9 @@
         <a th:if="${communityMembership != null && communityMembership.role.name() == 'ADMIN'}"
            th:href="@{'/c/' + ${slug} + '/admin/window-settings'}"
            class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-amber-300 hover:text-white hover:bg-white/10 transition-colors">🪟 Windows</a>
+        <a th:if="${communityMembership != null && communityMembership.role.name() == 'ADMIN'}"
+           th:href="@{'/c/' + ${slug} + '/admin/reopen-predictions'}"
+           class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-amber-300 hover:text-white hover:bg-white/10 transition-colors">🔓 Reopen</a>
         <a th:href="@{/fixtures}" class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors">📅 Fixtures</a>
         <a th:href="@{/groups}" class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors">🗂 Groups</a>
         <a th:href="@{/bracket}" class="block px-4 py-2.5 rounded-lg text-sm font-semibold text-white/80 hover:text-white hover:bg-white/10 transition-colors">🎯 Bracket</a>

@@ -10,6 +10,7 @@
     var ROUND_MATCHES = /*[[${roundMatches}]]*/ [];
     var ACTIVE_ROUND_LABEL = /*[[${activeRoundLabel}]]*/ '';
     var COMMUNITY_SLUG = /*[[${slug}]]*/ '';
+    var COMMUNITY_ID = /*[[${community != null ? community.id : slug}]]*/ '';
     /*]]>*/
   </script>
 
@@ -208,16 +209,50 @@
 
   <script>
   function communityPredictionsApp(rawData, activeLabel, slug) {
+    var communityId = (typeof COMMUNITY_ID !== 'undefined') ? COMMUNITY_ID : slug;
+    var storageKey = 'predictions:' + communityId + ':' + activeLabel;
+
+    function loadDrafts() {
+      try {
+        var raw = localStorage.getItem(storageKey);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) { return {}; }
+    }
+
+    function saveDrafts(matches) {
+      try {
+        var drafts = {};
+        for (var i = 0; i < matches.length; i++) {
+          var m = matches[i];
+          if (!m.locked && (m.predHome >= 0 || m.predAway >= 0)) {
+            drafts[m.matchId] = { home: m.predHome, away: m.predAway };
+          }
+        }
+        localStorage.setItem(storageKey, JSON.stringify(drafts));
+      } catch (e) { /* storage full or unavailable */ }
+    }
+
+    function clearDrafts() {
+      try { localStorage.removeItem(storageKey); } catch (e) {}
+    }
+
+    var drafts = loadDrafts();
+
     return {
       viewMode: 'list',
       cardIdx:  0,
       activeLabel,
       slug,
-      matches: rawData.map(m => ({
-        ...m,
-        predHome: (m.predictedHome != null && m.predictedHome >= 0) ? m.predictedHome : -1,
-        predAway: (m.predictedAway != null && m.predictedAway >= 0) ? m.predictedAway : -1,
-      })),
+      matches: rawData.map(m => {
+        var serverHome = (m.predictedHome != null && m.predictedHome >= 0) ? m.predictedHome : -1;
+        var serverAway = (m.predictedAway != null && m.predictedAway >= 0) ? m.predictedAway : -1;
+        var draft = drafts[m.matchId];
+        return {
+          ...m,
+          predHome: serverHome >= 0 ? serverHome : (draft && draft.home >= 0 ? draft.home : -1),
+          predAway: serverAway >= 0 ? serverAway : (draft && draft.away >= 0 ? draft.away : -1),
+        };
+      }),
 
       get filledCount()  { return this.matches.filter(m => this.isFilled(m)).length; },
       get allFilled()    { return this.matches.filter(m => !m.locked).every(m => this.isFilled(m)) && this.matches.length > 0; },
@@ -239,20 +274,25 @@
         return diff < 3 * 3600 * 1000 && diff > 0;
       },
 
+      _saveDrafts() { saveDrafts(this.matches); },
+
       adj(m, side, d) {
         if (m.locked) return;
         const cur = side === 'home' ? m.predHome : m.predAway;
         const next = Math.max(0, Math.min(20, (cur >= 0 ? cur : 0) + d));
         if (side === 'home') m.predHome = next; else m.predAway = next;
+        this._saveDrafts();
       },
       setScore(m, side, val) {
         const n = parseInt(val);
         const v = isNaN(n) ? -1 : Math.max(0, Math.min(20, n));
         if (side === 'home') m.predHome = v; else m.predAway = v;
+        this._saveDrafts();
       },
 
       submit() {
         if (!this.allFilled) return;
+        clearDrafts();
         const form = document.getElementById('pred-form');
         form.querySelectorAll('.dyn').forEach(el => el.remove());
         this.matches.filter(m => !m.locked).forEach((m, i) => {

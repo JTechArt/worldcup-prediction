@@ -99,6 +99,7 @@ public class CommunityPredictionController {
         populateRoundModel(principal.getUserId(), roundLabel, communityId, model);
         model.addAttribute("activeRoundLabel", roundLabel);
         model.addAttribute("slug", slug);
+        model.addAttribute("community", community);
         return "fragments/predictions-round-content :: roundContent";
     }
 

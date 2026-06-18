@@ -55,6 +55,7 @@ public class PredictionViewService {
     private final RoundSubmissionService roundSubmissionService;
     private final TournamentSettingsService tournamentSettingsService;
     private final PredictionWindowService predictionWindowService;
+    private final UserRoundOverrideService userRoundOverrideService;
 
     public List<RoundSummaryDto> getRoundSummaries(Long userId, Long communityId) {
         List<String> roundLabels = matchRepository.findDistinctRoundLabels();
@@ -79,6 +80,11 @@ public class PredictionViewService {
                         .mapToInt(Prediction::getPointsAwarded).sum();
                 dto.setPointsEarned(pts);
             } else if (roundWindowService.isRoundOpen(label, now)) {
+                dto.setStatus("OPEN");
+                long predicted = predictionRepository.countByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId);
+                dto.setPredictedCount((int) predicted);
+            } else if (userRoundOverrideService.hasActiveOverride(userId, communityId, label)
+                       && !userRoundOverrideService.getEligibleMatches(label, now).isEmpty()) {
                 dto.setStatus("OPEN");
                 long predicted = predictionRepository.countByUserIdAndMatchIdInAndCommunityId(userId, matchIds, communityId);
                 dto.setPredictedCount((int) predicted);
@@ -140,7 +146,23 @@ public class PredictionViewService {
                 .collect(Collectors.toMap(p -> p.getMatch().getId(), p -> p));
 
         LocalDateTime now = LocalDateTime.now();
-        return matches.stream().map(m -> toMatchPredictionDto(m, predMap.get(m.getId()), now)).toList();
+        boolean roundOpen = roundWindowService.isRoundOpen(roundLabel, now);
+        boolean hasOverride = !roundOpen
+                && userRoundOverrideService.hasActiveOverride(userId, communityId, roundLabel);
+        Set<Long> eligibleIds = hasOverride
+                ? userRoundOverrideService.getEligibleMatches(roundLabel, now).stream()
+                        .map(Match::getId).collect(Collectors.toSet())
+                : Set.of();
+
+        return matches.stream().map(m -> {
+            MatchPredictionDto dto = toMatchPredictionDto(m, predMap.get(m.getId()), now);
+            if (hasOverride && eligibleIds.contains(m.getId())) {
+                dto.setLocked(false);
+            } else if (hasOverride && !eligibleIds.contains(m.getId())) {
+                dto.setLocked(true);
+            }
+            return dto;
+        }).toList();
     }
 
     public Map<String, List<MatchPredictionDto>> groupMatchesByDate(List<MatchPredictionDto> matches) {
@@ -163,26 +185,37 @@ public class PredictionViewService {
 
         List<Match> roundMatches = matchRepository.findByRoundLabelWithTeams(dto.getRoundLabel());
         LocalDateTime now = LocalDateTime.now();
+        boolean roundOpen = roundWindowService.isRoundOpen(dto.getRoundLabel(), now);
+        boolean hasOverride = userRoundOverrideService.hasActiveOverride(userId, communityId, dto.getRoundLabel());
 
-        if (!roundWindowService.isRoundOpen(dto.getRoundLabel(), now)) {
+        if (!roundOpen && !hasOverride) {
             throw new IllegalStateException("The prediction window for " + dto.getRoundLabel() + " is not open.");
         }
 
-        for (Match m : roundMatches) {
-            if (now.isAfter(m.getKickoffTime().minusHours(1))) {
-                String ht = m.getHomeTeam() != null ? m.getHomeTeam().getName() : "?";
-                String at = m.getAwayTeam() != null ? m.getAwayTeam().getName() : "?";
-                throw new IllegalStateException(ht + " vs " + at + " is already locked.");
+        List<Match> eligibleMatches;
+        if (hasOverride && !roundOpen) {
+            eligibleMatches = userRoundOverrideService.getEligibleMatches(dto.getRoundLabel(), now);
+            if (eligibleMatches.isEmpty()) {
+                throw new IllegalStateException("No eligible matches remaining in " + dto.getRoundLabel() + ".");
             }
+        } else {
+            for (Match m : roundMatches) {
+                if (now.isAfter(m.getKickoffTime().minusHours(1))) {
+                    String ht = m.getHomeTeam() != null ? m.getHomeTeam().getName() : "?";
+                    String at = m.getAwayTeam() != null ? m.getAwayTeam().getName() : "?";
+                    throw new IllegalStateException(ht + " vs " + at + " is already locked.");
+                }
+            }
+            eligibleMatches = roundMatches;
         }
 
-        Set<Long> openIds = roundMatches.stream().map(Match::getId).collect(Collectors.toSet());
+        Set<Long> eligibleIds = eligibleMatches.stream().map(Match::getId).collect(Collectors.toSet());
         Set<Long> submittedIds = dto.getPredictions().stream()
                 .map(PredictionSubmitDto.SinglePrediction::getMatchId).collect(Collectors.toSet());
 
-        if (!submittedIds.equals(openIds)) {
+        if (!submittedIds.equals(eligibleIds)) {
             throw new IllegalStateException(
-                    "You must predict all " + openIds.size() + " matches in this round (all-or-nothing).");
+                    "You must predict all " + eligibleIds.size() + " eligible matches (all-or-nothing).");
         }
 
         Map<Long, Match> matchMap = roundMatches.stream().collect(Collectors.toMap(Match::getId, m -> m));
@@ -192,6 +225,9 @@ public class PredictionViewService {
         for (PredictionSubmitDto.SinglePrediction sp : dto.getPredictions()) {
             Match match = matchMap.get(sp.getMatchId());
             if (match == null) throw new IllegalStateException("Match not found: " + sp.getMatchId());
+            if (!eligibleIds.contains(sp.getMatchId())) {
+                throw new IllegalStateException("Match " + sp.getMatchId() + " is not eligible for prediction.");
+            }
 
             Optional<Prediction> existing = predictionRepository.findByUserIdAndMatchIdAndCommunityId(userId, sp.getMatchId(), communityId);
             Prediction prediction;
@@ -210,8 +246,12 @@ public class PredictionViewService {
             predictionRepository.save(prediction);
         }
 
+        if (hasOverride && !roundOpen) {
+            userRoundOverrideService.markUsed(userId, communityId, dto.getRoundLabel());
+        }
+
         roundSubmissionService.upsert(userId, communityId, dto.getRoundLabel());
-        return roundMatches.size();
+        return eligibleMatches.size();
     }
 
     @Transactional

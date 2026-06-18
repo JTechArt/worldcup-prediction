@@ -31,6 +31,7 @@ class PredictionViewServiceSubmissionTest {
     @Mock private RoundSubmissionService roundSubmissionService;
     @Mock private TournamentSettingsService tournamentSettingsService;
     @Mock private PredictionWindowService predictionWindowService;
+    @Mock private UserRoundOverrideService userRoundOverrideService;
 
     private PredictionViewService service;
 
@@ -42,7 +43,7 @@ class PredictionViewServiceSubmissionTest {
     void setUp() {
         service = new PredictionViewService(matchRepository, predictionRepository,
                 userRepository, communityRepository, roundWindowService, roundSubmissionService,
-                tournamentSettingsService, predictionWindowService);
+                tournamentSettingsService, predictionWindowService, userRoundOverrideService);
         lenient().when(tournamentSettingsService.getEffectiveMode(any())).thenReturn(WindowMode.ROUND);
         // set timezone via reflection since @Value cannot inject in unit tests
         try {
