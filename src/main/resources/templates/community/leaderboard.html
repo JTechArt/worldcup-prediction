@@ -667,13 +667,13 @@
       <!-- Header: avatar + name + rank/pts -->
       <div class="uc-header" x-show="entry">
         <div style="position:relative;flex-shrink:0">
-          <div class="uc-avatar" x-data="{ imgError: false, _effectCount: 0 }" x-effect="imgError = false; _effectCount++; if(_effectCount > 2) console.error('[PERF] x-effect loop detected! count=' + _effectCount)">
-            <img x-show="entry && entry.avatarUrl && !imgError"
-                 :src="entry.avatarUrl"
-                 :alt="entry.name"
-                 @error="imgError = true">
+          <div class="uc-avatar">
+            <img x-show="entry && entry.avatarUrl"
+                 :src="entry ? entry.avatarUrl : ''"
+                 :alt="entry ? entry.name : ''"
+                 @error.once="$el.style.display='none'; $el.nextElementSibling.style.display=''">
             <span class="uc-avatar-initials"
-                  x-show="!entry || !entry.avatarUrl || imgError"
+                  x-show="!entry || !entry.avatarUrl"
                   x-text="entry ? entry.initials : ''"></span>
           </div>
           <div class="uc-flag-badge" x-show="entry && entry.flagUrl">
