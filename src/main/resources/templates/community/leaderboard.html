@@ -411,7 +411,9 @@
   </div>
 
   <!-- THREE-PANEL LEADERBOARD -->
-  <div class="lb-outer" th:unless="${#lists.isEmpty(entries)}">
+  <div class="lb-outer" th:unless="${#lists.isEmpty(entries)}"
+       x-data="{ gsOpen: $el.dataset.gsOpen === 'true' }"
+       th:data-gs-open="${gsOpenDefault}">
 
     <!-- ══ STICKY HEADER STRIP: phase row + game header row ══ -->
     <div class="lb-sticky-hdr">
@@ -438,8 +440,18 @@
                  th:id="'ph-gs-r' + ${iter.count}"
                  class="lb-phase-hd-cell phase-gs"
                  th:classappend="${entry.key == currentRoundLabel} ? ' lb-phase-current' : ''"
-                 th:style="'width:' + (${entry.value.size()} * 76) + 'px'">
+                 th:style="'width:' + (${entry.value.size()} * 76) + 'px'"
+                 x-show="gsOpen">
               <span th:text="'⚽ GS · Round ' + ${iter.count}">⚽ GS · Round 1</span>
+            </div>
+            <!-- GS collapsed placeholder header — shown once when gsOpen is false -->
+            <div th:if="${groupRounds != null and not groupRounds.isEmpty()}"
+                 class="lb-phase-hd-cell phase-gs"
+                 style="width:80px;cursor:pointer"
+                 x-show="!gsOpen"
+                 @click="gsOpen=true">
+              <span style="font-size:9px">⚽ GS</span>
+              <span style="font-size:9px;opacity:0.8;margin-left:4px">▶</span>
             </div>
             <div th:each="stage : ${stages}"
                  th:if="${stage.name() != 'GROUP'}"
@@ -454,6 +466,7 @@
             <th:block th:each="entry : ${groupRounds}">
               <div th:each="m : ${entry.value}"
                    class="lb-game-col-hd"
+                   x-show="gsOpen"
                    th:data-date="${#temporals.format(m.kickoffTime, 'yyyy-MM-dd')}">
                 <div class="lb-ghd" th:text="${#temporals.format(m.kickoffTime, 'MMM d')}">Jun 12</div>
                 <div class="lb-ghf">
@@ -476,6 +489,10 @@
                 </div>
               </div>
             </th:block>
+            <!-- Collapsed GS total header -->
+            <div class="lb-psc-hd" x-show="!gsOpen" style="width:80px">
+              <div class="lb-psc-hd-label">GS Pts</div>
+            </div>
             <div th:each="stage : ${stages}" th:if="${stage.name() != 'GROUP'}" class="lb-psc-hd">
               <div class="lb-psc-hd-label" th:text="${stage.shortLabel}">R32</div>
             </div>
@@ -561,6 +578,7 @@
                  style="display:flex">
               <th:block th:each="roundEntry : ${groupRounds}">
                 <div th:each="m : ${roundEntry.value}"
+                     x-show="gsOpen"
                      th:with="roundClosed=${closedRoundLabels != null and closedRoundLabels.contains(roundEntry.key)},
                               isOwnRow=${currentUserId != null and entry.userId == currentUserId},
                               showPred=${roundClosed or isOwnRow},
@@ -577,6 +595,13 @@
                   <span th:if="${not showPred}">·</span>
                 </div>
               </th:block>
+              <!-- Collapsed GS total data cell -->
+              <div th:with="gsPts=${phasePoints != null ? phasePoints.get(entry.userId)?.get(gsStage) : null}"
+                   th:class="'lb-psc-cell ' + (${gsPts == null} ? 'cell-pending' : (${gsPts >= 3} ? 'cell-exact' : (${gsPts == 2} ? 'cell-draw' : (${gsPts == 1} ? 'cell-winner' : 'cell-zero'))))"
+                   style="width:80px"
+                   x-show="!gsOpen">
+                <span th:text="${gsPts != null ? gsPts : '·'}">·</span>
+              </div>
               <div th:each="stage : ${stages}"
                    th:if="${stage.name() != 'GROUP'}"
                    th:with="pts=${phasePoints != null ? phasePoints.get(entry.userId)?.get(stage) : null}"

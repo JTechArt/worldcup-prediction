@@ -132,6 +132,9 @@ public class CommunityLeaderboardController {
         model.addAttribute("closedRoundLabels", closedRoundLabels);
         model.addAttribute("predsByUserAndMatch", predsByUserAndMatch);
         model.addAttribute("today", java.time.LocalDate.now().toString());
+        boolean gsOpenDefault = java.time.LocalDate.now().isBefore(java.time.LocalDate.of(2026, 6, 28));
+        model.addAttribute("gsOpenDefault", gsOpenDefault);
+        model.addAttribute("gsStage", MatchStage.GROUP);
         model.addAttribute("pageTitle", community.getName() + " · Leaderboard");
 
         return "community/leaderboard";
