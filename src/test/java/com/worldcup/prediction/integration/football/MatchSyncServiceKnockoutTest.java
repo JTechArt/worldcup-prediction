@@ -95,7 +95,8 @@ class MatchSyncServiceKnockoutTest {
 
         service.syncKnockoutMatches();
 
-        verify(matchRepository).save(argThat(m -> "5001".equals(m.getExternalId())));
+        verify(matchRepository).save(argThat(m ->
+                "5001".equals(m.getExternalId()) && m.getKickoffTime() != null));
         verify(matchRepository, times(1)).save(any());
     }
 

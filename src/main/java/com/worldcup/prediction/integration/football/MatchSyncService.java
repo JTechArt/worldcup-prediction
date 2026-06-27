@@ -255,6 +255,18 @@ public class MatchSyncService {
                 Match m = existing.get();
                 m.setKickoffTime(parseUtc(apiMatch.utcDate()));
                 m.setStatus(mapStatus(apiMatch.status()));
+                if (m.getHomeTeam() == null && apiMatch.homeTeam() != null) {
+                    resolveTeam(apiMatch.homeTeam()).ifPresent(t -> {
+                        m.setHomeTeam(t);
+                        m.setHomeTeamPlaceholder(null);
+                    });
+                }
+                if (m.getAwayTeam() == null && apiMatch.awayTeam() != null) {
+                    resolveTeam(apiMatch.awayTeam()).ifPresent(t -> {
+                        m.setAwayTeam(t);
+                        m.setAwayTeamPlaceholder(null);
+                    });
+                }
                 matchRepository.save(m);
                 updated++;
                 continue;
