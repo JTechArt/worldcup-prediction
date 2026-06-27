@@ -170,7 +170,7 @@ public class NotificationScheduler {
             LocalDate today = LocalDate.now();
             LocalDateTime dayStart = today.atStartOfDay();
             LocalDateTime dayEnd = today.atTime(LocalTime.MAX);
-            List<Match> todayMatches = matchRepository.findByKickoffTimeBetween(dayStart, dayEnd);
+            List<Match> todayMatches = matchRepository.findByKickoffTimeBetweenWithTeams(dayStart, dayEnd);
             if (todayMatches.isEmpty()) {
                 log.debug("NotificationScheduler: no matches today — skipping digest");
                 logService.complete(entry, SchedulerJobStatus.SKIPPED, 0, "No matches today");
