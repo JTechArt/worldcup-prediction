@@ -156,4 +156,23 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
     List<Prediction> findByCommunityIdAndMatchIdIn(
             @Param("communityId") Long communityId,
             @Param("matchIds") java.util.Collection<Long> matchIds);
+
+    @Query("""
+            SELECT p FROM Prediction p
+            JOIN FETCH p.user u
+            JOIN FETCH p.match m
+            LEFT JOIN FETCH m.homeTeam
+            LEFT JOIN FETCH m.awayTeam
+            WHERE p.community.id = :communityId
+              AND p.scoreResult = 'EXACT'
+              AND (
+                :stageFilter = 'all'
+                OR (:stageFilter = 'group'   AND m.stage = com.worldcup.prediction.domain.enums.MatchStage.GROUP)
+                OR (:stageFilter = 'playoff' AND m.stage <> com.worldcup.prediction.domain.enums.MatchStage.GROUP)
+              )
+            ORDER BY u.id ASC
+            """)
+    List<Prediction> findCumulativeExactPredictions(
+            @Param("communityId") Long communityId,
+            @Param("stageFilter") String stageFilter);
 }

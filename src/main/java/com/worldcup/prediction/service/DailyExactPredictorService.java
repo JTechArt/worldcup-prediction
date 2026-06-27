@@ -96,6 +96,61 @@ public class DailyExactPredictorService {
                 .orElse(null);
     }
 
+    public List<DailyExactPredictorDto> getCumulativeHeroes(Long communityId, String stageFilter) {
+        List<Prediction> exactPredictions =
+                predictionRepository.findCumulativeExactPredictions(communityId, stageFilter);
+
+        if (exactPredictions.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, List<Prediction>> byUser = exactPredictions.stream()
+                .collect(Collectors.groupingBy(p -> p.getUser().getId(), LinkedHashMap::new, Collectors.toList()));
+
+        List<DailyExactPredictorDto> result = new ArrayList<>();
+        for (var entry : byUser.entrySet()) {
+            List<Prediction> userPredictions = entry.getValue();
+            var user = userPredictions.get(0).getUser();
+
+            List<DailyExactPredictorDto.ExactMatchDto> exactMatches = userPredictions.stream()
+                    .map(p -> {
+                        Match m = p.getMatch();
+                        Integer homeScore = m.getEffectiveHomeScore();
+                        Integer awayScore = m.getEffectiveAwayScore();
+                        if (homeScore == null || awayScore == null) return null;
+                        return DailyExactPredictorDto.ExactMatchDto.builder()
+                                .homeTeamName(m.getHomeTeam() != null ? m.getHomeTeam().getName() : m.getHomeTeamPlaceholder())
+                                .awayTeamName(m.getAwayTeam() != null ? m.getAwayTeam().getName() : m.getAwayTeamPlaceholder())
+                                .homeTeamFlagCode(m.getHomeTeam() != null ? m.getHomeTeam().getFlagCode() : null)
+                                .awayTeamFlagCode(m.getAwayTeam() != null ? m.getAwayTeam().getFlagCode() : null)
+                                .homeTeamFifaCode(m.getHomeTeam() != null ? m.getHomeTeam().getFifaCode() : null)
+                                .awayTeamFifaCode(m.getAwayTeam() != null ? m.getAwayTeam().getFifaCode() : null)
+                                .homeScore(homeScore)
+                                .awayScore(awayScore)
+                                .build();
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
+
+            result.add(DailyExactPredictorDto.builder()
+                    .userId(user.getId())
+                    .displayName(user.getFullName())
+                    .avatarUrl(user.getAvatarUrl())
+                    .exactCount(userPredictions.size())
+                    .exactMatches(exactMatches)
+                    .build());
+        }
+
+        result.sort(Comparator.comparingInt(DailyExactPredictorDto::getExactCount).reversed()
+                .thenComparing(DailyExactPredictorDto::getDisplayName));
+
+        if (result.size() > 20) {
+            result = result.subList(0, 20);
+        }
+
+        return result;
+    }
+
     /**
      * Returns all completed matches belonging to the most recently completed round.
      * Groups by roundLabel so that users who predicted correctly across multiple days
