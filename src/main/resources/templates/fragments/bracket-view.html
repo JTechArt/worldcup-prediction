@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="bracket-view">
+
+  <!-- Empty state -->
+  <div th:if="${bracketByStage == null or bracketByStage.isEmpty()}"
+       class="text-center py-20 text-white/50 animate-fade-up stagger-1">
+    <div class="text-6xl mb-4">🏆</div>
+    <p class="text-xl font-semibold">Knockout rounds not started yet</p>
+    <p class="text-sm mt-2">Check back after the Group Stage!</p>
+  </div>
+
+  <!-- Bracket -->
+  <div class="bracket-scroll animate-fade-up stagger-1" th:unless="${bracketByStage == null or bracketByStage.isEmpty()}">
+    <div class="bracket-grid">
+
+      <div th:each="entry, iterStat : ${bracketByStage}"
+           th:with="roundName=${entry.key}"
+           th:classappend="${roundName == 'Final'} ? ' round-col final' : (${roundName == '3rd Place'} ? ' round-col third' : ' round-col')"
+           class="round-col">
+
+        <div class="round-header" th:text="${roundName}">Round</div>
+
+        <div class="matches-col">
+          <div th:each="match : ${entry.value}"
+               th:classappend="${match.status?.name() == 'COMPLETED'} ? ' finished' : ''"
+               class="match-card">
+
+            <!-- Home team -->
+            <div class="team-row">
+              <img th:if="${match.homeTeam != null}"
+                   th:src="@{'/images/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
+                   th:alt="${match.homeTeam.name}"
+                   class="flag-sm" />
+              <div th:unless="${match.homeTeam != null}" class="flag-sm bg-gray-100"></div>
+              <span th:if="${match.homeTeam != null}" th:text="${match.homeTeam.name}" class="team-name"></span>
+              <span th:unless="${match.homeTeam != null}"
+                    th:text="${match.homeTeamPlaceholder != null ? match.homeTeamPlaceholder : 'TBD'}"
+                    class="team-name tbd"></span>
+              <span th:if="${match.status?.name() == 'COMPLETED' and match.homeScore != null}"
+                    th:text="${match.homeScore}"
+                    th:classappend="${match.homeScore > match.awayScore} ? ' winner' : ''"
+                    class="score"></span>
+              <div th:unless="${match.status?.name() == 'COMPLETED'}" class="tbd-dots">
+                <div class="tbd-dot"></div><div class="tbd-dot"></div><div class="tbd-dot"></div>
+              </div>
+            </div>
+
+            <!-- Away team -->
+            <div class="team-row">
+              <img th:if="${match.awayTeam != null}"
+                   th:src="@{'/images/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
+                   th:alt="${match.awayTeam.name}"
+                   class="flag-sm" />
+              <div th:unless="${match.awayTeam != null}" class="flag-sm bg-gray-100"></div>
+              <span th:if="${match.awayTeam != null}" th:text="${match.awayTeam.name}" class="team-name"></span>
+              <span th:unless="${match.awayTeam != null}"
+                    th:text="${match.awayTeamPlaceholder != null ? match.awayTeamPlaceholder : 'TBD'}"
+                    class="team-name tbd"></span>
+              <span th:if="${match.status?.name() == 'COMPLETED' and match.awayScore != null}"
+                    th:text="${match.awayScore}"
+                    th:classappend="${match.awayScore > match.homeScore} ? ' winner' : ''"
+                    class="score"></span>
+              <div th:unless="${match.status?.name() == 'COMPLETED'}" class="tbd-dots">
+                <div class="tbd-dot"></div><div class="tbd-dot"></div><div class="tbd-dot"></div>
+              </div>
+            </div>
+
+            <!-- Kickoff date chip -->
+            <div class="mt-1.5 text-center">
+              <span th:if="${match.kickoffTime != null}"
+                    th:text="${#temporals.format(match.kickoffTime, 'MMM d')}"
+                    class="text-xs text-white/50 font-medium"></span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="md:hidden text-center py-2 text-xs text-white/50">← Scroll horizontally to see all rounds →</div>
+
+</div>
+</body>
+</html>
