@@ -14,8 +14,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -40,10 +38,8 @@ public class CommunityHomeController {
                 .map(LeaderboardEntryDto::getRank).orElse(0);
         int openMatchCount = matchService.getOpenMatchCount();
 
-        LocalDateTime now = LocalDateTime.now();
         List<DailyExactPredictorDto> exactPredictors =
-                dailyExactPredictorService.getLastMatchdayExactPredictors(communityId, now);
-        LocalDate lastMatchday = dailyExactPredictorService.getLastMatchdayDate(now);
+                dailyExactPredictorService.getCumulativeHeroes(communityId, "all");
 
         model.addAttribute("community", community);
         model.addAttribute("slug", slug);
@@ -51,8 +47,28 @@ public class CommunityHomeController {
         model.addAttribute("userRank", userRank);
         model.addAttribute("openMatchCount", openMatchCount);
         model.addAttribute("exactPredictors", exactPredictors);
-        model.addAttribute("lastMatchday", lastMatchday);
+        model.addAttribute("heroStage", "all");
+        model.addAttribute("heroTotalCount", exactPredictors.stream()
+                .mapToInt(DailyExactPredictorDto::getExactCount).sum());
         model.addAttribute("pageTitle", community.getName() + " · Home");
         return "community/home";
+    }
+
+    @GetMapping("/heroes")
+    public String heroes(@PathVariable String slug,
+                         @RequestParam(defaultValue = "all") String stage,
+                         HttpServletRequest request, Model model) {
+        Community community = (Community) request.getAttribute("community");
+        Long communityId = community.getId();
+
+        List<DailyExactPredictorDto> exactPredictors =
+                dailyExactPredictorService.getCumulativeHeroes(communityId, stage);
+
+        model.addAttribute("slug", slug);
+        model.addAttribute("exactPredictors", exactPredictors);
+        model.addAttribute("heroStage", stage);
+        model.addAttribute("heroTotalCount", exactPredictors.stream()
+                .mapToInt(DailyExactPredictorDto::getExactCount).sum());
+        return "fragments/heroes-content :: heroes-content";
     }
 }

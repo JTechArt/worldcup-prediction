@@ -39,95 +39,67 @@
 
     </div>
 
-    <!-- Daily Exact Score Predictors - ONE CARD PER USER -->
-    <div th:if="${exactPredictors != null && !exactPredictors.isEmpty()}" class="mb-10 animate-fade-up stagger-2">
-      <div class="flex items-center gap-3 mb-6">
+    <!-- Exact Score Heroes - cumulative with stage filter tabs -->
+    <div class="mb-10 animate-fade-up stagger-2">
+      <div class="flex items-center gap-3 mb-4">
         <div class="hero-trophy-icon">
           <span class="text-4xl">🏆</span>
         </div>
         <div>
           <h2 class="font-display text-3xl sm:text-4xl text-white tracking-wider leading-none">EXACT SCORE HEROES</h2>
           <p class="text-white/60 text-sm font-semibold mt-1">
-            Last matchday
-            <span th:if="${lastMatchday != null}"
-                  th:text="' · ' + ${#temporals.format(lastMatchday, 'MMMM d, yyyy')}"></span>
+            All stages
+            <span th:if="${heroTotalCount != null and heroTotalCount > 0}"
+                  th:text="' · ' + ${heroTotalCount} + ' exact predictions'"></span>
           </p>
         </div>
       </div>
 
-      <!-- Horizontal scroll container -->
-      <div class="hero-scroll-container">
-        <div class="hero-scroll-content">
-          <div th:each="predictor, iter : ${exactPredictors}"
-               class="hero-card"
-               th:classappend="${iter.index == 0} ? 'hero-rank-1' : (${iter.index == 1} ? 'hero-rank-2' : (${iter.index == 2} ? 'hero-rank-3' : ''))"
-               th:style="'animation-delay:' + (${iter.index} * 0.1) + 's'">
-
-          <!-- Rank badge -->
-          <div class="hero-rank-badge">
-            <span th:if="${iter.index == 0}">🥇</span>
-            <span th:if="${iter.index == 1}">🥈</span>
-            <span th:if="${iter.index == 2}">🥉</span>
-            <span th:if="${iter.index > 2}" th:text="'#' + (${iter.index + 1})">#4</span>
-          </div>
-
-          <!-- User header -->
-          <div class="hero-header">
-            <div class="hero-avatar-container">
-              <div class="hero-avatar-ring" th:if="${iter.index < 3}"></div>
-              <div class="hero-avatar">
-                <img th:if="${predictor.avatarUrl != null}" th:src="${predictor.avatarUrl}"
-                     th:alt="${predictor.displayName}"
-                     onerror="this.style.display='none';this.parentElement.classList.add('hero-avatar-fallback')"/>
-                <span th:if="${predictor.avatarUrl == null}" class="hero-avatar-initials" th:text="${predictor.initials}">AB</span>
-              </div>
-            </div>
-            <div class="hero-user-info">
-              <div class="hero-user-name" th:text="${predictor.displayName}">Player Name</div>
-              <div class="hero-stat-badge">
-                <svg class="hero-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-                </svg>
-                <span class="hero-stat-value" th:text="${predictor.exactCount}">3</span>
-                <span class="hero-stat-label" th:text="${predictor.exactCount == 1 ? 'exact score' : 'exact scores'}">exact scores</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Matches list -->
-          <div class="hero-matches">
-            <div class="hero-matches-title">Correct Predictions</div>
-            <div th:each="match : ${predictor.exactMatches}" class="hero-match">
-              <div class="hero-match-teams">
-                <div class="hero-match-team">
-                  <div class="hero-flag-wrap">
-                    <img th:if="${match.homeTeamFlagCode != null}"
-                         th:src="'/images/flags/' + ${match.homeTeamFlagCode} + '.svg'"
-                         class="hero-match-flag" th:alt="${match.homeTeamName}"/>
-                    <span class="hero-match-tla" th:if="${match.homeTeamFifaCode != null}" th:text="${match.homeTeamFifaCode}"></span>
-                  </div>
-                  <span class="hero-match-name" th:text="${match.homeTeamName}">Home Team</span>
-                </div>
-                <div class="hero-match-score">
-                  <span th:text="${match.homeScore}">2</span>
-                  <span class="hero-match-sep">–</span>
-                  <span th:text="${match.awayScore}">1</span>
-                </div>
-                <div class="hero-match-team hero-match-team-away">
-                  <span class="hero-match-name" th:text="${match.awayTeamName}">Away Team</span>
-                  <div class="hero-flag-wrap">
-                    <img th:if="${match.awayTeamFlagCode != null}"
-                         th:src="'/images/flags/' + ${match.awayTeamFlagCode} + '.svg'"
-                         class="hero-match-flag" th:alt="${match.awayTeamName}"/>
-                    <span class="hero-match-tla" th:if="${match.awayTeamFifaCode != null}" th:text="${match.awayTeamFifaCode}"></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          </div>
-        </div>
+      <!-- Stage filter tabs -->
+      <div class="flex gap-2 mb-5" id="hero-tabs">
+        <button class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 hero-tab-btn"
+                th:classappend="${heroStage == 'all'} ? 'bg-green-dark text-white shadow' : 'bg-white/10 text-white/70 hover:bg-white/20'"
+                hx-get="@{'/c/' + ${slug} + '/heroes?stage=all'}"
+                hx-target="#heroes-container"
+                hx-swap="innerHTML"
+                hx-on::after-request="updateHeroTabs(this)">
+          All
+        </button>
+        <button class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 hero-tab-btn"
+                th:classappend="${heroStage == 'group'} ? 'bg-green-dark text-white shadow' : 'bg-white/10 text-white/70 hover:bg-white/20'"
+                hx-get="@{'/c/' + ${slug} + '/heroes?stage=group'}"
+                hx-target="#heroes-container"
+                hx-swap="innerHTML"
+                hx-on::after-request="updateHeroTabs(this)">
+          Group Stage
+        </button>
+        <button class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 hero-tab-btn"
+                th:classappend="${heroStage == 'playoff'} ? 'bg-green-dark text-white shadow' : 'bg-white/10 text-white/70 hover:bg-white/20'"
+                hx-get="@{'/c/' + ${slug} + '/heroes?stage=playoff'}"
+                hx-target="#heroes-container"
+                hx-swap="innerHTML"
+                hx-on::after-request="updateHeroTabs(this)">
+          Play Off
+        </button>
       </div>
+
+      <!-- Heroes content (HTMX swap target) -->
+      <div id="heroes-container">
+        <div th:replace="~{fragments/heroes-content :: heroes-content}"></div>
+      </div>
+
+    </div>
+
+    <script>
+    function updateHeroTabs(clickedBtn) {
+      document.querySelectorAll('.hero-tab-btn').forEach(btn => {
+        btn.classList.remove('bg-green-dark', 'text-white', 'shadow');
+        btn.classList.add('bg-white/10', 'text-white/70');
+      });
+      clickedBtn.classList.remove('bg-white/10', 'text-white/70');
+      clickedBtn.classList.add('bg-green-dark', 'text-white', 'shadow');
+    }
+    </script>
 
       <style>
         @keyframes heroFloat {
@@ -451,7 +423,6 @@
           }
         }
       </style>
-    </div>
 
     <!-- Two-column layout -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">

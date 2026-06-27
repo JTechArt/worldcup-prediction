@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="heroes-content">
+
+  <div th:if="${exactPredictors != null && !exactPredictors.isEmpty()}">
+    <!-- Horizontal scroll container -->
+    <div class="hero-scroll-container">
+      <div class="hero-scroll-content">
+        <div th:each="predictor, iter : ${exactPredictors}"
+             class="hero-card"
+             th:classappend="${iter.index == 0} ? 'hero-rank-1' : (${iter.index == 1} ? 'hero-rank-2' : (${iter.index == 2} ? 'hero-rank-3' : ''))"
+             th:style="'animation-delay:' + (${iter.index} * 0.1) + 's'">
+
+          <!-- Rank badge -->
+          <div class="hero-rank-badge">
+            <span th:if="${iter.index == 0}">🥇</span>
+            <span th:if="${iter.index == 1}">🥈</span>
+            <span th:if="${iter.index == 2}">🥉</span>
+            <span th:if="${iter.index > 2}" th:text="'#' + (${iter.index + 1})">#4</span>
+          </div>
+
+          <!-- User header -->
+          <div class="hero-header">
+            <div class="hero-avatar-container">
+              <div class="hero-avatar-ring" th:if="${iter.index < 3}"></div>
+              <div class="hero-avatar">
+                <img th:if="${predictor.avatarUrl != null}" th:src="${predictor.avatarUrl}"
+                     th:alt="${predictor.displayName}"
+                     onerror="this.style.display='none';this.parentElement.classList.add('hero-avatar-fallback')"/>
+                <span th:if="${predictor.avatarUrl == null}" class="hero-avatar-initials" th:text="${predictor.initials}">AB</span>
+              </div>
+            </div>
+            <div class="hero-user-info">
+              <div class="hero-user-name" th:text="${predictor.displayName}">Player Name</div>
+              <div class="hero-stat-badge">
+                <svg class="hero-stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                </svg>
+                <span class="hero-stat-value" th:text="${predictor.exactCount}">3</span>
+                <span class="hero-stat-label" th:text="${predictor.exactCount == 1 ? 'exact score' : 'exact scores'}">exact scores</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Matches list -->
+          <div class="hero-matches">
+            <div class="hero-matches-title">Correct Predictions</div>
+            <div th:each="match : ${predictor.exactMatches}" class="hero-match">
+              <div class="hero-match-teams">
+                <div class="hero-match-team">
+                  <div class="hero-flag-wrap">
+                    <img th:if="${match.homeTeamFlagCode != null}"
+                         th:src="'/images/flags/' + ${match.homeTeamFlagCode} + '.svg'"
+                         class="hero-match-flag" th:alt="${match.homeTeamName}"/>
+                    <span class="hero-match-tla" th:if="${match.homeTeamFifaCode != null}" th:text="${match.homeTeamFifaCode}"></span>
+                  </div>
+                  <span class="hero-match-name" th:text="${match.homeTeamName}">Home Team</span>
+                </div>
+                <div class="hero-match-score">
+                  <span th:text="${match.homeScore}">2</span>
+                  <span class="hero-match-sep">–</span>
+                  <span th:text="${match.awayScore}">1</span>
+                </div>
+                <div class="hero-match-team hero-match-team-away">
+                  <span class="hero-match-name" th:text="${match.awayTeamName}">Away Team</span>
+                  <div class="hero-flag-wrap">
+                    <img th:if="${match.awayTeamFlagCode != null}"
+                         th:src="'/images/flags/' + ${match.awayTeamFlagCode} + '.svg'"
+                         class="hero-match-flag" th:alt="${match.awayTeamName}"/>
+                    <span class="hero-match-tla" th:if="${match.awayTeamFifaCode != null}" th:text="${match.awayTeamFifaCode}"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:if="${exactPredictors == null || exactPredictors.isEmpty()}"
+       class="text-white/50 text-sm py-8 text-center">
+    No exact predictions yet for this filter.
+  </div>
+
+</th:block>
+</body>
+</html>
