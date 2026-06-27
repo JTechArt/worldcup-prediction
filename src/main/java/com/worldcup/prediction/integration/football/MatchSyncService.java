@@ -316,6 +316,24 @@ public class MatchSyncService {
             created++;
         }
 
+        // Create or refresh RoundWindow for each knockout stage (window closes 1h before first match)
+        for (MatchStage stage : List.of(MatchStage.ROUND_OF_32, MatchStage.ROUND_OF_16,
+                MatchStage.QUARTER_FINAL, MatchStage.SEMI_FINAL, MatchStage.THIRD_PLACE, MatchStage.FINAL)) {
+            List<Match> stageMatches = matchRepository.findByStage(stage);
+            if (stageMatches.isEmpty()) continue;
+            String label = stageMatches.get(0).getRoundLabel();
+            if (label == null) continue;
+            LocalDateTime firstKickoff = stageMatches.stream()
+                    .map(Match::getKickoffTime).filter(java.util.Objects::nonNull)
+                    .min(LocalDateTime::compareTo).orElse(null);
+            if (firstKickoff == null) continue;
+            RoundWindow rw = roundWindowRepository.findByRoundLabel(label)
+                    .orElse(RoundWindow.builder().roundLabel(label).build());
+            rw.setAutoOpensAt(firstKickoff.minusHours(24));
+            rw.setAutoClosesAt(firstKickoff.minusHours(1));
+            roundWindowRepository.save(rw);
+        }
+
         return SyncResult.success(created + " created, " + updated + " updated" +
                 (skipped > 0 ? ", " + skipped + " skipped" : ""));
     }
