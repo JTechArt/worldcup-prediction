@@ -94,9 +94,9 @@
     function updateHeroTabs(clickedBtn) {
       document.querySelectorAll('.hero-tab-btn').forEach(btn => {
         btn.classList.remove('bg-green-dark', 'text-white', 'shadow');
-        btn.classList.add('bg-white/10', 'text-white/70');
+        btn.classList.add('bg-white/10', 'text-white/70', 'hover:bg-white/20');
       });
-      clickedBtn.classList.remove('bg-white/10', 'text-white/70');
+      clickedBtn.classList.remove('bg-white/10', 'text-white/70', 'hover:bg-white/20');
       clickedBtn.classList.add('bg-green-dark', 'text-white', 'shadow');
     }
     </script>
