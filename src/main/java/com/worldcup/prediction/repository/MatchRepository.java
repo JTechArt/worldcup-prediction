@@ -153,4 +153,7 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             """)
     List<Match> findCompletedMatchesBefore(@Param("before") LocalDateTime before);
 
+    @Query("SELECT MAX(m.matchNumber) FROM Match m")
+    Optional<Integer> findMaxMatchNumber();
+
 }

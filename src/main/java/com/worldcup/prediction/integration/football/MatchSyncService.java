@@ -239,6 +239,7 @@ public class MatchSyncService {
         int created = 0;
         int updated = 0;
         int skipped = 0;
+        int nextMatchNumber = matchRepository.findMaxMatchNumber().orElse(72) + 1;
 
         for (FootballApiMatchDto apiMatch : knockoutMatches) {
             MatchStage stage = mapKnockoutStage(apiMatch.stage());
@@ -302,7 +303,7 @@ public class MatchSyncService {
             Match match = Match.builder()
                     .externalId(extId)
                     .stage(stage)
-                    .matchNumber(0)
+                    .matchNumber(nextMatchNumber++)
                     .roundLabel(stage.getDisplayName())
                     .homeTeam(home)
                     .awayTeam(away)
