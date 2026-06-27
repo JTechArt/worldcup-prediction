@@ -17,7 +17,7 @@
 
       <div th:each="entry, iterStat : ${bracketByStage}"
            th:with="roundName=${entry.key}"
-           th:classappend="${roundName == 'Final'} ? ' round-col final' : (${roundName == '3rd Place'} ? ' round-col third' : ' round-col')"
+           th:classappend="${roundName == 'Final'} ? ' final' : (${roundName == '3rd Place'} ? ' third' : '')"
            class="round-col">
 
         <div class="round-header" th:text="${roundName}">Round</div>

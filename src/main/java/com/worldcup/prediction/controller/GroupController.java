@@ -26,8 +26,8 @@ public class GroupController {
             MatchStage.ROUND_OF_16,
             MatchStage.QUARTER_FINAL,
             MatchStage.SEMI_FINAL,
-            MatchStage.FINAL,
-            MatchStage.THIRD_PLACE
+            MatchStage.THIRD_PLACE,
+            MatchStage.FINAL
     );
 
     private final GroupService groupService;
@@ -41,7 +41,7 @@ public class GroupController {
 
         Map<String, List<Match>> bracketByStage = new LinkedHashMap<>();
         for (MatchStage stage : BRACKET_STAGES) {
-            List<Match> stageMatches = matchRepository.findByStageOrderByKickoffTimeAsc(stage);
+            List<Match> stageMatches = matchRepository.findByStageWithTeams(stage);
             if (!stageMatches.isEmpty()) {
                 bracketByStage.put(stageName(stage), stageMatches);
             }
