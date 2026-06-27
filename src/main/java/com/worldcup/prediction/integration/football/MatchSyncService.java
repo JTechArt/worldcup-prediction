@@ -210,6 +210,118 @@ public class MatchSyncService {
     }
 
     /**
+     * Non-destructive upsert of knockout stage matches from the API.
+     * Creates new matches for unseen externalIds; updates kickoff/status for existing ones.
+     * Never touches predictions or group stage matches.
+     */
+    public SyncResult syncKnockoutMatches() {
+        FootballApiResponseDto response = rateLimiter.call(client::fetchAllMatches);
+        if (response == null || response.matches() == null) {
+            return SyncResult.skipped("No API response");
+        }
+
+        response.matches().stream()
+                .map(FootballApiMatchDto::stage)
+                .filter(s -> s != null && !"GROUP_STAGE".equals(s))
+                .distinct()
+                .forEach(s -> log.info("Knockout API stage string observed: '{}'", s));
+
+        List<FootballApiMatchDto> knockoutMatches = response.matches().stream()
+                .filter(m -> m.stage() != null && !"GROUP_STAGE".equals(m.stage()))
+                .filter(m -> m.id() != null && m.utcDate() != null)
+                .sorted(Comparator.comparing(FootballApiMatchDto::utcDate))
+                .toList();
+
+        if (knockoutMatches.isEmpty()) {
+            return SyncResult.skipped("No knockout matches in API response");
+        }
+
+        int created = 0;
+        int updated = 0;
+        int skipped = 0;
+
+        for (FootballApiMatchDto apiMatch : knockoutMatches) {
+            MatchStage stage = mapKnockoutStage(apiMatch.stage());
+            if (stage == null) {
+                log.warn("Unknown knockout stage '{}' for match id={} — skipping", apiMatch.stage(), apiMatch.id());
+                skipped++;
+                continue;
+            }
+
+            String extId = String.valueOf(apiMatch.id());
+            Optional<Match> existing = matchRepository.findByExternalId(extId);
+
+            if (existing.isPresent()) {
+                Match m = existing.get();
+                m.setKickoffTime(parseUtc(apiMatch.utcDate()));
+                m.setStatus(mapStatus(apiMatch.status()));
+                matchRepository.save(m);
+                updated++;
+                continue;
+            }
+
+            Team home = null;
+            Team away = null;
+            String homePlaceholder = null;
+            String awayPlaceholder = null;
+
+            if (apiMatch.homeTeam() != null) {
+                Optional<Team> opt = resolveTeam(apiMatch.homeTeam());
+                if (opt.isPresent()) {
+                    home = opt.get();
+                } else {
+                    homePlaceholder = apiMatch.homeTeam().name() != null ? apiMatch.homeTeam().name() : "TBD";
+                }
+            } else {
+                homePlaceholder = "TBD";
+            }
+
+            if (apiMatch.awayTeam() != null) {
+                Optional<Team> opt = resolveTeam(apiMatch.awayTeam());
+                if (opt.isPresent()) {
+                    away = opt.get();
+                } else {
+                    awayPlaceholder = apiMatch.awayTeam().name() != null ? apiMatch.awayTeam().name() : "TBD";
+                }
+            } else {
+                awayPlaceholder = "TBD";
+            }
+
+            Match match = Match.builder()
+                    .externalId(extId)
+                    .stage(stage)
+                    .matchNumber(0)
+                    .roundLabel(stage.getDisplayName())
+                    .homeTeam(home)
+                    .awayTeam(away)
+                    .homeTeamPlaceholder(homePlaceholder)
+                    .awayTeamPlaceholder(awayPlaceholder)
+                    .kickoffTime(parseUtc(apiMatch.utcDate()))
+                    .status(mapStatus(apiMatch.status()))
+                    .build();
+
+            matchRepository.save(match);
+            created++;
+        }
+
+        return SyncResult.success(created + " created, " + updated + " updated" +
+                (skipped > 0 ? ", " + skipped + " skipped" : ""));
+    }
+
+    private MatchStage mapKnockoutStage(String apiStage) {
+        if (apiStage == null) return null;
+        return switch (apiStage) {
+            case "LAST_32",   "ROUND_OF_32"                -> MatchStage.ROUND_OF_32;
+            case "LAST_16",   "ROUND_OF_16"                -> MatchStage.ROUND_OF_16;
+            case "QUARTER_FINALS", "QUARTER_FINAL"         -> MatchStage.QUARTER_FINAL;
+            case "SEMI_FINALS",    "SEMI_FINAL"            -> MatchStage.SEMI_FINAL;
+            case "FINAL"                                   -> MatchStage.FINAL;
+            case "THIRD_PLACE", "PLAY_OFF_FOR_THIRD_PLACE" -> MatchStage.THIRD_PLACE;
+            default -> null;
+        };
+    }
+
+    /**
      * Resolves a team from the API DTO, trying externalId → TLA → name in order.
      * When found via TLA or name, also stamps the externalId so future lookups
      * hit the fast externalId path.
