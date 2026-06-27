@@ -49,6 +49,13 @@ public class AdminSyncController {
         return "redirect:/admin/sync";
     }
 
+    @PostMapping("/knockout-matches")
+    public String syncKnockoutMatches(RedirectAttributes ra) {
+        SyncResult r = matchSyncService.syncKnockoutMatches();
+        ra.addFlashAttribute("successMessage", "Knockout Matches: " + r.message());
+        return "redirect:/admin/sync";
+    }
+
     @PostMapping("/match-dates")
     public String syncMatchDates(RedirectAttributes ra) {
         SyncResult r = matchSyncService.syncMatchDatesOnly();

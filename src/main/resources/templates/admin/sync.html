@@ -61,6 +61,17 @@
 
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
       <div>
+        <p class="font-semibold text-gray-800">Knockout Matches</p>
+        <p class="text-xs text-gray-400 mt-0.5">Upsert Round of 32 through Final from API. Predictions are <span class="text-green-600 font-medium">preserved</span>. 1 API call.</p>
+      </div>
+      <form th:action="@{/admin/sync/knockout-matches}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit" class="px-4 py-2 text-sm font-semibold bg-admin-dark text-white rounded-lg hover:bg-admin-mid transition-colors">Run</button>
+      </form>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
+      <div>
         <p class="font-semibold text-gray-800">Standings</p>
         <p class="text-xs text-gray-400 mt-0.5">Upsert group standings from API. Skipped if no matches completed since last sync. 1 API call.</p>
       </div>
