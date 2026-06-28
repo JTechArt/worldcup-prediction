@@ -55,30 +55,35 @@
         </div>
       </div>
 
-      <!-- Stage filter tabs -->
-      <div class="flex gap-2 mb-5" id="hero-tabs">
-        <button class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 hero-tab-btn"
-                th:classappend="${heroStage == 'all'} ? 'bg-green-dark text-white shadow' : 'bg-white/10 text-white/70 hover:bg-white/20'"
-                hx-get="@{'/c/' + ${slug} + '/heroes?stage=all'}"
-                hx-target="#heroes-container"
-                hx-swap="innerHTML"
-                hx-on::after-request="updateHeroTabs(this)">
+      <!-- Hero stage filter tabs (Alpine.js manages active state) -->
+      <div class="flex gap-2 mb-5"
+           x-data="{ ht: $el.dataset.heroTab }"
+           th:data-hero-tab="${heroStage}">
+        <button
+            :class="ht === 'all' ? 'bg-green-dark text-white shadow' : 'bg-white/10 text-white/70 hover:bg-white/20'"
+            class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200"
+            @click="ht = 'all'"
+            th:attr="hx-get=@{|/c/${slug}/heroes?stage=all|}"
+            hx-target="#heroes-container"
+            hx-swap="innerHTML">
           All
         </button>
-        <button class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 hero-tab-btn"
-                th:classappend="${heroStage == 'group'} ? 'bg-green-dark text-white shadow' : 'bg-white/10 text-white/70 hover:bg-white/20'"
-                hx-get="@{'/c/' + ${slug} + '/heroes?stage=group'}"
-                hx-target="#heroes-container"
-                hx-swap="innerHTML"
-                hx-on::after-request="updateHeroTabs(this)">
+        <button
+            :class="ht === 'group' ? 'bg-green-dark text-white shadow' : 'bg-white/10 text-white/70 hover:bg-white/20'"
+            class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200"
+            @click="ht = 'group'"
+            th:attr="hx-get=@{|/c/${slug}/heroes?stage=group|}"
+            hx-target="#heroes-container"
+            hx-swap="innerHTML">
           Group Stage
         </button>
-        <button class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 hero-tab-btn"
-                th:classappend="${heroStage == 'playoff'} ? 'bg-green-dark text-white shadow' : 'bg-white/10 text-white/70 hover:bg-white/20'"
-                hx-get="@{'/c/' + ${slug} + '/heroes?stage=playoff'}"
-                hx-target="#heroes-container"
-                hx-swap="innerHTML"
-                hx-on::after-request="updateHeroTabs(this)">
+        <button
+            :class="ht === 'playoff' ? 'bg-green-dark text-white shadow' : 'bg-white/10 text-white/70 hover:bg-white/20'"
+            class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200"
+            @click="ht = 'playoff'"
+            th:attr="hx-get=@{|/c/${slug}/heroes?stage=playoff|}"
+            hx-target="#heroes-container"
+            hx-swap="innerHTML">
           Play Off
         </button>
       </div>
@@ -89,17 +94,6 @@
       </div>
 
     </div>
-
-    <script>
-    function updateHeroTabs(clickedBtn) {
-      document.querySelectorAll('.hero-tab-btn').forEach(btn => {
-        btn.classList.remove('bg-green-dark', 'text-white', 'shadow');
-        btn.classList.add('bg-white/10', 'text-white/70', 'hover:bg-white/20');
-      });
-      clickedBtn.classList.remove('bg-white/10', 'text-white/70', 'hover:bg-white/20');
-      clickedBtn.classList.add('bg-green-dark', 'text-white', 'shadow');
-    }
-    </script>
 
       <style>
         @keyframes heroFloat {

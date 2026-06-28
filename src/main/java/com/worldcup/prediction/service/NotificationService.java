@@ -25,13 +25,19 @@ public class NotificationService {
 
     @Transactional
     public boolean sendPredictionWindowOpen(List<User> users, Match match, Long communityId) {
-        String refKey = "PREDICTION_WINDOW_OPEN:community:" + communityId + ":match:" + match.getId();
-        if (notificationLogRepository.existsByReferenceKey(refKey)) {
+        List<User> toNotify = users.stream()
+                .filter(u -> {
+                    String refKey = "PREDICTION_WINDOW_OPEN:community:" + communityId + ":match:" + match.getId() + ":user:" + u.getId();
+                    return !notificationLogRepository.existsByReferenceKey(refKey);
+                })
+                .toList();
+        if (toNotify.isEmpty()) {
             log.debug("Window-open notification already sent for match {} in community {}", match.getId(), communityId);
             return false;
         }
-        emailService.sendPredictionWindowOpen(users, List.of(match));
-        for (User user : users) {
+        emailService.sendPredictionWindowOpen(toNotify, List.of(match));
+        for (User user : toNotify) {
+            String refKey = "PREDICTION_WINDOW_OPEN:community:" + communityId + ":match:" + match.getId() + ":user:" + user.getId();
             logNotification(NotificationType.PREDICTION_WINDOW_OPEN, user, user.getEmail(), match, refKey, null);
         }
         return true;

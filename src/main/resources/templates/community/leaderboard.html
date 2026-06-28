@@ -444,14 +444,13 @@
                  x-show="gsOpen">
               <span th:text="'⚽ GS · Round ' + ${iter.count}">⚽ GS · Round 1</span>
             </div>
-            <!-- GS collapsed placeholder header — shown once when gsOpen is false -->
+            <!-- GS expand/collapse toggle button -->
             <div th:if="${groupRounds != null and not groupRounds.isEmpty()}"
                  class="lb-phase-hd-cell phase-gs"
-                 style="width:80px;cursor:pointer"
-                 x-show="!gsOpen"
-                 @click="gsOpen=true">
-              <span style="font-size:9px">⚽ GS</span>
-              <span style="font-size:9px;opacity:0.8;margin-left:4px">▶</span>
+                 style="width:44px;cursor:pointer;flex-shrink:0"
+                 @click="gsOpen=!gsOpen"
+                 :title="gsOpen ? 'Collapse Group Stage' : 'Expand Group Stage'">
+              <span style="font-size:9px" x-text="gsOpen ? '◀ GS' : '▶ GS'">▶ GS</span>
             </div>
             <div th:each="stage : ${stages}"
                  th:if="${stage.name() != 'GROUP'}"
@@ -489,6 +488,8 @@
                 </div>
               </div>
             </th:block>
+            <!-- Spacer to match the GS toggle button column -->
+            <div th:if="${groupRounds != null and not groupRounds.isEmpty()}" style="width:44px;flex-shrink:0"></div>
             <!-- Collapsed GS total header -->
             <div class="lb-psc-hd" x-show="!gsOpen" style="width:80px">
               <div class="lb-psc-hd-label">GS Pts</div>
@@ -595,6 +596,10 @@
                   <span th:if="${not showPred}">·</span>
                 </div>
               </th:block>
+              <!-- Spacer to match the GS toggle button column -->
+              <div th:if="${groupRounds != null and not groupRounds.isEmpty()}"
+                   class="lb-psc-cell"
+                   style="width:44px;flex-shrink:0"></div>
               <!-- Collapsed GS total data cell -->
               <div th:with="gsPts=${phasePoints != null ? phasePoints.get(entry.userId)?.get(gsStage) : null}"
                    th:class="'lb-psc-cell ' + (${gsPts == null} ? 'cell-pending' : (${gsPts >= 3} ? 'cell-exact' : (${gsPts == 2} ? 'cell-draw' : (${gsPts == 1} ? 'cell-winner' : 'cell-zero'))))"

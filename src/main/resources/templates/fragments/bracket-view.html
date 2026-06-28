@@ -1,88 +1,428 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MAIN BRACKET FRAGMENT
+     ══════════════════════════════════════════════════════════════ -->
 <div th:fragment="bracket-view">
 
-  <!-- Empty state -->
+  <style>
+    /* ── Outer scroll wrapper ─────────────────────────────── */
+    .wc-bracket { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 24px; }
+    .wc-bracket-inner {
+      display: flex; align-items: center; gap: 0;
+      min-width: max-content; padding: 48px 4px 24px;
+      position: relative;
+      background: rgba(0,0,0,0.38);
+      border-radius: 18px;
+      backdrop-filter: blur(3px);
+    }
+
+    /* ── Two halves + center ──────────────────────────────── */
+    .bracket-half  { display: flex; align-items: stretch; overflow: visible; }
+    .bracket-center {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 0 6px; gap: 28px; z-index: 1;
+    }
+
+    /* ── Individual round columns ─────────────────────────── */
+    .bracket-col {
+      display: flex; flex-direction: column; height: 720px;
+      position: relative; overflow: visible;
+    }
+    /* Left half: gap on the RIGHT of each column */
+    .bracket-left .bracket-col { padding-right: 8px; }
+    /* Right half: gap on the LEFT of each column */
+    .bracket-right .bracket-col { padding-left: 8px; }
+
+    /* Column header (floats above column) */
+    .bkt-col-hdr {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.68rem; letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.88); text-align: center;
+      position: absolute; top: -26px; left: 0; right: 0;
+      white-space: nowrap; pointer-events: none;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    }
+
+    /* ── Each match slot (fills height proportionally) ────── */
+    .bracket-item {
+      flex: 1; display: flex; align-items: center;
+      position: relative; overflow: visible;
+    }
+
+    /* ── Match card ───────────────────────────────────────── */
+    .bkt-card {
+      width: 120px;
+      background: rgba(255,255,255,0.93);
+      border: 1.5px solid rgba(0,107,42,0.12);
+      border-radius: 10px;
+      padding: 7px 9px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      transition: transform .18s, box-shadow .18s, border-color .18s;
+    }
+    .bkt-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 18px rgba(0,107,42,0.18);
+      border-color: rgba(0,200,83,0.5);
+    }
+    .bkt-card.bkt-done { border-color: #00c853; }
+
+    /* Final card */
+    .bkt-final-card {
+      background: rgba(255,252,220,0.96);
+      border-color: #FFD600;
+      box-shadow: 0 0 24px rgba(255,214,0,0.18);
+      width: 120px;
+    }
+    .bkt-final-card:hover {
+      box-shadow: 0 6px 24px rgba(255,214,0,0.35);
+      border-color: #FF8F00;
+    }
+    /* 3rd Place card */
+    .bkt-tp-card {
+      background: rgba(248,250,252,0.94);
+      border-color: #94a3b8;
+    }
+    .bkt-tp-card:hover { border-color: #64748b; box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+
+    /* ── Team row ─────────────────────────────────────────── */
+    .bm-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
+    .bm-row + .bm-row { border-top: 1px solid #f0fdf5; }
+    .bm-flag {
+      width: 20px; height: 20px; border-radius: 50%;
+      object-fit: cover; border: 1px solid #e2e8f0; flex-shrink: 0;
+    }
+    .bm-flag-empty {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: #f1f5f9; border: 1px dashed #cbd5e1; flex-shrink: 0;
+    }
+    .bm-name {
+      flex: 1; font-size: 0.7rem; font-weight: 700;
+      color: #1a3a2a;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .bm-name.bm-tbd {
+      color: #94a3b8; font-style: italic;
+      font-weight: 400; text-transform: none; letter-spacing: 0;
+    }
+    .bm-score {
+      font-family: 'Bebas Neue', sans-serif; font-size: 0.9rem;
+      color: #006b2a; min-width: 13px; text-align: right; line-height: 1;
+    }
+    .bm-score.bm-win { color: #00c853; font-weight: 900; }
+    .bm-dots  { display: flex; gap: 3px; align-items: center; }
+    .bm-dot   {
+      width: 3px; height: 3px; border-radius: 50%;
+      background: #cbd5e1;
+      animation: bmdot 1.6s ease-in-out infinite;
+    }
+    .bm-dot:nth-child(2) { animation-delay: .32s; }
+    .bm-dot:nth-child(3) { animation-delay: .64s; }
+    @keyframes bmdot { 0%,100%{opacity:.3} 50%{opacity:.9} }
+    .bm-date { margin-top: 4px; text-align: center; font-size: 0.58rem; color: #94a3b8; font-weight: 500; }
+
+    /* ── Center labels ────────────────────────────────────── */
+    .bkt-round-lbl {
+      font-family: 'Bebas Neue', sans-serif; font-size: 0.7rem;
+      letter-spacing: 0.12em; color: rgba(255,255,255,0.85);
+      text-align: center; margin-bottom: 5px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    }
+    .bkt-final-lbl {
+      font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem;
+      letter-spacing: 0.16em; color: rgba(255,214,0,0.95);
+      text-align: center; margin-bottom: 6px;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+    }
+
+    /* ════════════════════════════════════════════════════════
+       CONNECTING LINES
+       ════════════════════════════════════════════════════════ */
+
+    /* LEFT HALF - vertical bracket arm on right side */
+    .bracket-left .bracket-col:not(.col-sfl) .bracket-item:nth-child(2n-1)::after {
+      content: ''; position: absolute;
+      right: -5px; top: 50%; width: 2px; height: 100%;
+      background: rgba(0, 200, 83, 0.42); border-radius: 1px;
+    }
+    .bracket-left .bracket-col:not(.col-sfl) .bracket-item:nth-child(2n)::after {
+      content: ''; position: absolute;
+      right: -5px; bottom: 50%; width: 2px; height: 100%;
+      background: rgba(0, 200, 83, 0.42); border-radius: 1px;
+    }
+    /* Incoming horizontal bar */
+    .bracket-left .col-r16l .bracket-item::before,
+    .bracket-left .col-qfl  .bracket-item::before,
+    .bracket-left .col-sfl  .bracket-item::before {
+      content: ''; position: absolute;
+      left: -4px; top: 50%; width: 4px; height: 2px;
+      background: rgba(0, 200, 83, 0.42); transform: translateY(-1px);
+    }
+    /* SF Left → Final gold bar (SFL gap 8px + center padding-left 6px = 14px) */
+    .bracket-left .col-sfl .bracket-item::after {
+      content: ''; position: absolute;
+      right: -14px; top: 50%; width: 14px; height: 2px;
+      background: rgba(255, 214, 0, 0.55); transform: translateY(-1px);
+    }
+
+    /* RIGHT HALF */
+    .bracket-right .bracket-col:not(.col-sfr) .bracket-item:nth-child(2n-1)::after {
+      content: ''; position: absolute;
+      left: -5px; top: 50%; width: 2px; height: 100%;
+      background: rgba(0, 200, 83, 0.42); border-radius: 1px;
+    }
+    .bracket-right .bracket-col:not(.col-sfr) .bracket-item:nth-child(2n)::after {
+      content: ''; position: absolute;
+      left: -5px; bottom: 50%; width: 2px; height: 100%;
+      background: rgba(0, 200, 83, 0.42); border-radius: 1px;
+    }
+    .bracket-right .col-sfr  .bracket-item::before,
+    .bracket-right .col-qfr  .bracket-item::before,
+    .bracket-right .col-r16r .bracket-item::before {
+      content: ''; position: absolute;
+      left: -4px; top: 50%; width: 4px; height: 2px;
+      background: rgba(0, 200, 83, 0.42); transform: translateY(-1px);
+    }
+    /* SF Right → Final gold bar */
+    .bracket-right .col-sfr .bracket-item::after {
+      content: ''; position: absolute;
+      left: -14px; top: 50%; width: 14px; height: 2px;
+      background: rgba(255, 214, 0, 0.55); transform: translateY(-1px);
+    }
+
+    /* ── Mobile hint ─────────────────────────────────────── */
+    .bkt-scroll-hint {
+      display: none; text-align: center; padding: 10px 0 0;
+      font-size: 0.68rem; color: rgba(255,255,255,0.28); letter-spacing: .05em;
+    }
+    @media (max-width: 900px) { .bkt-scroll-hint { display: block; } }
+    @media (prefers-reduced-motion: reduce) { .bm-dot { animation: none !important; } }
+  </style>
+
+  <!-- ── Empty state ──────────────────────────────────────────── -->
   <div th:if="${bracketByStage == null or bracketByStage.isEmpty()}"
-       class="text-center py-20 text-white/50 animate-fade-up stagger-1">
+       class="text-center py-24 animate-fade-up">
     <div class="text-6xl mb-4">🏆</div>
-    <p class="text-xl font-semibold">Knockout rounds not started yet</p>
-    <p class="text-sm mt-2">Check back after the Group Stage!</p>
+    <p class="text-xl font-semibold text-white/70">Knockout rounds not started yet</p>
+    <p class="text-sm text-white/40 mt-2">Check back after the Group Stage concludes!</p>
   </div>
 
-  <!-- Bracket -->
-  <div class="bracket-scroll animate-fade-up stagger-1" th:unless="${bracketByStage == null or bracketByStage.isEmpty()}">
-    <div class="bracket-grid">
+  <!-- ── Bracket ──────────────────────────────────────────────── -->
+  <div th:unless="${bracketByStage == null or bracketByStage.isEmpty()}"
+       class="wc-bracket animate-fade-up stagger-1"
+       th:with="
+         r32=${bracketByStage.get('Round of 32')},
+         r16=${bracketByStage.get('Round of 16')},
+         qf=${bracketByStage.get('Quarter-Finals')},
+         sf=${bracketByStage.get('Semi-Finals')},
+         tp=${bracketByStage.get('3rd Place')},
+         fin=${bracketByStage.get('Final')}">
 
-      <div th:each="entry, iterStat : ${bracketByStage}"
-           th:with="roundName=${entry.key}"
-           th:classappend="${roundName == 'Final'} ? ' final' : (${roundName == '3rd Place'} ? ' third' : '')"
-           class="round-col">
+    <div class="wc-bracket-inner">
 
-        <div class="round-header" th:text="${roundName}">Round</div>
+      <!-- ════════════════════════════════════════
+           LEFT HALF:  R32 → R16 → QF → SF (left-to-right)
+           ════════════════════════════════════════ -->
+      <div class="bracket-half bracket-left">
 
-        <div class="matches-col">
-          <div th:each="match : ${entry.value}"
-               th:classappend="${match.status?.name() == 'COMPLETED'} ? ' finished' : ''"
-               class="match-card">
-
-            <!-- Home team -->
-            <div class="team-row">
-              <img th:if="${match.homeTeam != null}"
-                   th:src="@{'/images/flags/' + ${match.homeTeam.flagCode} + '.svg'}"
-                   th:alt="${match.homeTeam.name}"
-                   class="flag-sm" />
-              <div th:unless="${match.homeTeam != null}" class="flag-sm bg-gray-100"></div>
-              <span th:if="${match.homeTeam != null}" th:text="${match.homeTeam.name}" class="team-name"></span>
-              <span th:unless="${match.homeTeam != null}"
-                    th:text="${match.homeTeamPlaceholder != null ? match.homeTeamPlaceholder : 'TBD'}"
-                    class="team-name tbd"></span>
-              <span th:if="${match.status?.name() == 'COMPLETED' and match.homeScore != null}"
-                    th:text="${match.homeScore}"
-                    th:classappend="${match.homeScore > match.awayScore} ? ' winner' : ''"
-                    class="score"></span>
-              <div th:unless="${match.status?.name() == 'COMPLETED'}" class="tbd-dots">
-                <div class="tbd-dot"></div><div class="tbd-dot"></div><div class="tbd-dot"></div>
-              </div>
-            </div>
-
-            <!-- Away team -->
-            <div class="team-row">
-              <img th:if="${match.awayTeam != null}"
-                   th:src="@{'/images/flags/' + ${match.awayTeam.flagCode} + '.svg'}"
-                   th:alt="${match.awayTeam.name}"
-                   class="flag-sm" />
-              <div th:unless="${match.awayTeam != null}" class="flag-sm bg-gray-100"></div>
-              <span th:if="${match.awayTeam != null}" th:text="${match.awayTeam.name}" class="team-name"></span>
-              <span th:unless="${match.awayTeam != null}"
-                    th:text="${match.awayTeamPlaceholder != null ? match.awayTeamPlaceholder : 'TBD'}"
-                    class="team-name tbd"></span>
-              <span th:if="${match.status?.name() == 'COMPLETED' and match.awayScore != null}"
-                    th:text="${match.awayScore}"
-                    th:classappend="${match.awayScore > match.homeScore} ? ' winner' : ''"
-                    class="score"></span>
-              <div th:unless="${match.status?.name() == 'COMPLETED'}" class="tbd-dots">
-                <div class="tbd-dot"></div><div class="tbd-dot"></div><div class="tbd-dot"></div>
-              </div>
-            </div>
-
-            <!-- Kickoff date chip -->
-            <div class="mt-1.5 text-center">
-              <span th:if="${match.kickoffTime != null}"
-                    th:text="${#temporals.format(match.kickoffTime, 'MMM d')}"
-                    class="text-xs text-white/50 font-medium"></span>
-            </div>
-
+        <!-- R32 Left (matches 0–7) -->
+        <div class="bracket-col col-r32l">
+          <div class="bkt-col-hdr">ROUND OF 32</div>
+          <div class="bracket-item" th:each="i : ${#numbers.sequence(0, 7)}">
+            <th:block th:with="m=${r32 != null and r32.size() > i ? r32[i] : null}">
+              <th:block th:replace="~{fragments/bracket-view :: bmc(${m}, '')}"></th:block>
+            </th:block>
           </div>
         </div>
+
+        <!-- R16 Left (matches 0–3) -->
+        <div class="bracket-col col-r16l">
+          <div class="bkt-col-hdr">ROUND OF 16</div>
+          <div class="bracket-item" th:each="i : ${#numbers.sequence(0, 3)}">
+            <th:block th:with="m=${r16 != null and r16.size() > i ? r16[i] : null}">
+              <th:block th:replace="~{fragments/bracket-view :: bmc(${m}, '')}"></th:block>
+            </th:block>
+          </div>
+        </div>
+
+        <!-- QF Left (matches 0–1) -->
+        <div class="bracket-col col-qfl">
+          <div class="bkt-col-hdr">QUARTER-FINALS</div>
+          <div class="bracket-item" th:each="i : ${#numbers.sequence(0, 1)}">
+            <th:block th:with="m=${qf != null and qf.size() > i ? qf[i] : null}">
+              <th:block th:replace="~{fragments/bracket-view :: bmc(${m}, '')}"></th:block>
+            </th:block>
+          </div>
+        </div>
+
+        <!-- SF Left (match 0) -->
+        <div class="bracket-col col-sfl">
+          <div class="bkt-col-hdr">SEMI-FINALS</div>
+          <div class="bracket-item">
+            <th:block th:with="m=${sf != null and sf.size() > 0 ? sf[0] : null}">
+              <th:block th:replace="~{fragments/bracket-view :: bmc(${m}, '')}"></th:block>
+            </th:block>
+          </div>
+        </div>
+
+      </div><!-- /bracket-left -->
+
+      <!-- ════════════════════════════════════════
+           CENTER: FINAL + 3RD PLACE
+           ════════════════════════════════════════ -->
+      <div class="bracket-center">
+
+        <!-- Final -->
+        <div>
+          <div class="bkt-final-lbl">⚽ FINAL</div>
+          <th:block th:with="m=${fin != null and fin.size() > 0 ? fin[0] : null}">
+            <th:block th:replace="~{fragments/bracket-view :: bmc(${m}, 'bkt-final-card')}"></th:block>
+          </th:block>
+        </div>
+
+        <!-- 3rd Place -->
+        <div>
+          <div class="bkt-round-lbl">3RD PLACE</div>
+          <th:block th:with="m=${tp != null and tp.size() > 0 ? tp[0] : null}">
+            <th:block th:replace="~{fragments/bracket-view :: bmc(${m}, 'bkt-tp-card')}"></th:block>
+          </th:block>
+        </div>
+
       </div>
 
+      <!-- ════════════════════════════════════════
+           RIGHT HALF: SF → QF → R16 → R32 (center-to-right)
+           ════════════════════════════════════════ -->
+      <div class="bracket-half bracket-right">
+
+        <!-- SF Right (match 1) -->
+        <div class="bracket-col col-sfr">
+          <div class="bkt-col-hdr">SEMI-FINALS</div>
+          <div class="bracket-item">
+            <th:block th:with="m=${sf != null and sf.size() > 1 ? sf[1] : null}">
+              <th:block th:replace="~{fragments/bracket-view :: bmc(${m}, '')}"></th:block>
+            </th:block>
+          </div>
+        </div>
+
+        <!-- QF Right (matches 2–3) -->
+        <div class="bracket-col col-qfr">
+          <div class="bkt-col-hdr">QUARTER-FINALS</div>
+          <div class="bracket-item" th:each="i : ${#numbers.sequence(2, 3)}">
+            <th:block th:with="m=${qf != null and qf.size() > i ? qf[i] : null}">
+              <th:block th:replace="~{fragments/bracket-view :: bmc(${m}, '')}"></th:block>
+            </th:block>
+          </div>
+        </div>
+
+        <!-- R16 Right (matches 4–7) -->
+        <div class="bracket-col col-r16r">
+          <div class="bkt-col-hdr">ROUND OF 16</div>
+          <div class="bracket-item" th:each="i : ${#numbers.sequence(4, 7)}">
+            <th:block th:with="m=${r16 != null and r16.size() > i ? r16[i] : null}">
+              <th:block th:replace="~{fragments/bracket-view :: bmc(${m}, '')}"></th:block>
+            </th:block>
+          </div>
+        </div>
+
+        <!-- R32 Right (matches 8–15) -->
+        <div class="bracket-col col-r32r">
+          <div class="bkt-col-hdr">ROUND OF 32</div>
+          <div class="bracket-item" th:each="i : ${#numbers.sequence(8, 15)}">
+            <th:block th:with="m=${r32 != null and r32.size() > i ? r32[i] : null}">
+              <th:block th:replace="~{fragments/bracket-view :: bmc(${m}, '')}"></th:block>
+            </th:block>
+          </div>
+        </div>
+
+      </div><!-- /bracket-right -->
+
+    </div><!-- /wc-bracket-inner -->
+
+    <div class="bkt-scroll-hint">← Scroll to see full bracket →</div>
+
+  </div><!-- /wc-bracket -->
+
+</div><!-- /bracket-view fragment -->
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     HELPER: MATCH CARD
+     Called with (m=Match|null, cardClass=extra CSS class string)
+     ══════════════════════════════════════════════════════════════ -->
+<th:block th:fragment="bmc(m, cardClass)">
+
+  <!-- Populated match -->
+  <div th:if="${m != null}"
+       th:class="${'bkt-card ' + cardClass + (m.status?.name() == 'COMPLETED' ? ' bkt-done' : '')}">
+
+    <!-- Home team -->
+    <div class="bm-row">
+      <img th:if="${m.homeTeam != null}"
+           th:src="@{'/images/flags/' + ${m.homeTeam.flagCode} + '.svg'}"
+           th:alt="${m.homeTeam.fifaCode}" class="bm-flag" loading="lazy" />
+      <div th:unless="${m.homeTeam != null}" class="bm-flag-empty"></div>
+
+      <span th:if="${m.homeTeam != null}"
+            th:text="${m.homeTeam.fifaCode}" class="bm-name"></span>
+      <span th:unless="${m.homeTeam != null}"
+            th:text="${m.homeTeamPlaceholder != null and m.homeTeamPlaceholder != 'TBD'
+                       ? m.homeTeamPlaceholder : 'TBD'}"
+            class="bm-name bm-tbd"></span>
+
+      <span th:if="${m.status?.name() == 'COMPLETED' and m.homeScore != null}"
+            th:text="${m.homeScore}"
+            th:class="${'bm-score' + (m.homeScore > m.awayScore ? ' bm-win' : '')}"></span>
+      <div th:unless="${m.status?.name() == 'COMPLETED'}" class="bm-dots">
+        <div class="bm-dot"></div><div class="bm-dot"></div><div class="bm-dot"></div>
+      </div>
+    </div>
+
+    <!-- Away team -->
+    <div class="bm-row">
+      <img th:if="${m.awayTeam != null}"
+           th:src="@{'/images/flags/' + ${m.awayTeam.flagCode} + '.svg'}"
+           th:alt="${m.awayTeam.fifaCode}" class="bm-flag" loading="lazy" />
+      <div th:unless="${m.awayTeam != null}" class="bm-flag-empty"></div>
+
+      <span th:if="${m.awayTeam != null}"
+            th:text="${m.awayTeam.fifaCode}" class="bm-name"></span>
+      <span th:unless="${m.awayTeam != null}"
+            th:text="${m.awayTeamPlaceholder != null and m.awayTeamPlaceholder != 'TBD'
+                       ? m.awayTeamPlaceholder : 'TBD'}"
+            class="bm-name bm-tbd"></span>
+
+      <span th:if="${m.status?.name() == 'COMPLETED' and m.awayScore != null}"
+            th:text="${m.awayScore}"
+            th:class="${'bm-score' + (m.awayScore > m.homeScore ? ' bm-win' : '')}"></span>
+      <div th:unless="${m.status?.name() == 'COMPLETED'}" class="bm-dots">
+        <div class="bm-dot"></div><div class="bm-dot"></div><div class="bm-dot"></div>
+      </div>
+    </div>
+
+    <!-- Kickoff date -->
+    <div th:if="${m.kickoffTime != null}" class="bm-date"
+         th:text="${#temporals.format(m.kickoffTime, 'MMM d · HH:mm')}"></div>
+
+  </div><!-- /populated match -->
+
+  <!-- Empty slot (m == null or match data not yet available) -->
+  <div th:unless="${m != null}" th:class="${'bkt-card ' + cardClass}">
+    <div class="bm-row">
+      <div class="bm-flag-empty"></div>
+      <span class="bm-name bm-tbd">TBD</span>
+      <div class="bm-dots"><div class="bm-dot"></div><div class="bm-dot"></div><div class="bm-dot"></div></div>
+    </div>
+    <div class="bm-row">
+      <div class="bm-flag-empty"></div>
+      <span class="bm-name bm-tbd">TBD</span>
     </div>
   </div>
 
-  <div class="md:hidden text-center py-2 text-xs text-white/50">← Scroll horizontally to see all rounds →</div>
+</th:block><!-- /bmc helper -->
 
-</div>
 </body>
 </html>
