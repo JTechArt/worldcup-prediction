@@ -110,6 +110,31 @@ public class CommunityLeaderboardController {
                             .put(p.getMatch().getId(), p));
         }
 
+        // Round of 32: fetch, sort, group by round label
+        List<Match> r32MatchesList = matchRepository.findByStageWithTeams(MatchStage.ROUND_OF_32);
+        r32MatchesList.sort(Comparator.comparing(Match::getKickoffTime));
+        Map<String, List<Match>> r32Rounds = new LinkedHashMap<>();
+        for (Match m : r32MatchesList) {
+            String label = m.getRoundLabel() != null ? m.getRoundLabel() : "Round of 32";
+            r32Rounds.computeIfAbsent(label, k -> new ArrayList<>()).add(m);
+        }
+        Set<String> closedR32RoundLabels = new HashSet<>();
+        for (String label : r32Rounds.keySet()) {
+            if (!roundWindowService.isRoundOpen(label, now)) {
+                closedR32RoundLabels.add(label);
+            }
+        }
+        List<Long> closedR32MatchIds = r32MatchesList.stream()
+                .filter(m -> closedR32RoundLabels.contains(m.getRoundLabel() != null ? m.getRoundLabel() : "Round of 32"))
+                .map(Match::getId)
+                .toList();
+        if (!closedR32MatchIds.isEmpty()) {
+            predictionRepository.findByCommunityIdAndMatchIdIn(communityId, closedR32MatchIds)
+                    .forEach(p -> predsByUserAndMatch
+                            .computeIfAbsent(p.getUser().getId(), k -> new HashMap<>())
+                            .put(p.getMatch().getId(), p));
+        }
+
         // Also load the current user's own predictions (for open rounds — always visible to self)
         if (currentUserId != null) {
             predictionRepository.findByUserIdAndCommunityId(currentUserId, communityId)
@@ -132,9 +157,17 @@ public class CommunityLeaderboardController {
         model.addAttribute("closedRoundLabels", closedRoundLabels);
         model.addAttribute("predsByUserAndMatch", predsByUserAndMatch);
         model.addAttribute("today", java.time.LocalDate.now().toString());
-        boolean gsOpenDefault = java.time.LocalDate.now().isBefore(java.time.LocalDate.of(2026, 6, 28));
+        // Open the stage that is currently active (has any non-COMPLETED match)
+        boolean anyGsActive = groupMatchesList.stream().anyMatch(m -> m.getStatus() != MatchStatus.COMPLETED);
+        boolean anyR32Active = r32MatchesList.stream().anyMatch(m -> m.getStatus() != MatchStatus.COMPLETED);
+        boolean gsOpenDefault = anyGsActive;
+        boolean r32OpenDefault = !anyGsActive && anyR32Active;
         model.addAttribute("gsOpenDefault", gsOpenDefault);
+        model.addAttribute("r32OpenDefault", r32OpenDefault);
         model.addAttribute("gsStage", MatchStage.GROUP);
+        model.addAttribute("r32Rounds", r32Rounds);
+        model.addAttribute("closedR32RoundLabels", closedR32RoundLabels);
+        model.addAttribute("r32Stage", MatchStage.ROUND_OF_32);
         model.addAttribute("pageTitle", community.getName() + " · Leaderboard");
 
         return "community/leaderboard";

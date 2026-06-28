@@ -412,8 +412,9 @@
 
   <!-- THREE-PANEL LEADERBOARD -->
   <div class="lb-outer" th:unless="${#lists.isEmpty(entries)}"
-       x-data="{ gsOpen: $el.dataset.gsOpen === 'true' }"
-       th:data-gs-open="${gsOpenDefault}">
+       x-data="{ gsOpen: $el.dataset.gsOpen === 'true', r32Open: $el.dataset.r32Open === 'true' }"
+       th:data-gs-open="${gsOpenDefault}"
+       th:data-r32-open="${r32OpenDefault}">
 
     <!-- ══ STICKY HEADER STRIP: phase row + game header row ══ -->
     <div class="lb-sticky-hdr">
@@ -452,12 +453,36 @@
                  :title="gsOpen ? 'Collapse Group Stage' : 'Expand Group Stage'">
               <span style="font-size:9px" x-text="gsOpen ? '◀ GS' : '▶ GS'">▶ GS</span>
             </div>
+            <!-- R32 expandable phase headers -->
+            <div th:each="rEntry, rIter : ${r32Rounds}"
+                 th:id="'ph-r32-r' + ${rIter.count}"
+                 class="lb-phase-hd-cell phase-r32"
+                 th:style="'width:' + (${rEntry.value.size()} * 76) + 'px'"
+                 x-show="r32Open">
+              <span th:text="'⚡ R32 · ' + ${rEntry.key}">⚡ R32</span>
+            </div>
+            <!-- R32 toggle button (always visible) -->
+            <div th:if="${r32Rounds != null and not r32Rounds.isEmpty()}"
+                 class="lb-phase-hd-cell phase-r32"
+                 style="width:44px;cursor:pointer;flex-shrink:0"
+                 @click="r32Open=!r32Open"
+                 :title="r32Open ? 'Collapse Round of 32' : 'Expand Round of 32'">
+              <span style="font-size:9px" x-text="r32Open ? '◀ R32' : '▶ R32'">▶ R32</span>
+            </div>
+            <!-- R32 aggregate header (collapsed) -->
+            <div th:if="${r32Rounds != null and not r32Rounds.isEmpty()}"
+                 class="lb-phase-hd-cell phase-r32"
+                 style="width:var(--kc)"
+                 x-show="!r32Open">
+              <span>R32</span>
+            </div>
+            <!-- Other knockout stage headers (R16 onward) -->
             <div th:each="stage : ${stages}"
-                 th:if="${stage.name() != 'GROUP'}"
+                 th:if="${stage.name() != 'GROUP' and stage.name() != 'ROUND_OF_32'}"
                  th:id="'ph-' + ${stage.name().toLowerCase()}"
                  th:class="'lb-phase-hd-cell ' + ${stage.cssClass}"
                  style="width:var(--kc)"
-                 th:text="${stage.shortLabel}">R32</div>
+                 th:text="${stage.shortLabel}">R16</div>
           </div>
 
           <!-- Game header row: dates, flags, scores -->
@@ -494,8 +519,44 @@
             <div class="lb-psc-hd" x-show="!gsOpen" style="width:80px">
               <div class="lb-psc-hd-label">GS Pts</div>
             </div>
-            <div th:each="stage : ${stages}" th:if="${stage.name() != 'GROUP'}" class="lb-psc-hd">
-              <div class="lb-psc-hd-label" th:text="${stage.shortLabel}">R32</div>
+            <!-- R32 match header columns (expanded) -->
+            <th:block th:if="${r32Rounds != null and not r32Rounds.isEmpty()}">
+              <th:block th:each="rEntry : ${r32Rounds}">
+                <div th:each="m : ${rEntry.value}"
+                     class="lb-game-col-hd"
+                     x-show="r32Open"
+                     th:data-date="${#temporals.format(m.kickoffTime, 'yyyy-MM-dd')}">
+                  <div class="lb-ghd" th:text="${#temporals.format(m.kickoffTime, 'MMM d')}">Jun 28</div>
+                  <div class="lb-ghf">
+                    <div class="lb-ghflag">
+                      <img th:if="${m.homeTeam != null}"
+                           th:src="@{'/images/flags/' + ${m.homeTeam.flagCode} + '.svg'}"
+                           onerror="this.style.display='none'"/>
+                    </div>
+                    <span class="lb-ghv">v</span>
+                    <div class="lb-ghflag">
+                      <img th:if="${m.awayTeam != null}"
+                           th:src="@{'/images/flags/' + ${m.awayTeam.flagCode} + '.svg'}"
+                           onerror="this.style.display='none'"/>
+                    </div>
+                  </div>
+                  <div th:if="${m.homeScore != null}" class="lb-ghs"
+                       th:text="${m.homeScore} + '–' + ${m.awayScore}">0–0</div>
+                  <div th:unless="${m.homeScore != null}" class="lb-ghs-tbd">
+                    <div class="lb-pd"></div><div class="lb-pd"></div><div class="lb-pd"></div>
+                  </div>
+                </div>
+              </th:block>
+              <!-- Spacer to match R32 toggle button -->
+              <div style="width:44px;flex-shrink:0"></div>
+              <!-- R32 Pts header (collapsed) -->
+              <div class="lb-psc-hd" x-show="!r32Open" style="width:var(--kc)">
+                <div class="lb-psc-hd-label">R32 Pts</div>
+              </div>
+            </th:block>
+            <!-- Other knockout stage game headers (R16 onward) -->
+            <div th:each="stage : ${stages}" th:if="${stage.name() != 'GROUP' and stage.name() != 'ROUND_OF_32'}" class="lb-psc-hd">
+              <div class="lb-psc-hd-label" th:text="${stage.shortLabel}">R16</div>
             </div>
           </div>
 
@@ -607,8 +668,39 @@
                    x-show="!gsOpen">
                 <span th:text="${gsPts != null ? gsPts : '·'}">·</span>
               </div>
+              <!-- R32 individual prediction cells (expanded) -->
+              <th:block th:if="${r32Rounds != null and not r32Rounds.isEmpty()}">
+                <th:block th:each="r32Entry : ${r32Rounds}">
+                  <div th:each="m : ${r32Entry.value}"
+                       x-show="r32Open"
+                       th:with="roundClosed=${closedR32RoundLabels != null and closedR32RoundLabels.contains(r32Entry.key)},
+                                isOwnRow=${currentUserId != null and entry.userId == currentUserId},
+                                showPred=${roundClosed or isOwnRow},
+                                userPreds=${predsByUserAndMatch != null ? predsByUserAndMatch.get(entry.userId) : null},
+                                pred=${showPred and userPreds != null ? userPreds.get(m.id) : null}"
+                       th:class="'lb-game-cell '
+                                 + (${pred == null} ? '' :
+                                   (${pred.scoreResult.name() == 'EXACT'} ? 'cell-exact ' :
+                                   (${pred.scoreResult.name() == 'CORRECT_DRAW'} ? 'cell-draw ' :
+                                   (${pred.scoreResult.name() == 'CORRECT_WINNER'} ? 'cell-winner ' :
+                                   (${pred.scoreResult.name() == 'WRONG'} ? 'cell-zero ' : 'cell-pending ')))))">
+                    <span th:if="${pred != null}" class="pred-score" th:text="${pred.predictedHome + '–' + pred.predictedAway}">0–0</span>
+                    <span th:if="${pred == null and showPred}" class="opacity-30">–</span>
+                    <span th:if="${not showPred}">·</span>
+                  </div>
+                </th:block>
+                <!-- Spacer to match R32 toggle button -->
+                <div class="lb-psc-cell" style="width:44px;flex-shrink:0"></div>
+                <!-- R32 aggregate (collapsed) -->
+                <div th:with="r32Pts=${phasePoints != null ? phasePoints.get(entry.userId)?.get(r32Stage) : null}"
+                     th:class="'lb-psc-cell ' + (${r32Pts == null} ? 'cell-pending' : (${r32Pts >= 3} ? 'cell-exact' : (${r32Pts == 2} ? 'cell-draw' : (${r32Pts == 1} ? 'cell-winner' : 'cell-zero'))))"
+                     x-show="!r32Open">
+                  <span th:text="${r32Pts != null ? r32Pts : '·'}">·</span>
+                </div>
+              </th:block>
+              <!-- Other knockout stage cells (R16 onward) -->
               <div th:each="stage : ${stages}"
-                   th:if="${stage.name() != 'GROUP'}"
+                   th:if="${stage.name() != 'GROUP' and stage.name() != 'ROUND_OF_32'}"
                    th:with="pts=${phasePoints != null ? phasePoints.get(entry.userId)?.get(stage) : null}"
                    th:class="'lb-psc-cell ' + (${pts == null} ? 'cell-pending' : (${pts >= 3} ? 'cell-exact' : (${pts == 2} ? 'cell-draw' : (${pts == 1} ? 'cell-winner' : 'cell-zero'))))">
                 <span th:text="${pts != null ? pts : '·'}">·</span>
