@@ -68,7 +68,7 @@ class NotificationSchedulerTest {
 
     @Test
     void checkLeaderboardDigest_noMatchesToday_logsSkipped() {
-        when(matchRepository.findByKickoffTimeBetween(any(), any())).thenReturn(List.of());
+        when(matchRepository.findByKickoffTimeBetweenWithTeams(any(), any())).thenReturn(List.of());
         scheduler.checkLeaderboardDigest();
         verify(notificationService, never()).sendLeaderboardDigest(anyString(), anyList(), anyList(), anyList(), anyLong());
         verify(logService).complete(stubLog, SchedulerJobStatus.SKIPPED, 0, "No matches today");
@@ -78,7 +78,7 @@ class NotificationSchedulerTest {
     void checkLeaderboardDigest_notAllCompleted_logsSkipped() {
         Match incomplete = Match.builder().id(1L).status(MatchStatus.SCHEDULED)
                 .kickoffTime(LocalDateTime.now()).stage(MatchStage.GROUP).matchNumber(1).build();
-        when(matchRepository.findByKickoffTimeBetween(any(), any())).thenReturn(List.of(incomplete));
+        when(matchRepository.findByKickoffTimeBetweenWithTeams(any(), any())).thenReturn(List.of(incomplete));
         scheduler.checkLeaderboardDigest();
         verify(notificationService, never()).sendLeaderboardDigest(anyString(), anyList(), anyList(), anyList(), anyLong());
         verify(logService).complete(stubLog, SchedulerJobStatus.SKIPPED, 0, "Not all today's matches completed");

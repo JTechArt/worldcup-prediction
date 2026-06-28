@@ -58,7 +58,7 @@ class NotificationServiceTest {
 
     @Test
     void sendPredictionWindowOpen_skipsIfAlreadySent() {
-        when(notificationLogRepository.existsByReferenceKey("PREDICTION_WINDOW_OPEN:community:100:match:10")).thenReturn(true);
+        when(notificationLogRepository.existsByReferenceKey("PREDICTION_WINDOW_OPEN:community:100:match:10:user:1")).thenReturn(true);
         boolean result = service.sendPredictionWindowOpen(List.of(testUser), testMatch, COMMUNITY_ID);
         assertFalse(result);
         verify(emailService, never()).sendPredictionWindowOpen(anyList(), anyList());
