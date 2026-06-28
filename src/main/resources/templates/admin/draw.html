@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout}">
+<head><title>Draw Management</title></head>
+<body>
+
+<th:block layout:fragment="page-title">Draw Management</th:block>
+
+<th:block layout:fragment="content">
+
+  <!-- Flash messages -->
+  <div th:if="${successMessage}"
+       class="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm flex items-center gap-2">
+    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+    </svg>
+    <span th:text="${successMessage}"></span>
+  </div>
+  <div th:if="${errorMessage}"
+       class="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm flex items-center gap-2">
+    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+    <span th:text="${errorMessage}"></span>
+  </div>
+
+  <div th:if="${#maps.isEmpty(matchesByStage)}"
+       class="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center text-sm text-gray-400">
+    No knockout matches found. Run <strong>Sync Knockout Matches</strong> from Data Sync first.
+  </div>
+
+  <!-- Stage sections -->
+  <div th:each="stageEntry : ${matchesByStage}" class="mb-6" x-data="{ open: true }">
+
+    <!-- Stage header -->
+    <div class="bg-white rounded-t-xl shadow-sm border border-gray-100 px-4 sm:px-6 py-4
+                flex items-center justify-between cursor-pointer"
+         :class="{ 'rounded-b-xl': !open }"
+         @click="open = !open">
+      <div class="flex items-center gap-3 flex-wrap">
+        <svg :class="{ 'rotate-90': open }"
+             class="w-4 h-4 text-gray-400 transition-transform duration-200"
+             fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+        <h2 class="font-semibold text-gray-800" th:text="${stageEntry.key.displayName}">Round of 32</h2>
+        <span class="text-xs text-gray-400"
+              th:text="${#lists.size(stageEntry.value)} + ' matches'">32 matches</span>
+        <!-- Assignment progress badge -->
+        <th:block th:with="total=${#lists.size(stageEntry.value)},
+                           assigned=${assignedCountByStage.get(stageEntry.key)}">
+          <span th:if="${assigned == total}"
+                class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">All assigned</span>
+          <span th:if="${assigned != null and assigned > 0 and assigned < total}"
+                class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-medium"
+                th:text="${assigned} + '/' + ${total} + ' assigned'">16/32 assigned</span>
+          <span th:if="${assigned == null or assigned == 0}"
+                class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-medium">Not drawn</span>
+        </th:block>
+      </div>
+    </div>
+
+    <!-- Match cards grid -->
+    <div x-show="open" x-transition
+         class="border border-t-0 border-gray-100 rounded-b-xl bg-gray-50 p-4">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+
+        <div th:each="m : ${stageEntry.value}"
+             class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+
+          <!-- Match header row -->
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded"
+                    th:text="'#' + ${m.matchNumber}">#49</span>
+              <span class="text-xs text-gray-500"
+                    th:text="${#temporals.format(m.kickoffTime, 'd MMM HH:mm')}">28 Jun 18:00</span>
+              <span th:if="${m.city != null}" class="text-xs text-gray-400" th:text="${m.city}">Dallas</span>
+            </div>
+            <span th:if="${m.homeTeam != null and m.awayTeam != null}"
+                  class="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700 flex-shrink-0">Assigned</span>
+            <span th:if="${(m.homeTeam != null) != (m.awayTeam != null)}"
+                  class="text-xs font-medium px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 flex-shrink-0">Partial</span>
+            <span th:if="${m.homeTeam == null and m.awayTeam == null}"
+                  class="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 flex-shrink-0">Pending</span>
+          </div>
+
+          <!-- Team selectors form -->
+          <form th:action="@{'/admin/draw/match/' + ${m.id} + '/teams'}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="flex items-start gap-2">
+
+              <!-- Home team -->
+              <div class="flex-1 min-w-0">
+                <label class="text-xs font-medium text-gray-500 block mb-1">Home</label>
+                <select name="homeTeamId"
+                        class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white
+                               focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400">
+                  <option value="">-- TBD --</option>
+                  <option th:each="t : ${teams}"
+                          th:value="${t.id}"
+                          th:text="${t.name}"
+                          th:selected="${m.homeTeam != null and m.homeTeam.id == t.id}">Team</option>
+                </select>
+                <p th:if="${m.homeTeamPlaceholder != null}"
+                   class="text-xs text-gray-400 mt-0.5 truncate"
+                   th:text="${m.homeTeamPlaceholder}">Winner Group A</p>
+              </div>
+
+              <!-- VS -->
+              <div class="pt-6 text-xs font-bold text-gray-400 flex-shrink-0">VS</div>
+
+              <!-- Away team -->
+              <div class="flex-1 min-w-0">
+                <label class="text-xs font-medium text-gray-500 block mb-1">Away</label>
+                <select name="awayTeamId"
+                        class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white
+                               focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400">
+                  <option value="">-- TBD --</option>
+                  <option th:each="t : ${teams}"
+                          th:value="${t.id}"
+                          th:text="${t.name}"
+                          th:selected="${m.awayTeam != null and m.awayTeam.id == t.id}">Team</option>
+                </select>
+                <p th:if="${m.awayTeamPlaceholder != null}"
+                   class="text-xs text-gray-400 mt-0.5 truncate"
+                   th:text="${m.awayTeamPlaceholder}">2nd Place Group B</p>
+              </div>
+
+              <!-- Save button -->
+              <div class="pt-5 flex-shrink-0">
+                <button type="submit"
+                        class="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-600 hover:bg-green-700
+                               text-white transition-colors duration-150 whitespace-nowrap">
+                  Save
+                </button>
+              </div>
+
+            </div>
+          </form>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</th:block>
+</body>
+</html>
