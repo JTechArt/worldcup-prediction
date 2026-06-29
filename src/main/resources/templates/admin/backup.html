@@ -73,8 +73,7 @@
           </div>
 
           <form th:action="@{/admin/backup/restore}" method="post" enctype="multipart/form-data"
-                x-data="{ filename: '', confirmed: false }"
-                @submit.prevent="if(confirmed) $el.submit()">
+                x-data="{ filename: '', confirmed: false }">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
             <div class="mb-4">
