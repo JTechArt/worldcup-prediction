@@ -2,6 +2,7 @@ package com.worldcup.prediction.controller.admin;
 
 import com.worldcup.prediction.domain.enums.WindowMode;
 import com.worldcup.prediction.security.SuperAdminAuthenticationProvider;
+import com.worldcup.prediction.service.RoundWindowService;
 import com.worldcup.prediction.service.TournamentSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +20,7 @@ public class AdminSettingsController {
 
     private final PasswordEncoder passwordEncoder;
     private final TournamentSettingsService tournamentSettingsService;
+    private final RoundWindowService roundWindowService;
 
     @GetMapping
     public String settings(Model model) {
@@ -30,9 +32,12 @@ public class AdminSettingsController {
     @PostMapping("/tournament-mode")
     public String updateTournamentMode(@RequestParam WindowMode windowMode,
                                        @RequestParam int dailyWindowCloseOffsetMinutes,
+                                       @RequestParam int roundLockOffsetMinutes,
                                        RedirectAttributes redirectAttributes) {
         tournamentSettingsService.updateMode(windowMode);
         tournamentSettingsService.updateCloseOffset(dailyWindowCloseOffsetMinutes);
+        tournamentSettingsService.updateRoundLockOffset(roundLockOffsetMinutes);
+        roundWindowService.recalculateAllRoundWindows();
         redirectAttributes.addFlashAttribute("successMessage", "Tournament window mode updated.");
         return "redirect:/admin/settings";
     }

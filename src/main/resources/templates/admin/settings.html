@@ -58,6 +58,12 @@
                  th:value="${tournamentSettings != null ? tournamentSettings.dailyWindowCloseOffsetMinutes : 30}"
                  class="border border-gray-300 rounded px-2 py-1 w-20 text-sm"/>
         </div>
+        <div class="flex items-center gap-3">
+          <label class="text-sm text-gray-600">Round lock offset (minutes before first match kickoff):</label>
+          <input type="number" name="roundLockOffsetMinutes" min="1" max="360"
+                 th:value="${tournamentSettings != null ? tournamentSettings.roundLockOffsetMinutes : 60}"
+                 class="border border-gray-300 rounded px-2 py-1 w-20 text-sm"/>
+        </div>
         <button type="submit"
                 class="bg-admin-dark hover:bg-admin-mid text-white rounded-lg px-4 py-2 text-sm font-semibold">
           Save Mode
