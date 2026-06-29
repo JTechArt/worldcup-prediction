@@ -156,6 +156,55 @@ public class PredictionService {
         return predictionRepository.findByMatchIdWithUsers(matchId);
     }
 
+    /** Returns predictions for a match within a specific community (admin use — bypasses window checks). */
+    public List<Prediction> findAllByMatchIdAndCommunityId(Long matchId, Long communityId) {
+        return predictionRepository.findByMatchIdAndCommunityIdWithUsers(matchId, communityId);
+    }
+
+    /**
+     * Creates a prediction on behalf of a user — bypasses window lock checks.
+     * Admin backdoor for members who submitted predictions via email.
+     * Re-scores immediately if the match result is already recorded.
+     */
+    @Transactional
+    public Prediction createOnBehalfOf(Long userId, Long matchId, Long communityId,
+                                        int homeScore, int awayScore,
+                                        ScoringService scoringService) {
+        if (predictionRepository.existsByUserIdAndMatchIdAndCommunityId(userId, matchId, communityId)) {
+            throw new IllegalStateException(
+                    "Prediction already exists for user " + userId + " / match " + matchId +
+                    " / community " + communityId + "; use override instead.");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Match not found: " + matchId));
+        Community community = communityRepository.findById(communityId)
+                .orElseThrow(() -> new IllegalArgumentException("Community not found: " + communityId));
+
+        Prediction prediction = Prediction.builder()
+                .user(user)
+                .match(match)
+                .community(community)
+                .predictedHome(homeScore)
+                .predictedAway(awayScore)
+                .editedByAdmin(true)
+                .adminEditNote("Created on behalf of user by admin")
+                .build();
+
+        if (match.isCompleted() && match.getHomeScore() != null && match.getAwayScore() != null) {
+            int pts = scoringService.calculatePoints(
+                    match.getEffectiveHomeScore(), match.getEffectiveAwayScore(),
+                    homeScore, awayScore);
+            prediction.setPointsAwarded(pts);
+            prediction.setScoreResult(scoringService.determineScoreResult(
+                    match.getEffectiveHomeScore(), match.getEffectiveAwayScore(),
+                    homeScore, awayScore));
+        }
+
+        return predictionRepository.save(prediction);
+    }
+
     /**
      * Overrides a prediction's predicted scores.
      * Re-scores immediately if the match result is already recorded.
