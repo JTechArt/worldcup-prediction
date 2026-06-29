@@ -24,6 +24,9 @@ public class TournamentSettings {
     @Column(name = "daily_window_close_offset_minutes", nullable = false)
     private int dailyWindowCloseOffsetMinutes;
 
+    @Column(name = "round_lock_offset_minutes", nullable = false)
+    private int roundLockOffsetMinutes;
+
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;

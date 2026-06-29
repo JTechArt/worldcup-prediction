@@ -19,6 +19,7 @@ public class RoundWindowService {
 
     private final RoundWindowRepository roundWindowRepository;
     private final MatchRepository matchRepository;
+    private final TournamentSettingsService tournamentSettingsService;
 
     public boolean isRoundOpen(String roundLabel, LocalDateTime now) {
         Optional<RoundWindow> opt = roundWindowRepository.findByRoundLabel(roundLabel);
@@ -84,13 +85,18 @@ public class RoundWindowService {
                 .map(m -> m.getKickoffTime())
                 .min(LocalDateTime::compareTo)
                 .orElse(null);
-        LocalDateTime lastKickoff = matches.stream()
-                .map(m -> m.getKickoffTime())
-                .max(LocalDateTime::compareTo)
-                .orElse(null);
+        int lockOffsetMinutes = tournamentSettingsService.getSettings().getRoundLockOffsetMinutes();
         if (firstKickoff != null) rw.setAutoOpensAt(firstKickoff.minusHours(24));
-        if (lastKickoff != null) rw.setAutoClosesAt(lastKickoff.minusHours(1));
+        if (firstKickoff != null) rw.setAutoClosesAt(firstKickoff.minusMinutes(lockOffsetMinutes));
         roundWindowRepository.save(rw);
+    }
+
+    @Transactional
+    public void recalculateAllRoundWindows() {
+        roundWindowRepository.findAllOrderByAutoOpensAtAsc()
+                .stream()
+                .map(RoundWindow::getRoundLabel)
+                .forEach(this::recalculateAutoTimes);
     }
 
     private RoundWindow findOrThrow(String roundLabel) {

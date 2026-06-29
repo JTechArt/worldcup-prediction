@@ -24,6 +24,7 @@ public class TournamentSettingsService {
                                 .id(1L)
                                 .windowMode(WindowMode.ROUND)
                                 .dailyWindowCloseOffsetMinutes(30)
+                                .roundLockOffsetMinutes(60)
                                 .build()));
     }
 
@@ -48,6 +49,13 @@ public class TournamentSettingsService {
     public TournamentSettings updateCloseOffset(int minutes) {
         TournamentSettings s = getSettings();
         s.setDailyWindowCloseOffsetMinutes(minutes);
+        return settingsRepository.save(s);
+    }
+
+    @Transactional
+    public TournamentSettings updateRoundLockOffset(int minutes) {
+        TournamentSettings s = getSettings();
+        s.setRoundLockOffsetMinutes(minutes);
         return settingsRepository.save(s);
     }
 }
