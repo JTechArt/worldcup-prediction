@@ -128,7 +128,8 @@ public TournamentSettings updateRoundLockOffset(int minutes) {
 
 #### Service — `RoundWindowService`
 - Inject `TournamentSettingsService`
-- Replace `lastKickoff.minusHours(1)` with `lastKickoff.minusMinutes(tournamentSettingsService.getSettings().getRoundLockOffsetMinutes())`
+- Replace `lastKickoff.minusHours(1)` with `firstKickoff.minusMinutes(tournamentSettingsService.getSettings().getRoundLockOffsetMinutes())`
+  - **Note:** Close time is now anchored to `firstKickoff` (not `lastKickoff`), so predictions lock before the round's first match regardless of how spread out the matches are
 - Add new method `recalculateAllRoundWindows()` that calls `recalculateAutoTimes()` for every existing round window (used when the setting changes)
 
 #### Controller — `AdminSettingsController`
@@ -141,7 +142,7 @@ public TournamentSettings updateRoundLockOffset(int minutes) {
 Add within the Prediction Window Mode form:
 ```html
 <div class="flex items-center gap-3">
-  <label class="text-sm text-gray-600">Round lock offset (minutes before last match kickoff):</label>
+  <label class="text-sm text-gray-600">Round lock offset (minutes before first match kickoff):</label>
   <input type="number" name="roundLockOffsetMinutes" min="1" max="360"
          th:value="${tournamentSettings != null ? tournamentSettings.roundLockOffsetMinutes : 60}"
          class="border border-gray-300 rounded px-2 py-1 w-20 text-sm"/>
