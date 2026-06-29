@@ -152,6 +152,16 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
             @Param("matchIds") java.util.Collection<Long> matchIds,
             @Param("communityId") Long communityId);
 
+    @Query("""
+            SELECT p FROM Prediction p
+            JOIN FETCH p.user u
+            WHERE p.match.id = :matchId AND p.community.id = :communityId
+            ORDER BY u.totalPoints DESC
+            """)
+    List<Prediction> findByMatchIdAndCommunityIdWithUsers(
+            @Param("matchId") Long matchId,
+            @Param("communityId") Long communityId);
+
     @Query("SELECT p FROM Prediction p JOIN FETCH p.user WHERE p.community.id = :communityId AND p.match.id IN :matchIds")
     List<Prediction> findByCommunityIdAndMatchIdIn(
             @Param("communityId") Long communityId,

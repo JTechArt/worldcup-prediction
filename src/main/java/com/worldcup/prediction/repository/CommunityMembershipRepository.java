@@ -47,6 +47,21 @@ public interface CommunityMembershipRepository extends JpaRepository<CommunityMe
     List<CommunityMembership> findByCommunityIdAndStatusWithUser(
             @Param("communityId") Long communityId, @Param("status") MembershipStatus status);
 
+    @Query("""
+            SELECT cm FROM CommunityMembership cm
+            JOIN FETCH cm.user u
+            WHERE cm.community.id = :communityId
+              AND cm.status = 'ACTIVE'
+              AND cm.user.id NOT IN (
+                  SELECT p.user.id FROM Prediction p
+                  WHERE p.match.id = :matchId AND p.community.id = :communityId
+              )
+            ORDER BY u.firstName ASC
+            """)
+    List<CommunityMembership> findActiveMembersWithoutPrediction(
+            @Param("communityId") Long communityId,
+            @Param("matchId") Long matchId);
+
     Optional<CommunityMembership> findByCommunityIdAndUserIdAndRole(
             Long communityId, Long userId, CommunityRole role);
 
