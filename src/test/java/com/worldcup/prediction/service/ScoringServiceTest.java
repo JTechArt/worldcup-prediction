@@ -1,5 +1,7 @@
 package com.worldcup.prediction.service;
 
+import com.worldcup.prediction.domain.enums.PlayoffWinner;
+import com.worldcup.prediction.domain.enums.PlayoffWinnerPick;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -219,6 +221,75 @@ class ScoringServiceTest {
 
         @Test void actualWinPredictedDraw() {
             assertThat(scoringService.isCorrectDraw(2, 0, 1, 1)).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("calculatePlayoffWinnerBonus")
+    class CalculatePlayoffWinnerBonus {
+
+        @Test
+        @DisplayName("+1 when exact draw and winner correct (HOME)")
+        void bonus_exactDrawCorrectWinnerHome() {
+            assertThat(scoringService.calculatePlayoffWinnerBonus(
+                    1, 1, PlayoffWinner.HOME_WIN,
+                    1, 1, PlayoffWinnerPick.HOME)).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("+1 when exact draw and winner correct (AWAY)")
+        void bonus_exactDrawCorrectWinnerAway() {
+            assertThat(scoringService.calculatePlayoffWinnerBonus(
+                    0, 0, PlayoffWinner.AWAY_WIN,
+                    0, 0, PlayoffWinnerPick.AWAY)).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("0 when exact draw but wrong winner pick")
+        void bonus_exactDrawWrongWinner() {
+            assertThat(scoringService.calculatePlayoffWinnerBonus(
+                    1, 1, PlayoffWinner.HOME_WIN,
+                    1, 1, PlayoffWinnerPick.AWAY)).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("0 when exact draw but no winner pick")
+        void bonus_exactDrawNoWinnerPick() {
+            assertThat(scoringService.calculatePlayoffWinnerBonus(
+                    1, 1, PlayoffWinner.HOME_WIN,
+                    1, 1, null)).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("0 when predicted draw but wrong score (not exact)")
+        void bonus_wrongDrawScore() {
+            assertThat(scoringService.calculatePlayoffWinnerBonus(
+                    1, 1, PlayoffWinner.HOME_WIN,
+                    0, 0, PlayoffWinnerPick.HOME)).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("0 when match is not a draw at 90 min")
+        void bonus_notADraw() {
+            assertThat(scoringService.calculatePlayoffWinnerBonus(
+                    2, 1, PlayoffWinner.HOME_WIN,
+                    2, 1, PlayoffWinnerPick.HOME)).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("0 when match playoff winner not set")
+        void bonus_noActualWinner() {
+            assertThat(scoringService.calculatePlayoffWinnerBonus(
+                    1, 1, null,
+                    1, 1, PlayoffWinnerPick.HOME)).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("0 when prediction is not a draw")
+        void bonus_predictedNotDraw() {
+            assertThat(scoringService.calculatePlayoffWinnerBonus(
+                    1, 1, PlayoffWinner.HOME_WIN,
+                    2, 1, PlayoffWinnerPick.HOME)).isEqualTo(0);
         }
     }
 }

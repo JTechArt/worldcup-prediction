@@ -1,5 +1,7 @@
 package com.worldcup.prediction.service;
 
+import com.worldcup.prediction.domain.enums.PlayoffWinner;
+import com.worldcup.prediction.domain.enums.PlayoffWinnerPick;
 import com.worldcup.prediction.domain.enums.PredictionScore;
 import org.springframework.stereotype.Service;
 
@@ -54,6 +56,17 @@ public class ScoringService {
     public boolean isCorrectOutcome(int actualHome, int actualAway,
                                      int predictedHome, int predictedAway) {
         return outcome(actualHome, actualAway) == outcome(predictedHome, predictedAway);
+    }
+
+    public int calculatePlayoffWinnerBonus(int homeScore90, int awayScore90, PlayoffWinner actualWinner,
+                                            int predictedHome, int predictedAway, PlayoffWinnerPick predictedWinner) {
+        if (actualWinner == null || predictedWinner == null) return 0;
+        if (homeScore90 != awayScore90) return 0;           // not a 90-min draw
+        if (predictedHome != predictedAway) return 0;       // user didn't predict draw
+        if (predictedHome != homeScore90) return 0;         // not exact draw score
+        boolean homeWon = actualWinner == PlayoffWinner.HOME_WIN;
+        boolean pickedHome = predictedWinner == PlayoffWinnerPick.HOME;
+        return homeWon == pickedHome ? 1 : 0;
     }
 
     private void validateScores(int actualHome, int actualAway,
