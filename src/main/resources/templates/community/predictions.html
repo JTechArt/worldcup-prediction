@@ -177,7 +177,7 @@
                 <span class="pm-actual" th:unless="${match.knockout and match.actualHome90 != null}"
                       th:text="${match.actualHome} + '–' + ${match.actualAway}">2–1</span>
                 <span th:if="${match.knockout and match.actualHome90 != null}"
-                      style="font-size:10px;color:rgba(255,255,255,0.45);display:block;text-align:center;line-height:1.2;"
+                      style="font-size:10px;color:var(--muted);display:block;text-align:center;line-height:1.2;"
                       th:text="'FT ' + ${match.actualHome} + '–' + ${match.actualAway}"></span>
               </th:block>
               <span class="pm-actual" th:unless="${match.resultsAvailable}">TBD</span>
