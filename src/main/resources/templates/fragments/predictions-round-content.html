@@ -93,6 +93,20 @@
                   </div>
                 </div>
 
+                <!-- Playoff winner picker (knockout draw) -->
+                <div x-show="isDraw(match)" x-transition
+                     style="display:none;align-items:center;gap:8px;font-size:12px;">
+                    <span style="color:var(--muted);">Winner:</span>
+                    <button type="button"
+                            :class="match.predPlayoffWinner === 'HOME' ? 'pw-btn pw-active' : 'pw-btn'"
+                            @click="setPlayoffWinner(match, match.predPlayoffWinner === 'HOME' ? null : 'HOME')"
+                            x-text="match.homeTeamName"></button>
+                    <button type="button"
+                            :class="match.predPlayoffWinner === 'AWAY' ? 'pw-btn pw-active' : 'pw-btn'"
+                            @click="setPlayoffWinner(match, match.predPlayoffWinner === 'AWAY' ? null : 'AWAY')"
+                            x-text="match.awayTeamName"></button>
+                </div>
+
                 <!-- Locked display -->
                 <div x-show="match.locked"
                      style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--muted);"
@@ -205,6 +219,22 @@
             </div>
           </div>
 
+          <!-- Playoff winner picker (card, knockout draw) -->
+          <div x-show="isDraw(curMatch) && !curMatch.locked" x-transition
+               class="card-score-section" style="display:none;text-align:center;">
+            <div class="card-score-label">Who wins? (bonus point)</div>
+            <div style="display:flex;justify-content:center;gap:12px;margin-top:8px;">
+              <button type="button"
+                      :class="curMatch.predPlayoffWinner === 'HOME' ? 'pw-btn pw-active' : 'pw-btn'"
+                      @click="setPlayoffWinner(curMatch, curMatch.predPlayoffWinner === 'HOME' ? null : 'HOME')"
+                      x-text="curMatch.homeTeamName"></button>
+              <button type="button"
+                      :class="curMatch.predPlayoffWinner === 'AWAY' ? 'pw-btn pw-active' : 'pw-btn'"
+                      @click="setPlayoffWinner(curMatch, curMatch.predPlayoffWinner === 'AWAY' ? null : 'AWAY')"
+                      x-text="curMatch.awayTeamName"></button>
+            </div>
+          </div>
+
           <!-- Locked display (card) -->
           <div class="card-score-section" x-show="curMatch.locked" style="text-align:center;">
             <div class="card-score-label">Match Locked</div>
@@ -254,7 +284,7 @@
         for (var i = 0; i < matches.length; i++) {
           var m = matches[i];
           if (!m.locked && (m.predHome >= 0 || m.predAway >= 0)) {
-            drafts[m.matchId] = { home: m.predHome, away: m.predAway };
+            drafts[m.matchId] = { home: m.predHome, away: m.predAway, pw: m.predPlayoffWinner };
           }
         }
         localStorage.setItem(storageKey, JSON.stringify(drafts));
@@ -279,6 +309,7 @@
           ...m,
           predHome: serverHome >= 0 ? serverHome : (draft && draft.home >= 0 ? draft.home : -1),
           predAway: serverAway >= 0 ? serverAway : (draft && draft.away >= 0 ? draft.away : -1),
+          predPlayoffWinner: m.predictedPlayoffWinner || (draft ? draft.pw : null) || null,
         };
       }),
 
@@ -301,6 +332,13 @@
         const diff = new Date(m.lockTimeIso) - this.now;
         return diff < 3 * 3600 * 1000 && diff > 0;
       },
+      isDraw(m) {
+        return m.knockout && m.predHome >= 0 && m.predHome === m.predAway;
+      },
+      setPlayoffWinner(m, pw) {
+        m.predPlayoffWinner = pw;
+        this._saveDrafts();
+      },
 
       _saveDrafts() { saveDrafts(this.matches); },
 
@@ -309,12 +347,14 @@
         const cur = side === 'home' ? m.predHome : m.predAway;
         const next = Math.max(0, Math.min(20, (cur >= 0 ? cur : 0) + d));
         if (side === 'home') m.predHome = next; else m.predAway = next;
+        if (!this.isDraw(m)) m.predPlayoffWinner = null;
         this._saveDrafts();
       },
       setScore(m, side, val) {
         const n = parseInt(val);
         const v = isNaN(n) ? -1 : Math.max(0, Math.min(20, n));
         if (side === 'home') m.predHome = v; else m.predAway = v;
+        if (!this.isDraw(m)) m.predPlayoffWinner = null;
         this._saveDrafts();
       },
 
@@ -332,6 +372,9 @@
           add('predictions[' + i + '].matchId',   m.matchId);
           add('predictions[' + i + '].homeScore', m.predHome);
           add('predictions[' + i + '].awayScore', m.predAway);
+          if (m.predPlayoffWinner) {
+            add('predictions[' + i + '].playoffWinner', m.predPlayoffWinner);
+          }
         });
         form.submit();
       },
@@ -385,6 +428,12 @@
     };
   }
   </script>
+
+  <style>
+    .pw-btn { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--muted); background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 600; transition: all .15s; }
+    .pw-btn:hover { border-color: var(--green); color: var(--green); }
+    .pw-active { background: var(--green) !important; border-color: var(--green) !important; color: #fff !important; }
+  </style>
 
 </th:block>
 

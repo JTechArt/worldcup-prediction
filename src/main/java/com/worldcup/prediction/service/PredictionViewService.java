@@ -5,6 +5,7 @@ import com.worldcup.prediction.domain.Prediction;
 import com.worldcup.prediction.domain.PredictionWindow;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.MatchStatus;
+import com.worldcup.prediction.domain.enums.PlayoffWinnerPick;
 import com.worldcup.prediction.domain.enums.WindowMode;
 import com.worldcup.prediction.dto.*;
 import com.worldcup.prediction.repository.CommunityRepository;
@@ -235,6 +236,7 @@ public class PredictionViewService {
                 prediction = existing.get();
                 prediction.setPredictedHome(sp.getHomeScore());
                 prediction.setPredictedAway(sp.getAwayScore());
+                prediction.setPredictedPlayoffWinner(resolvePlayoffWinner(sp.getPlayoffWinner()));
             } else {
                 prediction = new Prediction();
                 prediction.setUser(user);
@@ -242,6 +244,7 @@ public class PredictionViewService {
                 prediction.setCommunity(communityRepository.findById(communityId).orElseThrow());
                 prediction.setPredictedHome(sp.getHomeScore());
                 prediction.setPredictedAway(sp.getAwayScore());
+                prediction.setPredictedPlayoffWinner(resolvePlayoffWinner(sp.getPlayoffWinner()));
             }
             predictionRepository.save(prediction);
         }
@@ -289,6 +292,7 @@ public class PredictionViewService {
                 prediction = existing.get();
                 prediction.setPredictedHome(sp.getHomeScore());
                 prediction.setPredictedAway(sp.getAwayScore());
+                prediction.setPredictedPlayoffWinner(resolvePlayoffWinner(sp.getPlayoffWinner()));
             } else {
                 prediction = new Prediction();
                 prediction.setUser(user);
@@ -296,6 +300,7 @@ public class PredictionViewService {
                 prediction.setCommunity(communityRepository.findById(communityId).orElseThrow());
                 prediction.setPredictedHome(sp.getHomeScore());
                 prediction.setPredictedAway(sp.getAwayScore());
+                prediction.setPredictedPlayoffWinner(resolvePlayoffWinner(sp.getPlayoffWinner()));
             }
             predictionRepository.save(prediction);
         }
@@ -374,12 +379,22 @@ public class PredictionViewService {
         dto.setAwayTeamName(m.getAwayTeam() != null ? m.getAwayTeam().getName() : "TBD");
         dto.setAwayTeamCode(m.getAwayTeam() != null ? m.getAwayTeam().getFlagCode() : "xx");
         dto.setVenue(m.getVenue());
+        dto.setKnockout(m.isKnockout());
         if (pred != null) {
             dto.setPredictedHome(pred.getPredictedHome());
             dto.setPredictedAway(pred.getPredictedAway());
             dto.setPredictionSaved(true);
+            if (pred.getPredictedPlayoffWinner() != null) {
+                dto.setPredictedPlayoffWinner(pred.getPredictedPlayoffWinner().name());
+            }
         }
         return dto;
+    }
+
+    private PlayoffWinnerPick resolvePlayoffWinner(String value) {
+        if ("HOME".equals(value)) return PlayoffWinnerPick.HOME;
+        if ("AWAY".equals(value)) return PlayoffWinnerPick.AWAY;
+        return null;
     }
 
     private String outcomeLabel(Integer ah, Integer aa, int ph, int pa) {

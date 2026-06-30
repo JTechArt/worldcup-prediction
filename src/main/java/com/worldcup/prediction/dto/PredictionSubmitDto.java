@@ -43,6 +43,8 @@ public class PredictionSubmitDto {
         @Min(0)
         private Integer awayScore;
 
+        private String playoffWinner; // "HOME", "AWAY", or null
+
         public Long getMatchId() { return matchId; }
         public void setMatchId(Long matchId) { this.matchId = matchId; }
 
@@ -51,5 +53,8 @@ public class PredictionSubmitDto {
 
         public Integer getAwayScore() { return awayScore; }
         public void setAwayScore(Integer awayScore) { this.awayScore = awayScore; }
+
+        public String getPlayoffWinner() { return playoffWinner; }
+        public void setPlayoffWinner(String playoffWinner) { this.playoffWinner = playoffWinner; }
     }
 }

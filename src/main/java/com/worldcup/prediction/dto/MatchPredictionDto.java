@@ -23,6 +23,9 @@ public class MatchPredictionDto {
     private Integer predictedAway;
     private boolean predictionSaved;
 
+    private boolean knockout;
+    private String predictedPlayoffWinner; // "HOME", "AWAY", or null
+
     public Long getMatchId() { return matchId; }
     public void setMatchId(Long matchId) { this.matchId = matchId; }
 
@@ -67,4 +70,10 @@ public class MatchPredictionDto {
 
     public boolean isPredictionSaved() { return predictionSaved; }
     public void setPredictionSaved(boolean predictionSaved) { this.predictionSaved = predictionSaved; }
+
+    public boolean isKnockout() { return knockout; }
+    public void setKnockout(boolean knockout) { this.knockout = knockout; }
+
+    public String getPredictedPlayoffWinner() { return predictedPlayoffWinner; }
+    public void setPredictedPlayoffWinner(String predictedPlayoffWinner) { this.predictedPlayoffWinner = predictedPlayoffWinner; }
 }
