@@ -374,8 +374,8 @@
             class="bm-name bm-tbd"></span>
 
       <span th:if="${m.status?.name() == 'COMPLETED' and m.homeScore != null}"
-            th:text="${m.homeScore}"
-            th:class="${'bm-score' + (m.homeScore > m.awayScore ? ' bm-win' : '')}"></span>
+            th:text="${m.isKnockout() and m.homeScore90 != null ? m.homeScore90 : m.homeScore}"
+            th:class="${'bm-score' + (m.playoffWinner?.name() == 'HOME_WIN' ? ' bm-win' : (m.playoffWinner == null and m.homeScore != null and m.awayScore != null and m.homeScore > m.awayScore ? ' bm-win' : ''))}"></span>
       <div th:unless="${m.status?.name() == 'COMPLETED'}" class="bm-dots">
         <div class="bm-dot"></div><div class="bm-dot"></div><div class="bm-dot"></div>
       </div>
@@ -396,8 +396,8 @@
             class="bm-name bm-tbd"></span>
 
       <span th:if="${m.status?.name() == 'COMPLETED' and m.awayScore != null}"
-            th:text="${m.awayScore}"
-            th:class="${'bm-score' + (m.awayScore > m.homeScore ? ' bm-win' : '')}"></span>
+            th:text="${m.isKnockout() and m.awayScore90 != null ? m.awayScore90 : m.awayScore}"
+            th:class="${'bm-score' + (m.playoffWinner?.name() == 'AWAY_WIN' ? ' bm-win' : (m.playoffWinner == null and m.homeScore != null and m.awayScore != null and m.awayScore > m.homeScore ? ' bm-win' : ''))}"></span>
       <div th:unless="${m.status?.name() == 'COMPLETED'}" class="bm-dots">
         <div class="bm-dot"></div><div class="bm-dot"></div><div class="bm-dot"></div>
       </div>
@@ -406,6 +406,11 @@
     <!-- Kickoff date -->
     <div th:if="${m.kickoffTime != null}" class="bm-date"
          th:text="${#temporals.format(m.kickoffTime, 'MMM d · HH:mm')}"></div>
+
+    <!-- Final result (when differs from 90-min) -->
+    <div th:if="${m.isKnockout() and m.homeScore90 != null and m.homeScore != null and (m.homeScore != m.homeScore90 or m.awayScore != m.awayScore90)}"
+         style="font-size:9px;color:#aaa;text-align:center;margin-top:2px;"
+         th:text="'FT ' + ${m.homeScore} + '–' + ${m.awayScore}"></div>
 
   </div><!-- /populated match -->
 

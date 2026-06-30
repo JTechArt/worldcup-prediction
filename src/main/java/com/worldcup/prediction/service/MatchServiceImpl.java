@@ -92,6 +92,9 @@ public class MatchServiceImpl implements MatchService {
 
         dto.setHomeScore(m.getHomeScore());
         dto.setAwayScore(m.getAwayScore());
+        dto.setHomeScore90(m.getHomeScore90());
+        dto.setAwayScore90(m.getAwayScore90());
+        dto.setKnockout(m.isKnockout());
         dto.setStatus(m.getStatus().name());
 
         return dto;

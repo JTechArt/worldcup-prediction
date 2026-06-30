@@ -506,8 +506,15 @@
                          onerror="this.style.display='none'"/>
                   </div>
                 </div>
-                <div th:if="${m.homeScore != null}" class="lb-ghs"
-                     th:text="${m.homeScore} + '–' + ${m.awayScore}">0–0</div>
+                <div th:if="${m.homeScore != null}">
+                  <div th:if="${m.knockout and m.homeScore90 != null}" class="lb-ghs"
+                       th:text="${m.homeScore90} + '–' + ${m.awayScore90}">0–0</div>
+                  <div th:unless="${m.knockout and m.homeScore90 != null}" class="lb-ghs"
+                       th:text="${m.homeScore} + '–' + ${m.awayScore}">0–0</div>
+                  <div th:if="${m.knockout and m.homeScore90 != null and (m.homeScore != m.homeScore90 or m.awayScore != m.awayScore90)}"
+                       style="font-size:9px;color:#aaa;text-align:center;line-height:1;"
+                       th:text="'FT ' + ${m.homeScore} + '–' + ${m.awayScore}"></div>
+                </div>
                 <div th:unless="${m.homeScore != null}" class="lb-ghs-tbd">
                   <div class="lb-pd"></div><div class="lb-pd"></div><div class="lb-pd"></div>
                 </div>

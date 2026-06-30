@@ -69,10 +69,25 @@
 
             <!-- Score or VS -->
             <div class="w-14 sm:w-20 flex-shrink-0 text-center">
-              <div th:if="${fixture.completed}" class="font-display text-lg sm:text-xl tracking-widest text-green-dark">
-                <span th:text="${fixture.homeScore}">2</span>
-                <span class="text-gray-300 mx-0.5">–</span>
-                <span th:text="${fixture.awayScore}">1</span>
+              <div th:if="${fixture.completed}">
+                <!-- 90-min score (knockout with 90-min data) -->
+                <div th:if="${fixture.knockout and fixture.homeScore90 != null}"
+                     class="font-display text-lg sm:text-xl tracking-widest text-green-dark">
+                  <span th:text="${fixture.homeScore90}">2</span>
+                  <span class="text-gray-300 mx-0.5">–</span>
+                  <span th:text="${fixture.awayScore90}">1</span>
+                </div>
+                <!-- Group stage or knockout without 90-min data -->
+                <div th:unless="${fixture.knockout and fixture.homeScore90 != null}"
+                     class="font-display text-lg sm:text-xl tracking-widest text-green-dark">
+                  <span th:text="${fixture.homeScore}">2</span>
+                  <span class="text-gray-300 mx-0.5">–</span>
+                  <span th:text="${fixture.awayScore}">1</span>
+                </div>
+                <!-- Final result label (knockout only, when final differs from 90-min) -->
+                <div th:if="${fixture.knockout and fixture.homeScore90 != null and (fixture.homeScore != fixture.homeScore90 or fixture.awayScore != fixture.awayScore90)}"
+                     class="text-xs text-gray-400 mt-0.5"
+                     th:text="'FT ' + ${fixture.homeScore} + '–' + ${fixture.awayScore}"></div>
               </div>
               <div th:unless="${fixture.completed}">
                 <span class="font-display text-sm sm:text-base tracking-widest text-gray-300">VS</span>

@@ -20,6 +20,9 @@ public class FixtureViewDto {
 
     private Integer homeScore;
     private Integer awayScore;
+    private Integer homeScore90;
+    private Integer awayScore90;
+    private boolean knockout;
 
     private String status;
 
@@ -66,6 +69,15 @@ public class FixtureViewDto {
 
     public Integer getAwayScore() { return awayScore; }
     public void setAwayScore(Integer awayScore) { this.awayScore = awayScore; }
+
+    public Integer getHomeScore90() { return homeScore90; }
+    public void setHomeScore90(Integer homeScore90) { this.homeScore90 = homeScore90; }
+
+    public Integer getAwayScore90() { return awayScore90; }
+    public void setAwayScore90(Integer awayScore90) { this.awayScore90 = awayScore90; }
+
+    public boolean isKnockout() { return knockout; }
+    public void setKnockout(boolean knockout) { this.knockout = knockout; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
