@@ -171,12 +171,12 @@
             </div>
             <div class="pm-scores">
               <th:block th:if="${match.resultsAvailable}">
-                <!-- Knockout: show 90-min score, then FT if different -->
+                <!-- Knockout: show 90-min score as main, then FT result below -->
                 <span class="pm-actual" th:if="${match.knockout and match.actualHome90 != null}"
                       th:text="${match.actualHome90} + '–' + ${match.actualAway90} + ' (90′)'">1–1 (90′)</span>
                 <span class="pm-actual" th:unless="${match.knockout and match.actualHome90 != null}"
                       th:text="${match.actualHome} + '–' + ${match.actualAway}">2–1</span>
-                <span th:if="${match.knockout and match.actualHome90 != null and (match.actualHome != match.actualHome90 or match.actualAway != match.actualAway90)}"
+                <span th:if="${match.knockout and match.actualHome90 != null}"
                       style="font-size:10px;color:rgba(255,255,255,0.45);display:block;text-align:center;line-height:1.2;"
                       th:text="'FT ' + ${match.actualHome} + '–' + ${match.actualAway}"></span>
               </th:block>
