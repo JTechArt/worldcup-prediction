@@ -105,6 +105,7 @@
            th:attr="hx-get=@{|/c/${slug}/predictions/round|(label=${round.roundLabel})}"
            hx-target="#round-content-wrapper"
            hx-swap="innerHTML"
+           hx-on::before-request="document.querySelectorAll('#round-tabs .round-tab').forEach(function(t){t.classList.remove('active')});this.classList.add('active')"
            style="cursor:pointer;">
         <span class="tab-status"
               th:text="${round.status == 'PAST'} ? '✅' : (${round.status == 'CLOSED'} ? '🔒' : '⚡')"></span>

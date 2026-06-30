@@ -100,7 +100,7 @@ public class CommunityPredictionController {
         model.addAttribute("activeRoundLabel", roundLabel);
         model.addAttribute("slug", slug);
         model.addAttribute("community", community);
-        return "fragments/predictions-round-content :: roundContent";
+        return "fragments/community-predictions-round-content :: roundContent";
     }
 
     @PostMapping("/submit")
