@@ -110,9 +110,14 @@
             <td class="px-4 py-3 text-xs text-gray-600"
                 th:text="${#temporals.format(match.kickoffTime, 'dd MMM HH:mm')}">01 Jun 18:00</td>
             <td class="px-4 py-3">
-              <span th:if="${match.completed}"
-                    class="font-mono font-semibold text-gray-900"
-                    th:text="${match.homeScore} + '–' + ${match.awayScore}">0–0</span>
+              <span th:if="${match.completed}" class="font-mono font-semibold text-gray-900">
+                <span th:if="${match.knockout and match.homeScore90 != null}"
+                      th:text="${match.homeScore90} + '–' + ${match.awayScore90} + ' (90′)'"></span>
+                <span th:if="${not (match.knockout and match.homeScore90 != null)}"
+                      th:text="${match.homeScore} + '–' + ${match.awayScore}"></span>
+                <span th:if="${match.resultSource?.name() == 'MANUAL'}"
+                      class="ml-1 text-amber-500 text-xs">🔒</span>
+              </span>
               <span th:unless="${match.completed}" class="text-gray-400 text-xs">Pending</span>
             </td>
             <td class="px-6 py-3">
@@ -132,7 +137,10 @@
                 </form>
 
                 <div x-show="showResultForm" x-transition class="w-full mt-2">
-                  <form th:action="@{'/admin/matches/' + ${match.id} + '/result'}" method="post"
+
+                  <!-- GROUP STAGE: simple home/away score -->
+                  <form th:if="${match.groupStage}"
+                        th:action="@{'/admin/matches/' + ${match.id} + '/result'}" method="post"
                         class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                     <label class="text-xs text-gray-500">Home</label>
@@ -149,6 +157,70 @@
                     <button type="button" @click="showResultForm = false"
                             class="px-3 py-1 text-xs font-medium rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors duration-150">Cancel</button>
                   </form>
+
+                  <!-- KNOCKOUT: 90-min result + optional playoff winner -->
+                  <div th:unless="${match.groupStage}"
+                       x-data="{
+                         home90: /*[[${match.homeScore90 != null ? match.homeScore90 : 0}]]*/ 0,
+                         away90: /*[[${match.awayScore90 != null ? match.awayScore90 : 0}]]*/ 0,
+                         get isDraw() { return this.home90 === this.away90; }
+                       }">
+
+                    <!-- Final result (API-managed, read-only) -->
+                    <div th:if="${match.homeScore != null}"
+                         class="text-xs text-gray-500 mb-2">
+                      Final result (API):
+                      <span class="font-mono font-semibold text-gray-700"
+                            th:text="${match.homeScore} + '–' + ${match.awayScore}"></span>
+                      <span th:if="${match.playoffWinner != null}"
+                            class="ml-1 text-gray-500"
+                            th:text="'(' + ${match.playoffWinner.name()} + ')'"></span>
+                    </div>
+
+                    <form th:action="@{'/admin/matches/' + ${match.id} + '/result'}" method="post"
+                          class="flex flex-wrap items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
+                      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                      <label class="text-xs text-gray-500">90-min Home</label>
+                      <input type="number" name="home90" min="0" max="30" x-model.number="home90"
+                             class="w-14 text-center border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-admin-light focus:outline-none"/>
+                      <span class="text-gray-400 font-bold">–</span>
+                      <input type="number" name="away90" min="0" max="30" x-model.number="away90"
+                             class="w-14 text-center border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-admin-light focus:outline-none"/>
+                      <label class="text-xs text-gray-500">Away</label>
+
+                      <!-- Playoff winner (shown when draw) -->
+                      <div x-show="isDraw" x-transition class="flex items-center gap-2 ml-2">
+                        <label class="text-xs text-gray-500">Winner:</label>
+                        <label class="flex items-center gap-1 text-xs cursor-pointer">
+                          <input type="radio" name="playoffWinner" value="HOME"
+                                 th:checked="${match.playoffWinner?.name() == 'HOME_WIN'}"/>
+                          <span th:text="${match.homeTeam?.name ?: 'Home'}">Home</span>
+                        </label>
+                        <label class="flex items-center gap-1 text-xs cursor-pointer">
+                          <input type="radio" name="playoffWinner" value="AWAY"
+                                 th:checked="${match.playoffWinner?.name() == 'AWAY_WIN'}"/>
+                          <span th:text="${match.awayTeam?.name ?: 'Away'}">Away</span>
+                        </label>
+                      </div>
+
+                      <button type="submit"
+                              class="px-3 py-1 text-xs font-medium rounded-md bg-green-600 hover:bg-green-700 text-white transition-colors duration-150">Save 90-min</button>
+                      <button type="button" @click="showResultForm = false"
+                              class="px-3 py-1 text-xs font-medium rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors duration-150">Cancel</button>
+                    </form>
+
+                    <!-- Manual lock indicator + unlock -->
+                    <div th:if="${match.resultSource?.name() == 'MANUAL'}"
+                         class="mt-2 flex items-center gap-2 text-xs text-amber-700">
+                      <span>🔒 Manual — API sync locked</span>
+                      <form th:action="@{'/admin/matches/' + ${match.id} + '/unlock-result'}" method="post" class="inline">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit"
+                                class="px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-800">Unlock</button>
+                      </form>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </td>
