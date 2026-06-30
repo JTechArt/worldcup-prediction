@@ -4,6 +4,7 @@ import com.worldcup.prediction.domain.Community;
 import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.domain.Prediction;
 import com.worldcup.prediction.domain.User;
+import com.worldcup.prediction.domain.enums.PlayoffWinnerPick;
 import com.worldcup.prediction.dto.PredictionDto;
 import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.MatchRepository;
@@ -109,11 +110,16 @@ public class PredictionService {
             Optional<Prediction> existing =
                     predictionRepository.findByUserIdAndMatchIdAndCommunityId(userId, dto.getMatchId(), communityId);
 
+            PlayoffWinnerPick winnerPick = null;
+            if ("HOME".equals(dto.getPlayoffWinner())) winnerPick = PlayoffWinnerPick.HOME;
+            else if ("AWAY".equals(dto.getPlayoffWinner())) winnerPick = PlayoffWinnerPick.AWAY;
+
             Prediction prediction;
             if (existing.isPresent()) {
                 prediction = existing.get();
                 prediction.setPredictedHome(dto.getHomeScore());
                 prediction.setPredictedAway(dto.getAwayScore());
+                prediction.setPredictedPlayoffWinner(winnerPick);
             } else {
                 prediction = Prediction.builder()
                         .user(user)
@@ -121,6 +127,7 @@ public class PredictionService {
                         .community(community)
                         .predictedHome(dto.getHomeScore())
                         .predictedAway(dto.getAwayScore())
+                        .predictedPlayoffWinner(winnerPick)
                         .build();
             }
             saved.add(predictionRepository.save(prediction));
