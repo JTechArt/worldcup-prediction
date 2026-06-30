@@ -7,5 +7,6 @@ public record FootballApiScoreDto(
     String winner,
     String duration,
     FootballApiFullTimeDto fullTime,
-    FootballApiFullTimeDto halfTime
+    FootballApiFullTimeDto halfTime,
+    FootballApiFullTimeDto regularTime
 ) {}
