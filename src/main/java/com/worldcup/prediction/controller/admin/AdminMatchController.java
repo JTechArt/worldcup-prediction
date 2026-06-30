@@ -86,11 +86,19 @@ public class AdminMatchController {
         Match match = matchAdminService.findById(id);
 
         if (match.isKnockout()) {
+            if (home90 == null || away90 == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "90-min scores are required for knockout matches.");
+                return "redirect:/admin/matches";
+            }
             PlayoffWinner winner = "HOME".equals(playoffWinner) ? PlayoffWinner.HOME_WIN
                     : "AWAY".equals(playoffWinner) ? PlayoffWinner.AWAY_WIN : null;
             User adminUser = admin != null ? admin.getUser() : null;
             matchAdminService.set90MinResult(id, home90, away90, winner, adminUser);
         } else {
+            if (homeScore == null || awayScore == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Home and away scores are required.");
+                return "redirect:/admin/matches";
+            }
             matchAdminService.setResult(id, homeScore, awayScore);
         }
 
