@@ -120,14 +120,9 @@ public class MatchAdminService {
         if (match.getHomeScore() == null || match.getAwayScore() == null) return;
 
         KnockoutScoringMode mode = tournamentSettingsService.getKnockoutScoringMode();
-        int effectiveHome, effectiveAway;
-        if (match.isKnockout() && mode == KnockoutScoringMode.NINETY_MINUTES) {
-            effectiveHome = match.getEffectiveHomeScore();
-            effectiveAway = match.getEffectiveAwayScore();
-        } else {
-            effectiveHome = match.getHomeScore();
-            effectiveAway = match.getAwayScore();
-        }
+        boolean useNinetyMinScoring = match.isKnockout() && mode == KnockoutScoringMode.NINETY_MINUTES;
+        int effectiveHome = useNinetyMinScoring ? match.getEffectiveHomeScore() : match.getHomeScore();
+        int effectiveAway = useNinetyMinScoring ? match.getEffectiveAwayScore() : match.getAwayScore();
 
         List<Prediction> predictions = predictionRepository.findByMatchId(matchId);
         Set<String> updatedMembershipKeys = new HashSet<>();
@@ -136,23 +131,18 @@ public class MatchAdminService {
             int totalPoints;
             PredictionScore scoreResult;
 
-            if (match.isKnockout() && mode == KnockoutScoringMode.NINETY_MINUTES) {
-                int bonus = scoringService.calculatePlayoffWinnerBonus(
-                        effectiveHome, effectiveAway, match.getPlayoffWinner(),
-                        p.getPredictedHome(), p.getPredictedAway(),
-                        p.getPredictedPlayoffWinner());
+            if (useNinetyMinScoring) {
                 boolean isExactDraw = scoringService.isExactScore(effectiveHome, effectiveAway,
                         p.getPredictedHome(), p.getPredictedAway())
                         && effectiveHome == effectiveAway;
                 if (isExactDraw) {
                     // Exact draw in knockout: winner pick determines 3 (EXACT_DRAW_WINNER) or 2 (CORRECT_DRAW)
-                    if (bonus == 1) {
-                        totalPoints = 3;
-                        scoreResult = PredictionScore.EXACT_DRAW_WINNER;
-                    } else {
-                        totalPoints = 2;
-                        scoreResult = PredictionScore.CORRECT_DRAW;
-                    }
+                    int bonus = scoringService.calculatePlayoffWinnerBonus(
+                            effectiveHome, effectiveAway, match.getPlayoffWinner(),
+                            p.getPredictedHome(), p.getPredictedAway(),
+                            p.getPredictedPlayoffWinner());
+                    totalPoints = bonus == 1 ? 3 : 2;
+                    scoreResult = bonus == 1 ? PredictionScore.EXACT_DRAW_WINNER : PredictionScore.CORRECT_DRAW;
                 } else {
                     totalPoints = scoringService.calculatePoints(
                             effectiveHome, effectiveAway,

@@ -84,6 +84,27 @@ class MatchAdminServiceTest {
             assertThat(m.getResultEnteredAt()).isNotNull();
             assertThat(m.getStatus()).isEqualTo(MatchStatus.COMPLETED);
         }
+
+        @Test
+        @DisplayName("does not overwrite homeScore when already set")
+        void doesNotOverwriteExistingHomeScore() {
+            Match m = new Match();
+            m.setId(1L);
+            m.setStage(MatchStage.QUARTER_FINAL);
+            m.setStatus(MatchStatus.COMPLETED);
+            m.setHomeScore(3);  // already has a score
+            m.setAwayScore(0);
+            User admin = new User();
+            when(matchRepository.findByIdWithTeams(1L)).thenReturn(Optional.of(m));
+            when(matchRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            matchAdminService.set90MinResult(1L, 1, 1, PlayoffWinner.HOME_WIN, admin);
+
+            // homeScore90 updated, but homeScore left unchanged
+            assertThat(m.getHomeScore90()).isEqualTo(1);
+            assertThat(m.getHomeScore()).isEqualTo(3);
+            assertThat(m.getAwayScore()).isEqualTo(0);
+        }
     }
 
     @Nested
@@ -128,6 +149,26 @@ class MatchAdminServiceTest {
 
             assertThat(p.getPointsAwarded()).isEqualTo(2);
             assertThat(p.getScoreResult()).isEqualTo(PredictionScore.CORRECT_DRAW);
+        }
+
+        @Test
+        @DisplayName("awards EXACT (3pts) for exact non-draw knockout score in NINETY_MINUTES mode")
+        void nonDrawExactScore() {
+            Match m = knockoutMatch(2, 1, PlayoffWinner.HOME_WIN);
+            Community c = new Community(); c.setId(10L);
+            User u = new User(); u.setId(5L);
+            Prediction p = pred(m, c, u, 2, 1, null); // exact non-draw, no winner pick needed
+
+            when(matchRepository.findByIdWithTeams(1L)).thenReturn(Optional.of(m));
+            when(predictionRepository.findByMatchId(1L)).thenReturn(List.of(p));
+            when(membershipRepository.findByCommunityIdAndUserId(10L, 5L)).thenReturn(Optional.empty());
+            when(tournamentSettingsService.getKnockoutScoringMode())
+                .thenReturn(KnockoutScoringMode.NINETY_MINUTES);
+
+            matchAdminService.scoreAllPredictions(1L);
+
+            assertThat(p.getPointsAwarded()).isEqualTo(3);
+            assertThat(p.getScoreResult()).isEqualTo(PredictionScore.EXACT);
         }
     }
 
