@@ -102,7 +102,7 @@
            th:if="${round.status != 'FUTURE'}"
            class="round-tab"
            th:classappend="${round.roundLabel == activeRoundLabel} ? 'active' : ''"
-           th:attr="hx-get=@{'/c/' + ${slug} + '/predictions/round(label=' + ${round.roundLabel} + ')'}"
+           th:attr="hx-get=@{|/c/${slug}/predictions/round|(label=${round.roundLabel})}"
            hx-target="#round-content-wrapper"
            hx-swap="innerHTML"
            style="cursor:pointer;">
