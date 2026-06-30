@@ -60,6 +60,7 @@ class AdminMatchControllerTest {
     @WithMockUser(roles = "SUPER_ADMIN")
     void enterResult_scoresAndRedirects() throws Exception {
         Match match = buildMatch(10L, "Brazil", "Argentina");
+        when(matchAdminService.findById(10L)).thenReturn(match);
         when(matchAdminService.setResult(10L, 2, 1)).thenReturn(match);
 
         mockMvc.perform(post("/admin/matches/10/result")
