@@ -273,7 +273,7 @@ class ScoringServiceTest {
         void bonus_notADraw() {
             assertThat(scoringService.calculatePlayoffWinnerBonus(
                     2, 1, PlayoffWinner.HOME_WIN,
-                    2, 1, PlayoffWinnerPick.HOME)).isEqualTo(0);
+                    1, 1, PlayoffWinnerPick.HOME)).isEqualTo(0);
         }
 
         @Test
@@ -290,6 +290,24 @@ class ScoringServiceTest {
             assertThat(scoringService.calculatePlayoffWinnerBonus(
                     1, 1, PlayoffWinner.HOME_WIN,
                     2, 1, PlayoffWinnerPick.HOME)).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("0 when both actualWinner and predictedWinner are null")
+        void bonus_bothWinnersNull() {
+            assertThat(scoringService.calculatePlayoffWinnerBonus(
+                    1, 1, null,
+                    1, 1, null)).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("throws on negative score input")
+        void bonus_negativeScore_throws() {
+            assertThatThrownBy(() -> scoringService.calculatePlayoffWinnerBonus(
+                    -1, 1, PlayoffWinner.HOME_WIN,
+                    1, 1, PlayoffWinnerPick.HOME))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Score cannot be negative");
         }
     }
 }

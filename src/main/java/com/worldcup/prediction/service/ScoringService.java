@@ -59,7 +59,8 @@ public class ScoringService {
     }
 
     public int calculatePlayoffWinnerBonus(int homeScore90, int awayScore90, PlayoffWinner actualWinner,
-                                            int predictedHome, int predictedAway, PlayoffWinnerPick predictedWinner) {
+                                           int predictedHome, int predictedAway, PlayoffWinnerPick predictedWinner) {
+        validateScores(homeScore90, awayScore90, predictedHome, predictedAway);
         if (actualWinner == null || predictedWinner == null) return 0;
         if (homeScore90 != awayScore90) return 0;           // not a 90-min draw
         if (predictedHome != predictedAway) return 0;       // user didn't predict draw
