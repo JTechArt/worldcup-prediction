@@ -91,20 +91,22 @@ public class FootballApiSyncService {
             match.setAwayScore(awayScore);
             match.setStatus(MatchStatus.COMPLETED);
 
-            // Always update playoff winner from API
-            if (apiMatch.score().winner() != null) {
-                PlayoffWinner winner = switch (apiMatch.score().winner()) {
-                    case "HOME_TEAM" -> PlayoffWinner.HOME_WIN;
-                    case "AWAY_TEAM" -> PlayoffWinner.AWAY_WIN;
-                    default -> null;
-                };
-                match.setPlayoffWinner(winner);
+            // Always update playoffWinner — null clears any stale value
+            String winnerRaw = apiMatch.score().winner();
+            PlayoffWinner playoffWinner = null;
+            if ("HOME_TEAM".equals(winnerRaw)) {
+                playoffWinner = PlayoffWinner.HOME_WIN;
+            } else if ("AWAY_TEAM".equals(winnerRaw)) {
+                playoffWinner = PlayoffWinner.AWAY_WIN;
+            } else if (winnerRaw != null && !"DRAW".equals(winnerRaw)) {
+                log.warn("Unrecognized winner value '{}' for match id={}", winnerRaw, apiMatch.id());
             }
+            match.setPlayoffWinner(playoffWinner);
 
             // Update 90-min scores only if not manually locked
             if (match.getResultSource() != ResultSource.MANUAL) {
                 var regularTime = apiMatch.score().regularTime();
-                if (regularTime != null && regularTime.home() != null) {
+                if (regularTime != null && regularTime.home() != null && regularTime.away() != null) {
                     // Match went to ET/pens — regularTime has the 90-min score
                     match.setHomeScore90(regularTime.home());
                     match.setAwayScore90(regularTime.away());
