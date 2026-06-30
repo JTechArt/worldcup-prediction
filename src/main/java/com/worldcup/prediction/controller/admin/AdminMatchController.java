@@ -4,6 +4,7 @@ import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.domain.RoundWindow;
 import com.worldcup.prediction.domain.User;
 import com.worldcup.prediction.domain.enums.AuditAction;
+import com.worldcup.prediction.domain.enums.PlayoffWinner;
 import com.worldcup.prediction.domain.enums.UserStatus;
 import com.worldcup.prediction.security.CustomOAuth2User;
 import com.worldcup.prediction.service.AuditLogService;
@@ -74,17 +75,41 @@ public class AdminMatchController {
 
     @PostMapping("/{id}/result")
     public String enterResult(@PathVariable Long id,
-                              @RequestParam @Min(0) int homeScore,
-                              @RequestParam @Min(0) int awayScore,
+                              @RequestParam(required = false) @Min(0) Integer homeScore,
+                              @RequestParam(required = false) @Min(0) Integer awayScore,
+                              @RequestParam(required = false) @Min(0) Integer home90,
+                              @RequestParam(required = false) @Min(0) Integer away90,
+                              @RequestParam(required = false) String playoffWinner,
                               @AuthenticationPrincipal CustomOAuth2User admin,
                               RedirectAttributes redirectAttributes) {
         Long adminId = admin != null ? admin.getUserId() : 0L;
-        Match match = matchAdminService.setResult(id, homeScore, awayScore);
+        Match match = matchAdminService.findById(id);
+
+        if (match.isKnockout()) {
+            PlayoffWinner winner = "HOME".equals(playoffWinner) ? PlayoffWinner.HOME_WIN
+                    : "AWAY".equals(playoffWinner) ? PlayoffWinner.AWAY_WIN : null;
+            User adminUser = admin != null ? admin.getUser() : null;
+            matchAdminService.set90MinResult(id, home90, away90, winner, adminUser);
+        } else {
+            matchAdminService.setResult(id, homeScore, awayScore);
+        }
+
         matchAdminService.scoreAllPredictions(id);
         auditLogService.log(adminId, AuditAction.MATCH_RESULT_ENTERED, "MATCH", id,
-                match.getHomeTeam().getName() + " " + homeScore + "-" + awayScore + " " + match.getAwayTeam().getName());
-        redirectAttributes.addFlashAttribute("successMessage",
-                "Result entered: " + match.getHomeTeam().getName() + " " + homeScore + "–" + awayScore + " " + match.getAwayTeam().getName());
+                match.getHomeTeam().getName() + " result entered");
+        redirectAttributes.addFlashAttribute("successMessage", "Result saved successfully.");
+        return "redirect:/admin/matches";
+    }
+
+    @PostMapping("/{id}/unlock-result")
+    public String unlockResult(@PathVariable Long id,
+                               @AuthenticationPrincipal CustomOAuth2User admin,
+                               RedirectAttributes redirectAttributes) {
+        Long adminId = admin != null ? admin.getUserId() : 0L;
+        matchAdminService.unlockResult(id);
+        auditLogService.log(adminId, AuditAction.MATCH_RESULT_RESET, "MATCH", id,
+                "Result source unlocked for API re-sync");
+        redirectAttributes.addFlashAttribute("successMessage", "Result unlocked. API will re-sync 90-min scores.");
         return "redirect:/admin/matches";
     }
 

@@ -80,6 +80,15 @@ public class MatchAdminService {
     }
 
     @Transactional
+    public void unlockResult(Long matchId) {
+        Match match = findById(matchId);
+        match.setResultSource(null);
+        match.setResultEnteredAt(null);
+        match.setResultEnteredBy(null);
+        matchRepository.save(match);
+    }
+
+    @Transactional
     public Match resetResult(Long matchId) {
         Match match = findById(matchId);
         match.setHomeScore(null);
