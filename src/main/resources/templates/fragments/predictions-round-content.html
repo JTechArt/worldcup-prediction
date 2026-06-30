@@ -94,7 +94,7 @@
                 </div>
 
                 <!-- Playoff winner picker (knockout draw) -->
-                <div x-show="isDraw(match)" x-transition
+                <div x-show="isDraw(match) && !match.locked" x-transition
                      style="display:none;align-items:center;gap:8px;font-size:12px;">
                     <span style="color:var(--muted);">Winner:</span>
                     <button type="button"
@@ -326,7 +326,11 @@
         return g;
       },
 
-      isFilled(m) { return m.predHome >= 0 && m.predAway >= 0; },
+      isFilled(m) {
+        if (m.predHome < 0 || m.predAway < 0) return false;
+        if (this.isDraw(m) && !m.predPlayoffWinner) return false;
+        return true;
+      },
       isUrgent(m) {
         if (!m.lockTimeIso) return false;
         const diff = new Date(m.lockTimeIso) - this.now;
