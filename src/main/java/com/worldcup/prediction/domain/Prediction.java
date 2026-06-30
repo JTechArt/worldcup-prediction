@@ -1,5 +1,6 @@
 package com.worldcup.prediction.domain;
 
+import com.worldcup.prediction.domain.enums.PlayoffWinnerPick;
 import com.worldcup.prediction.domain.enums.PredictionScore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -71,6 +72,10 @@ public class Prediction {
 
     @Column(name = "admin_edit_note", length = 500)
     private String adminEditNote;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "predicted_playoff_winner", length = 5)
+    private PlayoffWinnerPick predictedPlayoffWinner;
 
     public boolean isPredictedDraw() {
         return predictedHome == predictedAway;
