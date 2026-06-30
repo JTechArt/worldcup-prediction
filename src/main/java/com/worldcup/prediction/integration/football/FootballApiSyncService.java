@@ -2,6 +2,8 @@ package com.worldcup.prediction.integration.football;
 
 import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.domain.enums.MatchStatus;
+import com.worldcup.prediction.domain.enums.PlayoffWinner;
+import com.worldcup.prediction.domain.enums.ResultSource;
 import com.worldcup.prediction.integration.football.dto.FootballApiMatchDto;
 import com.worldcup.prediction.integration.football.dto.FootballApiResponseDto;
 import com.worldcup.prediction.repository.MatchRepository;
@@ -84,9 +86,36 @@ public class FootballApiSyncService {
                 continue;
             }
 
+            // Always update final result (includes ET goals)
             match.setHomeScore(homeScore);
             match.setAwayScore(awayScore);
             match.setStatus(MatchStatus.COMPLETED);
+
+            // Always update playoff winner from API
+            if (apiMatch.score().winner() != null) {
+                PlayoffWinner winner = switch (apiMatch.score().winner()) {
+                    case "HOME_TEAM" -> PlayoffWinner.HOME_WIN;
+                    case "AWAY_TEAM" -> PlayoffWinner.AWAY_WIN;
+                    default -> null;
+                };
+                match.setPlayoffWinner(winner);
+            }
+
+            // Update 90-min scores only if not manually locked
+            if (match.getResultSource() != ResultSource.MANUAL) {
+                var regularTime = apiMatch.score().regularTime();
+                if (regularTime != null && regularTime.home() != null) {
+                    // Match went to ET/pens — regularTime has the 90-min score
+                    match.setHomeScore90(regularTime.home());
+                    match.setAwayScore90(regularTime.away());
+                } else {
+                    // Match decided in 90 min — fullTime IS the 90-min score
+                    match.setHomeScore90(homeScore);
+                    match.setAwayScore90(awayScore);
+                }
+                match.setResultSource(ResultSource.API);
+            }
+
             matchRepository.save(match);
 
             if (!wasAlreadyCompleted) {
