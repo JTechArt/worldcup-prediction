@@ -92,6 +92,8 @@ public class AdminMatchController {
             }
             PlayoffWinner winner = "HOME".equals(playoffWinner) ? PlayoffWinner.HOME_WIN
                     : "AWAY".equals(playoffWinner) ? PlayoffWinner.AWAY_WIN : null;
+            // Clear winner if not a draw (radio may have been submitted while hidden)
+            if (home90 != away90) winner = null;
             User adminUser = admin != null ? admin.getUser() : null;
             matchAdminService.set90MinResult(id, home90, away90, winner, adminUser);
         } else {

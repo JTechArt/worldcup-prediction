@@ -112,7 +112,7 @@
             <td class="px-4 py-3">
               <span th:if="${match.completed}" class="font-mono font-semibold text-gray-900">
                 <span th:if="${match.knockout and match.homeScore90 != null}"
-                      th:text="${match.homeScore90} + '–' + ${match.awayScore90} + ' (90′)'"></span>
+                      th:text="${match.homeScore90} + '–' + ${match.awayScore90 ?: '?'} + ' (90′)'"></span>
                 <span th:if="${not (match.knockout and match.homeScore90 != null)}"
                       th:text="${match.homeScore} + '–' + ${match.awayScore}"></span>
                 <span th:if="${match.resultSource?.name() == 'MANUAL'}"
