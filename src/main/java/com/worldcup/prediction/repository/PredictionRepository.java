@@ -144,7 +144,7 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
             LEFT JOIN FETCH m.homeTeam
             LEFT JOIN FETCH m.awayTeam
             WHERE p.community.id = :communityId
-              AND p.scoreResult = 'EXACT'
+              AND p.scoreResult IN ('EXACT', 'EXACT_DRAW_WINNER')
               AND m.id IN :matchIds
             ORDER BY u.id ASC
             """)
@@ -174,7 +174,7 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
             LEFT JOIN FETCH m.homeTeam
             LEFT JOIN FETCH m.awayTeam
             WHERE p.community.id = :communityId
-              AND p.scoreResult = 'EXACT'
+              AND p.scoreResult IN ('EXACT', 'EXACT_DRAW_WINNER')
               AND (
                 :stageFilter = 'all'
                 OR (:stageFilter = 'group'   AND m.stage = com.worldcup.prediction.domain.enums.MatchStage.GROUP)

@@ -648,7 +648,7 @@
                               pred=${showPred and userPreds != null ? userPreds.get(m.id) : null}"
                      th:class="'lb-game-cell '
                                + (${pred == null} ? '' :
-                                 (${pred.scoreResult.name() == 'EXACT'} ? 'cell-exact ' :
+                                 (${pred.scoreResult.name() == 'EXACT' or pred.scoreResult.name() == 'EXACT_DRAW_WINNER'} ? 'cell-exact ' :
                                  (${pred.scoreResult.name() == 'CORRECT_DRAW'} ? 'cell-draw ' :
                                  (${pred.scoreResult.name() == 'CORRECT_WINNER'} ? 'cell-winner ' :
                                  (${pred.scoreResult.name() == 'WRONG'} ? 'cell-zero ' : 'cell-pending ')))))">
@@ -680,7 +680,7 @@
                                 pred=${showPred and userPreds != null ? userPreds.get(m.id) : null}"
                        th:class="'lb-game-cell '
                                  + (${pred == null} ? '' :
-                                   (${pred.scoreResult.name() == 'EXACT'} ? 'cell-exact ' :
+                                   (${pred.scoreResult.name() == 'EXACT' or pred.scoreResult.name() == 'EXACT_DRAW_WINNER'} ? 'cell-exact ' :
                                    (${pred.scoreResult.name() == 'CORRECT_DRAW'} ? 'cell-draw ' :
                                    (${pred.scoreResult.name() == 'CORRECT_WINNER'} ? 'cell-winner ' :
                                    (${pred.scoreResult.name() == 'WRONG'} ? 'cell-zero ' : 'cell-pending ')))))">
