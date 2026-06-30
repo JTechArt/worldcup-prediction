@@ -2,8 +2,12 @@ package com.worldcup.prediction.service;
 
 import com.worldcup.prediction.domain.Match;
 import com.worldcup.prediction.domain.Prediction;
+import com.worldcup.prediction.domain.User;
+import com.worldcup.prediction.domain.enums.KnockoutScoringMode;
 import com.worldcup.prediction.domain.enums.MatchStatus;
+import com.worldcup.prediction.domain.enums.PlayoffWinner;
 import com.worldcup.prediction.domain.enums.PredictionScore;
+import com.worldcup.prediction.domain.enums.ResultSource;
 import com.worldcup.prediction.repository.CommunityMembershipRepository;
 import com.worldcup.prediction.repository.MatchRepository;
 import com.worldcup.prediction.repository.PredictionRepository;
@@ -13,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +35,7 @@ public class MatchAdminService {
     private final PredictionRepository predictionRepository;
     private final ScoringService scoringService;
     private final CommunityMembershipRepository membershipRepository;
+    private final TournamentSettingsService tournamentSettingsService;
 
     public List<Match> findAllOrderByKickoffAsc() {
         return matchRepository.findAllWithTeams();
@@ -44,6 +50,24 @@ public class MatchAdminService {
     public Match findById(Long matchId) {
         return matchRepository.findByIdWithTeams(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("Match not found: " + matchId));
+    }
+
+    @Transactional
+    public Match set90MinResult(Long matchId, int home90, int away90,
+                                PlayoffWinner playoffWinner, User adminUser) {
+        Match match = findById(matchId);
+        match.setHomeScore90(home90);
+        match.setAwayScore90(away90);
+        match.setPlayoffWinner(playoffWinner);
+        match.setResultSource(ResultSource.MANUAL);
+        match.setResultEnteredAt(LocalDateTime.now());
+        match.setResultEnteredBy(adminUser);
+        match.setStatus(MatchStatus.COMPLETED);
+        if (match.getHomeScore() == null) {
+            match.setHomeScore(home90);
+            match.setAwayScore(away90);
+        }
+        return matchRepository.save(match);
     }
 
     @Transactional
@@ -65,6 +89,8 @@ public class MatchAdminService {
         match.setStatus(MatchStatus.SCHEDULED);
         match.setResultEnteredAt(null);
         match.setResultEnteredBy(null);
+        match.setResultSource(null);
+        match.setPlayoffWinner(null);
 
         List<Prediction> predictions = predictionRepository.findByMatchId(matchId);
         Set<String> updatedMembershipKeys = new HashSet<>();
@@ -93,18 +119,59 @@ public class MatchAdminService {
         Match match = findById(matchId);
         if (match.getHomeScore() == null || match.getAwayScore() == null) return;
 
-        int actualHome = match.getEffectiveHomeScore();
-        int actualAway = match.getEffectiveAwayScore();
+        KnockoutScoringMode mode = tournamentSettingsService.getKnockoutScoringMode();
+        int effectiveHome, effectiveAway;
+        if (match.isKnockout() && mode == KnockoutScoringMode.NINETY_MINUTES) {
+            effectiveHome = match.getEffectiveHomeScore();
+            effectiveAway = match.getEffectiveAwayScore();
+        } else {
+            effectiveHome = match.getHomeScore();
+            effectiveAway = match.getAwayScore();
+        }
 
         List<Prediction> predictions = predictionRepository.findByMatchId(matchId);
         Set<String> updatedMembershipKeys = new HashSet<>();
 
         for (Prediction p : predictions) {
-            int pts = scoringService.calculatePoints(
-                    actualHome, actualAway, p.getPredictedHome(), p.getPredictedAway());
-            p.setPointsAwarded(pts);
-            p.setScoreResult(scoringService.determineScoreResult(
-                    actualHome, actualAway, p.getPredictedHome(), p.getPredictedAway()));
+            int totalPoints;
+            PredictionScore scoreResult;
+
+            if (match.isKnockout() && mode == KnockoutScoringMode.NINETY_MINUTES) {
+                int bonus = scoringService.calculatePlayoffWinnerBonus(
+                        effectiveHome, effectiveAway, match.getPlayoffWinner(),
+                        p.getPredictedHome(), p.getPredictedAway(),
+                        p.getPredictedPlayoffWinner());
+                boolean isExactDraw = scoringService.isExactScore(effectiveHome, effectiveAway,
+                        p.getPredictedHome(), p.getPredictedAway())
+                        && effectiveHome == effectiveAway;
+                if (isExactDraw) {
+                    // Exact draw in knockout: winner pick determines 3 (EXACT_DRAW_WINNER) or 2 (CORRECT_DRAW)
+                    if (bonus == 1) {
+                        totalPoints = 3;
+                        scoreResult = PredictionScore.EXACT_DRAW_WINNER;
+                    } else {
+                        totalPoints = 2;
+                        scoreResult = PredictionScore.CORRECT_DRAW;
+                    }
+                } else {
+                    totalPoints = scoringService.calculatePoints(
+                            effectiveHome, effectiveAway,
+                            p.getPredictedHome(), p.getPredictedAway());
+                    scoreResult = scoringService.determineScoreResult(
+                            effectiveHome, effectiveAway,
+                            p.getPredictedHome(), p.getPredictedAway());
+                }
+            } else {
+                totalPoints = scoringService.calculatePoints(
+                        effectiveHome, effectiveAway,
+                        p.getPredictedHome(), p.getPredictedAway());
+                scoreResult = scoringService.determineScoreResult(
+                        effectiveHome, effectiveAway,
+                        p.getPredictedHome(), p.getPredictedAway());
+            }
+
+            p.setPointsAwarded(totalPoints);
+            p.setScoreResult(scoreResult);
             predictionRepository.save(p);
 
             if (p.getCommunity() != null) {
@@ -121,7 +188,9 @@ public class MatchAdminService {
             List<Prediction> userPreds = predictionRepository.findByUserIdAndCommunityId(userId, communityId);
             m.setTotalPoints(userPreds.stream().mapToInt(Prediction::getPointsAwarded).sum());
             m.setExactScoreCount((int) userPreds.stream()
-                    .filter(p -> p.getScoreResult() == PredictionScore.EXACT).count());
+                    .filter(p -> p.getScoreResult() == PredictionScore.EXACT
+                              || p.getScoreResult() == PredictionScore.EXACT_DRAW_WINNER)
+                    .count());
             m.setCorrectWinnerCount((int) userPreds.stream()
                     .filter(p -> p.getScoreResult() == PredictionScore.CORRECT_WINNER).count());
             m.setCorrectDrawCount((int) userPreds.stream()
