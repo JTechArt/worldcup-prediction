@@ -37,4 +37,8 @@ public enum MatchStage {
     public String getDisplayName() { return displayName; }
     public String getCssClass()    { return cssClass; }
     public int    getOrder()       { return order; }
+
+    public boolean isKnockout() {
+        return this != GROUP;
+    }
 }

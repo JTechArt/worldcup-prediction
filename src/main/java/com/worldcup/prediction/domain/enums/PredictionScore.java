@@ -2,6 +2,7 @@ package com.worldcup.prediction.domain.enums;
 
 public enum PredictionScore {
     EXACT(3),
+    EXACT_DRAW_WINNER(3),
     CORRECT_DRAW(2),
     CORRECT_WINNER(1),
     WRONG(0),
