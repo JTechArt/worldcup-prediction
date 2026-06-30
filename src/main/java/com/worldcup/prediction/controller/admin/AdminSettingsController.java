@@ -1,5 +1,6 @@
 package com.worldcup.prediction.controller.admin;
 
+import com.worldcup.prediction.domain.enums.KnockoutScoringMode;
 import com.worldcup.prediction.domain.enums.WindowMode;
 import com.worldcup.prediction.security.SuperAdminAuthenticationProvider;
 import com.worldcup.prediction.service.RoundWindowService;
@@ -26,6 +27,8 @@ public class AdminSettingsController {
     public String settings(Model model) {
         model.addAttribute("tournamentSettings", tournamentSettingsService.getSettings());
         model.addAttribute("windowModes", WindowMode.values());
+        model.addAttribute("knockoutScoringModes", KnockoutScoringMode.values());
+        model.addAttribute("currentKnockoutScoringMode", tournamentSettingsService.getKnockoutScoringMode());
         return "admin/settings";
     }
 
@@ -39,6 +42,15 @@ public class AdminSettingsController {
         tournamentSettingsService.updateRoundLockOffset(roundLockOffsetMinutes);
         roundWindowService.recalculateAllRoundWindows();
         redirectAttributes.addFlashAttribute("successMessage", "Tournament window mode updated.");
+        return "redirect:/admin/settings";
+    }
+
+    @PostMapping("/knockout-scoring-mode")
+    public String updateKnockoutScoringMode(
+            @RequestParam KnockoutScoringMode knockoutScoringMode,
+            RedirectAttributes redirectAttributes) {
+        tournamentSettingsService.updateKnockoutScoringMode(knockoutScoringMode);
+        redirectAttributes.addFlashAttribute("successMessage", "Knockout scoring mode updated.");
         return "redirect:/admin/settings";
     }
 
