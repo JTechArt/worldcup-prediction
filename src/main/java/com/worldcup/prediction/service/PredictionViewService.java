@@ -338,6 +338,11 @@ public class PredictionViewService {
                 mr.setResultsAvailable(matchCompleted);
                 mr.setActualHome(matchCompleted ? m.getHomeScore() : 0);
                 mr.setActualAway(matchCompleted ? m.getAwayScore() : 0);
+                mr.setKnockout(m.isKnockout());
+                if (matchCompleted && m.isKnockout() && m.getHomeScore90() != null) {
+                    mr.setActualHome90(m.getHomeScore90());
+                    mr.setActualAway90(m.getAwayScore90());
+                }
 
                 Prediction pred = predMap.get(m.getId());
                 if (pred != null) {

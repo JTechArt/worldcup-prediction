@@ -10,6 +10,9 @@ public class PastMatchResultDto {
 
     private int actualHome;
     private int actualAway;
+    private Integer actualHome90;
+    private Integer actualAway90;
+    private boolean knockout;
 
     private Integer predictedHome;
     private Integer predictedAway;
@@ -42,6 +45,15 @@ public class PastMatchResultDto {
 
     public int getActualAway() { return actualAway; }
     public void setActualAway(int actualAway) { this.actualAway = actualAway; }
+
+    public Integer getActualHome90() { return actualHome90; }
+    public void setActualHome90(Integer actualHome90) { this.actualHome90 = actualHome90; }
+
+    public Integer getActualAway90() { return actualAway90; }
+    public void setActualAway90(Integer actualAway90) { this.actualAway90 = actualAway90; }
+
+    public boolean isKnockout() { return knockout; }
+    public void setKnockout(boolean knockout) { this.knockout = knockout; }
 
     public Integer getPredictedHome() { return predictedHome; }
     public void setPredictedHome(Integer predictedHome) { this.predictedHome = predictedHome; }
