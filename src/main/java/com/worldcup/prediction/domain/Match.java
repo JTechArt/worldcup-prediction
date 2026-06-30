@@ -2,6 +2,8 @@ package com.worldcup.prediction.domain;
 
 import com.worldcup.prediction.domain.enums.MatchStage;
 import com.worldcup.prediction.domain.enums.MatchStatus;
+import com.worldcup.prediction.domain.enums.PlayoffWinner;
+import com.worldcup.prediction.domain.enums.ResultSource;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -95,6 +97,14 @@ public class Match {
     @JoinColumn(name = "result_entered_by_id")
     private User resultEnteredBy;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "result_source", length = 10)
+    private ResultSource resultSource;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "playoff_winner", length = 10)
+    private PlayoffWinner playoffWinner;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -113,6 +123,10 @@ public class Match {
 
     public boolean isGroupStage() {
         return stage == MatchStage.GROUP;
+    }
+
+    public boolean isKnockout() {
+        return stage != null && stage.isKnockout();
     }
 
     /**
