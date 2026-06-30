@@ -1,5 +1,6 @@
 package com.worldcup.prediction.domain;
 
+import com.worldcup.prediction.domain.enums.KnockoutScoringMode;
 import com.worldcup.prediction.domain.enums.WindowMode;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,6 +27,11 @@ public class TournamentSettings {
 
     @Column(name = "round_lock_offset_minutes", nullable = false)
     private int roundLockOffsetMinutes;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "knockout_scoring_mode", nullable = false, length = 20)
+    @Builder.Default
+    private KnockoutScoringMode knockoutScoringMode = KnockoutScoringMode.NINETY_MINUTES;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)

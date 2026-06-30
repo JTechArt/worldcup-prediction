@@ -1,6 +1,7 @@
 package com.worldcup.prediction.service;
 
 import com.worldcup.prediction.domain.TournamentSettings;
+import com.worldcup.prediction.domain.enums.KnockoutScoringMode;
 import com.worldcup.prediction.domain.enums.WindowMode;
 import com.worldcup.prediction.repository.CommunityRepository;
 import com.worldcup.prediction.repository.TournamentSettingsRepository;
@@ -25,6 +26,7 @@ public class TournamentSettingsService {
                                 .windowMode(WindowMode.ROUND)
                                 .dailyWindowCloseOffsetMinutes(30)
                                 .roundLockOffsetMinutes(60)
+                                .knockoutScoringMode(KnockoutScoringMode.NINETY_MINUTES)
                                 .build()));
     }
 
@@ -57,5 +59,16 @@ public class TournamentSettingsService {
         TournamentSettings s = getSettings();
         s.setRoundLockOffsetMinutes(minutes);
         return settingsRepository.save(s);
+    }
+
+    public KnockoutScoringMode getKnockoutScoringMode() {
+        return getSettings().getKnockoutScoringMode();
+    }
+
+    @Transactional
+    public TournamentSettings updateKnockoutScoringMode(KnockoutScoringMode mode) {
+        TournamentSettings settings = getSettings();
+        settings.setKnockoutScoringMode(mode);
+        return settingsRepository.save(settings);
     }
 }
